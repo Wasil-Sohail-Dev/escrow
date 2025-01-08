@@ -22,7 +22,14 @@ body {
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS devices */
   width: 100%;
 }
+.scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
 
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* WebKit */
+}
 /* Custom Scrollbar Styles */
 *::-webkit-scrollbar {
   width: 3px;

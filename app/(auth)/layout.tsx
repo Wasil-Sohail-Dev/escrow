@@ -15,7 +15,7 @@ export default function Layout({
   children: React.ReactNode;
 }>) {
   return (
-    <section className="flex flex-col justify-center min-h-screen items-center my-5 relative">
+    <section className="flex flex-col justify-center min-h-screen items-center relative dark:bg-dark-bg">
       {/* Logo */}
       <Link href={"/sign-in"}>
         <Image

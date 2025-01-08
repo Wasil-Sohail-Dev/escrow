@@ -1,5 +1,3 @@
-"use client";
-
 import { Search, Bell, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {

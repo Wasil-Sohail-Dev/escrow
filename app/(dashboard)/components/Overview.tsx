@@ -6,11 +6,14 @@ import ProjectCard from "../components/ProjectCard";
 
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type TabOption = "active" | "dispute" | "completed" | "all";
 
 const Overview = ({ dispute }: { dispute?: boolean }) => {
   const [activeTab, setActiveTab] = useState<TabOption>("active");
+  const router = useRouter();
 
   const getFilteredCount = (tab: TabOption) => {
     switch (tab) {
@@ -30,7 +33,9 @@ const Overview = ({ dispute }: { dispute?: boolean }) => {
     <>
       <div
         className={`mb-4 flex justify-end ${
-          dispute ? "sm:justify-between  sm:flex-row flex-col sm:gap-0 gap-6 items-center" : "justify-end"
+          dispute
+            ? "sm:justify-between  sm:flex-row flex-col sm:gap-0 gap-6 items-center"
+            : "justify-end"
         }`}
       >
         {dispute && (
@@ -51,6 +56,13 @@ const Overview = ({ dispute }: { dispute?: boolean }) => {
               ? "bg-[#E71D1D] hover:bg-[#E71D1D]/90"
               : "bg-primary hover:bg-primary/90"
           }`}
+          onClick={() => {
+            if (dispute) {
+              router.push("/create-dispute");
+            } else {
+              router.push("/create-contract");
+            }
+          }}
         >
           <Plus />
           Create New Contract
@@ -65,28 +77,44 @@ const Overview = ({ dispute }: { dispute?: boolean }) => {
           title="Total Disputes Raised"
           count={2}
           status="active"
-          viewDetailsLink="/home/active"
+          viewDetailsLink={
+            dispute
+              ? "/dispute-management-screen/total-disputes"
+              : "/home/active"
+          }
           dispute={dispute}
         />
         <ProjectCard
           title="Pending Disputes"
           count={8}
           status="completed"
-          viewDetailsLink="/home/completed"
+          viewDetailsLink={
+            dispute
+              ? "/dispute-management-screen/pending-disputes"
+              : "/home/completed"
+          }
           dispute={dispute}
         />
         <ProjectCard
           title="In Progress"
           count={11}
           status="all"
-          viewDetailsLink="/home/all"
+          viewDetailsLink={
+            dispute
+              ? "/dispute-management-screen/in-progress-disputes"
+              : "/home/all"
+          }
           dispute={dispute}
         />
         <ProjectCard
           title="Resolved"
           count={1}
           status="dispute"
-          viewDetailsLink="/home/dispute"
+          viewDetailsLink={
+            dispute
+              ? "/dispute-management-screen/resolved-disputes"
+              : "/home/dispute"
+          }
           dispute={dispute}
         />
       </div>
@@ -138,12 +166,13 @@ const Overview = ({ dispute }: { dispute?: boolean }) => {
               {getFilteredCount(activeTab)}
             </span>
           </div>
-          <button
+          <Link
+            href="/milestone-details"
             className="lg:text-base1-semibold md:text-base-semibold max-md:text-small-semibold 
             underline flex items-center gap-2 dark:text-dark-text"
           >
             See Details <ChevronDown size={20} />
-          </button>
+          </Link>
         </div>
 
         <div
@@ -189,8 +218,18 @@ const Overview = ({ dispute }: { dispute?: boolean }) => {
                 className="lg:text-small-regular md:text-small-regular max-md:text-tiny-medium 
               text-secondary-heading dark:text-dark-text/60"
               >
-                Aug 8,2024
+                {/* user vendor: Add deadline */}
+                Deadline: Aug 8,2024
               </p>
+              <Button
+                className="lg:text-small-regular md:text-small-regular max-md:text-tiny-medium
+                  px-4 py-1.5 mt-2 rounded-lg
+                  bg-primary hover:bg-primary/90 
+                  dark:bg-dark-primary dark:hover:bg-dark-primary/90
+                  text-white transition-colors"
+              >
+                Submit Task
+              </Button>
             </div>
           ) : (
             <p className="text-base-regular text-[#7B878C] dark:text-dark-text items-end justify-end ">

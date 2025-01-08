@@ -19,6 +19,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 
 // Validation Schema
 const signUpSchema = z
@@ -138,18 +140,18 @@ const Page = () => {
   };
 
   return (
-    <div className="flex flex-col gap-5 max-md:px-3 max-md:mt-7 w-full max-w-md border border-white-3 p-10 shadow-md rounded">
-      <div className="text-center">
-        <h1 className="text-heading1-semibold text-dark-1">Sign Up</h1>
-        <p className="text-small-regular text-dark-2">
-          Sign up now to get started with an account.
+    <div className="flex flex-col gap-6 w-full max-w-[400px] bg-white dark:bg-dark-input-bg p-8 border border-[#E8EAEE] dark:border-dark-border">
+      <div className="text-center space-y-1">
+        <h1 className="text-2xl font-semibold text-paragraph dark:text-dark-text">Sign up</h1>
+        <p className="text-sm text-paragraph/60 dark:text-dark-text/60">
+          Sign up now to get started with an account
         </p>
       </div>
 
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSignUp)}
-          className="flex flex-col gap-5 mt-5"
+          className="flex flex-col gap-4"
         >
           {/* User Type Switch */}
           <FormField
@@ -157,15 +159,16 @@ const Page = () => {
             name="userType"
             render={({ field }) => (
               <FormItem>
-                <div className="flex justify-center items-center space-x-2">
-                  <label className="text-dark-1">Vendor</label>
+                <div className="flex justify-center items-center gap-3">
+                  <span className="text-sm text-paragraph dark:text-dark-text">Client</span>
                   <Switch
-                    checked={field.value === "client"}
+                    checked={field.value === "vendor"}
                     onCheckedChange={(checked) =>
-                      field.onChange(checked ? "client" : "vendor")
+                      field.onChange(checked ? "vendor" : "client")
                     }
+                    className="data-[state=checked]:bg-primary"
                   />
-                  <label className="text-dark-1">Client</label>
+                  <span className="text-sm text-paragraph dark:text-dark-text">Vendor</span>
                 </div>
               </FormItem>
             )}
@@ -175,17 +178,16 @@ const Page = () => {
           <FormField
             control={form.control}
             name="email"
-            render={({ field, fieldState }) => (
+            render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-dark-1">Email</FormLabel>
                 <Input
                   {...field}
                   type="email"
-                  placeholder="example@email.com"
-                  className="border-white-3"
+                  placeholder="Enter your email"
+                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
                   disabled={loading}
                 />
-                <FormMessage>{fieldState.error?.message}</FormMessage>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -194,21 +196,16 @@ const Page = () => {
           <FormField
             control={form.control}
             name="password"
-            render={({ field, fieldState }) => (
+            render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-dark-1">Password</FormLabel>
                 <Input
                   {...field}
                   type="password"
-                  placeholder="Enter your password"
-                  className="border-white-3"
+                  placeholder="Password"
+                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
                   disabled={loading}
                 />
-                <p className="text-xs text-gray-500">
-                  Password must include at least 8 characters, one uppercase,
-                  one lowercase, one number, and one special character.
-                </p>
-                <FormMessage>{fieldState.error?.message}</FormMessage>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -217,17 +214,16 @@ const Page = () => {
           <FormField
             control={form.control}
             name="cnfPassword"
-            render={({ field, fieldState }) => (
+            render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-dark-1">Confirm Password</FormLabel>
                 <Input
                   {...field}
                   type="password"
-                  placeholder="Confirm your password"
-                  className="border-white-3"
+                  placeholder="Confirm password"
+                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
                   disabled={loading}
                 />
-                <FormMessage>{fieldState.error?.message}</FormMessage>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -236,31 +232,69 @@ const Page = () => {
           <FormField
             control={form.control}
             name="acceptPolicy"
-            render={({ field, fieldState }) => (
+            render={({ field }) => (
               <FormItem>
                 <div className="flex items-center gap-2">
                   <Checkbox
                     checked={field.value}
                     onCheckedChange={field.onChange}
                     disabled={loading}
+                    className="border-[#D1D5DB] dark:border-dark-border data-[state=checked]:bg-primary"
                   />
-                  <FormLabel className="text-dark-1">
-                    I accept the{" "}
-                    <a href="/policy" className="text-blue-500">
-                      policy
-                    </a>
-                  </FormLabel>
+                  <label className="text-sm text-paragraph dark:text-dark-text">
+                    I agree to the terms and conditions
+                  </label>
                 </div>
-                <FormMessage>{fieldState.error?.message}</FormMessage>
+                <FormMessage />
               </FormItem>
             )}
           />
 
-          <Button type="submit" className="primary-btn" disabled={loading}>
-            {loading ? <div className="spinner"></div> : "Sign Up"}
+          <Button 
+            type="submit" 
+            className="h-11 bg-primary hover:bg-primary/90 text-white dark:text-dark-text rounded-lg"
+            disabled={loading}
+          >
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              "Sign Up"
+            )}
           </Button>
         </form>
       </Form>
+
+      <div className="flex items-center gap-2">
+        <div className="h-[1px] flex-1 bg-[#E8EAEE] dark:bg-dark-border" />
+        <span className="text-sm text-paragraph dark:text-dark-text">or</span>
+        <div className="h-[1px] flex-1 bg-[#E8EAEE] dark:bg-dark-border" />
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <Button 
+          type="button"
+          variant="outline"
+          className="h-11 border border-[#E8EAEE] dark:border-dark-border hover:bg-white/90 dark:hover:bg-dark-input-bg rounded-lg text-paragraph dark:text-dark-text flex items-center justify-center gap-2"
+        >
+          <Image src="/assets/google.svg" alt="Google" width={20} height={20} />
+          Sign up with Google
+        </Button>
+        <Button 
+          type="button"
+          variant="outline"
+          className="h-11 border border-[#E8EAEE] dark:border-dark-border hover:bg-white/90 dark:hover:bg-dark-input-bg rounded-lg text-paragraph dark:text-dark-text flex items-center justify-center gap-2"
+        >
+          <Image src="/assets/facebook.svg" alt="Facebook" width={20} height={20} />
+          Sign up with Facebook
+        </Button>
+      </div>
+
+      <p className="text-sm text-paragraph dark:text-dark-text text-center">
+        Already have an account?{" "}
+        <Link href="/login" className="text-primary hover:text-primary-500">
+          Sign in
+        </Link>
+      </p>
     </div>
   );
 };

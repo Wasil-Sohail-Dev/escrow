@@ -3,33 +3,7 @@
 import ProjectTable from "../components/PaymentHistory";
 import Topbar from "../components/Topbar";
 import Overview from "../components/Overview";
-
-const disputeData = [
-  {
-    id: "#DSP 11232",
-    milestoneName: "House Renovation",
-    date: "Jul 26,2023",
-    vendorName: "Jennifer",
-    status: "cancelled" as const,
-    amount: "Default Job",
-  },
-  {
-    id: "#DSP 11241",
-    milestoneName: "Floor Planning",
-    date: "Aug 29,2023",
-    vendorName: "Stefan",
-    status: "pending" as const,
-    amount: "Default Job",
-  },
-  {
-    id: "#DSP 11245",
-    milestoneName: "Wall Painting",
-    date: "Jul 26,2023",
-    vendorName: "Jennifer",
-    status: "delivered" as const,
-    amount: "Default Job",
-  },
-];
+import { disputeData } from "@/lib/data/transactions";
 
 export default function DisputeManagementScreen() {
   return (

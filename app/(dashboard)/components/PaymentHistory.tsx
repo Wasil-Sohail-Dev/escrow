@@ -19,7 +19,7 @@ interface Transaction {
   milestoneName: string;
   date: string;
   vendorName: string;
-  status: "pending" | "cancelled" | "delivered";
+  status: "pending" | "cancelled" | "delivered" | "in-progress";
   amount: string;
 }
 
@@ -61,6 +61,8 @@ export default function PaymentHistory({
       case "cancelled":
         return "bg-[#EF0606]";
       case "delivered":
+        return "bg-[#4CE13F]";
+      case "in-progress":
         return "bg-[#4CE13F]";
       default:
         return "bg-black";

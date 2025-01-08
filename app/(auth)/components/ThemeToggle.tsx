@@ -17,11 +17,7 @@ export default function ThemeToggle() {
         shadow-soft"
       aria-label="Toggle theme"
     >
-      {theme === "dark" ? (
-        <Sun size={20} />
-      ) : (
-        <Moon size={20} />
-      )}
+      {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
     </button>
   );
-} 
+}

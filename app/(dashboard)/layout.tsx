@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Sidebar from "./components/Sidebar";
-import Topbar from "./components/Topbar";
 
 export const metadata: Metadata = {
   title: "Auth Page",
@@ -15,18 +14,21 @@ export default function Layout({
 }>) {
   return (
     <section className="flex min-h-screen bg-white dark:bg-dark-bg">
-      <div className="fixed left-0 top-0 h-screen z-50">
+      <div className="fixed left-0 top-0 z-50">
         <Sidebar />
       </div>
       <section className="flex-1 md:ml-[118px] ml-0 min-h-screen">
-        {/* <div className="fixed top-0 right-0 md:left-[118px] left-0 z-40 bg-white dark:bg-dark-bg border-b dark:border-dark-border">
-          <Topbar />
-        </div> */}
-        <main className="px-20 py-10
+        <main
+          className="px-20 py-10
           lg:px-10 lg:py-10 
           md:px-6 md:py-8 
-          max-md:px-4 max-md:py-4">
-          <Suspense fallback={<div className="text-center dark:text-dark-text">Loading...</div>}>
+          max-md:px-4 max-md:py-4"
+        >
+          <Suspense
+            fallback={
+              <div className="text-center dark:text-dark-text">Loading...</div>
+            }
+          >
             {children}
           </Suspense>
         </main>
@@ -34,4 +36,3 @@ export default function Layout({
     </section>
   );
 }
-

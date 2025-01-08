@@ -16,6 +16,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
 
 // Validation Schema
 const signInSchema = z.object({
@@ -60,17 +61,12 @@ const Page = () => {
   };
 
   return (
-    <div className="flex flex-col gap-10 max-md:px-3 max-md:mt-7 w-full max-w-md 
-      border border-white-3 dark:border-dark-2 
-      bg-white-1 dark:bg-dark-1 
-      p-14 shadow-md rounded
-      transition-colors duration-300"
-    >
-      <div className="space-y-2">
-        <h1 className="text-heading1-semibold text-dark-1 dark:text-white-1 transition-colors">
+    <div className="flex flex-col gap-6 w-full max-w-[400px] bg-white dark:bg-dark-input-bg p-8 border border-[#E8EAEE] dark:border-dark-border">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold text-paragraph dark:text-dark-text">
           Welcome back
         </h1>
-        <p className="text-small-regular text-dark-2 dark:text-white-2 transition-colors">
+        <p className="text-sm text-paragraph/60 dark:text-dark-text/60">
           Welcome back! Please enter your details.
         </p>
       </div>
@@ -78,32 +74,26 @@ const Page = () => {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSignIn)}
-          className="flex flex-col gap-5 mt-5"
+          className="flex flex-col gap-4"
         >
-          {/* Email Field */}
           <FormField
             control={form.control}
             name="email"
             render={({ field, fieldState }) => (
               <FormItem>
-                <FormLabel className="text-dark-1 dark:text-white-1 transition-colors">
+                <FormLabel className="text-sm text-paragraph dark:text-dark-text">
                   Email
                 </FormLabel>
                 <Input
                   {...field}
                   type="email"
                   placeholder="Enter your email"
-                  className="border-white-3 dark:border-dark-2 
-                    bg-white-1 dark:bg-dark-3 
-                    text-dark-1 dark:text-white-1
-                    placeholder:text-dark-2 dark:placeholder:text-white-2
-                    focus:border-primary dark:focus:border-primary-500
-                    transition-colors"
+                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
                   required
                   disabled={loading}
                 />
                 {fieldState.error?.message && (
-                  <FormMessage className="text-error-accent dark:text-error-text">
+                  <FormMessage className="text-sm">
                     {fieldState.error.message}
                   </FormMessage>
                 )}
@@ -111,33 +101,24 @@ const Page = () => {
             )}
           />
 
-          {/* Password Field */}
           <FormField
             control={form.control}
             name="password"
             render={({ field, fieldState }) => (
               <FormItem>
-                <FormLabel className="text-dark-1 dark:text-white-1 transition-colors">
+                <FormLabel className="text-sm text-paragraph dark:text-dark-text">
                   Password
                 </FormLabel>
                 <Input
                   {...field}
                   type="password"
-                  placeholder="Password"
-                  className="border-white-3 dark:border-dark-2 
-                    bg-white-1 dark:bg-dark-3 
-                    text-dark-1 dark:text-white-1
-                    placeholder:text-dark-2 dark:placeholder:text-white-2
-                    focus:border-primary dark:focus:border-primary-500
-                    transition-colors"
+                  placeholder="••••••••"
+                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
                   required
                   disabled={loading}
                 />
                 {fieldState.error?.message && (
-                  <FormMessage className="bg-error-bg dark:bg-error-accent/20 
-                    text-error-accent dark:text-error-text 
-                    border border-error-accent dark:border-error-text 
-                    rounded-md p-2">
+                  <FormMessage className="text-sm">
                     {fieldState.error.message}
                   </FormMessage>
                 )}
@@ -146,44 +127,58 @@ const Page = () => {
           />
 
           {error && (
-            <p className="text-error-accent dark:text-error-text">{error}</p>
+            <p className="text-error-accent">{error}</p>
           )}
 
-          <Link href="/forgot-password">
-            <p className="cursor-pointer text-right 
-              text-primary dark:text-primary-300 
-              hover:text-primary-500 dark:hover:text-primary-500 
-              text-small-semibold transition-colors">
+          <div className="flex justify-end">
+            <Link href="/forgot-password" className="text-sm text-primary hover:text-primary-500">
               Forgot Password?
-            </p>
-          </Link>
+            </Link>
+          </div>
 
           <Button 
             type="submit" 
-            className="primary-btn hover:bg-primary-500 
-              dark:bg-primary-500 dark:hover:bg-primary 
-              transition-colors"
+            className="h-11 bg-primary hover:bg-primary/90 text-white dark:text-dark-text rounded-lg"
             disabled={loading}
           >
-            {loading ? <div className="spinner"></div> : "Sign In"}
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              "Sign In"
+            )}
           </Button>
         </form>
       </Form>
 
-      <div className="flex justify-center items-center gap-2">
-        <div className="w-24 border border-dark-2/30 dark:border-white-2/30"></div>
-        <p className="text-dark-1 dark:text-white-1">OR</p>
-        <div className="w-24 border border-dark-2/30 dark:border-white-2/30"></div>
+      <div className="flex items-center gap-2">
+        <div className="h-[1px] flex-1 bg-[#E8EAEE] dark:bg-dark-border" />
+        <span className="text-sm text-paragraph dark:text-dark-text">OR</span>
+        <div className="h-[1px] flex-1 bg-[#E8EAEE] dark:bg-dark-border" />
       </div>
 
-      <p className="text-small-semibold text-dark-2 dark:text-white-2 text-center">
+      <div className="flex flex-col gap-3">
+        <Button 
+          type="button"
+          variant="outline"
+          className="h-11 border border-[#E8EAEE] dark:border-dark-border hover:bg-white/90 dark:hover:bg-dark-input-bg rounded-lg text-paragraph dark:text-dark-text flex items-center justify-center gap-2"
+        >
+          <Image src="/assets/google.svg" alt="Google" width={20} height={20} />
+          Sign in with Google
+        </Button>
+        <Button 
+          type="button"
+          variant="outline"
+          className="h-11 border border-[#E8EAEE] dark:border-dark-border hover:bg-white/90 dark:hover:bg-dark-input-bg rounded-lg text-paragraph dark:text-dark-text flex items-center justify-center gap-2"
+        >
+          <Image src="/assets/facebook.svg" alt="Facebook" width={20} height={20} />
+          Sign in with Facebook
+        </Button>
+      </div>
+
+      <p className="text-sm text-paragraph dark:text-dark-text text-center">
         Don't have an account?{" "}
-        <Link href={"/user-register"}>
-          <span className="text-primary dark:text-primary-300 
-            hover:text-primary-500 dark:hover:text-primary-500 
-            transition-colors">
-            Sign up
-          </span>
+        <Link href="/user-register" className="text-primary hover:text-primary-500">
+          Sign up
         </Link>
       </p>
     </div>

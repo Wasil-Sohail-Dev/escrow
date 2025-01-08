@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -20,7 +18,7 @@ export default function Pagination({
 }: PaginationProps) {
   const getPageNumbers = () => {
     const pages = [];
-    const maxVisiblePages = window.innerWidth < 640 ? 3 : 5;
+    const maxVisiblePages = itemsPerPage;
     
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
