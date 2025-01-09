@@ -29,8 +29,6 @@ const Page = () => {
       },
     },
   });
-
-  console.log(editor?.getHTML(),"editor");
   
   return (
     <>

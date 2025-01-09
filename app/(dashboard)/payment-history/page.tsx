@@ -140,7 +140,7 @@ const PaymentHistoryPage = () => {
       />
       <div className="flex-1 mt-[85px]">
         <HeadBar title="Payment Overview" buttonName="Export" />
-        <div className="px-4 md:px-10 lg:px-20 -mt-10">
+        <div className="px-4 md:px-10 lg:px-20">
           <PaymentOverview show={false} />
 
           <div className="flex mt-10 flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
