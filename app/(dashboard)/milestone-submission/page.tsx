@@ -10,9 +10,6 @@ import TextStyle from "@tiptap/extension-text-style";
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import MenuBar from "../components/EditorMenu";
-
-  
-
 const Page = () => {
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
@@ -28,10 +25,13 @@ const Page = () => {
     content: "",
     editorProps: {
       attributes: {
-        class: "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none min-h-[200px] px-4 py-2 dark:text-dark-text",
+        class: "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none min-h-[200px] px-4 py-2 dark:text-dark-text [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-[40px] [&_ul]:pl-[40px]",
       },
     },
   });
+
+  console.log(editor?.getHTML(),"editor");
+  
   return (
     <>
       <Topbar
@@ -115,6 +115,8 @@ const Page = () => {
               </div>
             </div>
             <div className="md:col-span-1">
+            <div className="h-0 sm:h-6">
+              </div>
               <div className={`w-full border ${focusedInput === 'id' ? 'border-primary' : 'border-[#D1D5DB] dark:border-dark-border'} rounded-lg text-[#334155] dark:text-dark-text py-2 px-4 transition-colors dark:bg-dark-input-bg`}>
                 <label className="text-[14px] text-[#334155] dark:text-dark-text font-[400] mb-2 block leading-[21px]">
                   ID
