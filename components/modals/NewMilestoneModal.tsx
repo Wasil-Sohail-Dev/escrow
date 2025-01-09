@@ -22,13 +22,13 @@ interface NewMilestoneModalProps {
 const NewMilestoneModal = ({ isOpen, onClose, onAccept, onDecline }: NewMilestoneModalProps) => {
   return (
     <Modal open={isOpen} onOpenChange={onClose}>
-      <ModalContent className="w-[95%] max-w-[700px] px-4 sm:px-6 md:px-8 overflow-hidden bg-white dark:bg-dark-bg py-6 md:py-12">
+      <ModalContent className="w-[95%] max-w-[600px] px-4 sm:px-6 md:px-8 overflow-hidden bg-white dark:bg-dark-bg py-6 md:py-12">
         <ModalHeader className="text-center relative">
           <button 
             onClick={onClose}
             className="absolute md:right-4 right-6 md:top-0 top-4 text-[#8A8F9B] hover:text-paragraph dark:text-dark-2 dark:hover:text-dark-text"
           >
-            <X className="md:w-8 md:h-8 w-6 h-6 text-primary" />
+            <X className="w-6 h-6 text-primary" />
           </button>
           <div className="mx-auto w-16 h-16 sm:w-[140px] sm:h-[140px] bg-[#E6FBF6] rounded-[40px] flex items-center justify-center">
             <Image
