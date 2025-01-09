@@ -128,7 +128,6 @@ const ActionButtons = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const handleDeleteAccount = () => {
-    // Handle account deletion logic here
     setIsDeleteModalOpen(false);
   };
 

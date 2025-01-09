@@ -12,7 +12,7 @@ export default function DisputeManagementScreen() {
         title="Dispute Management screen"
         description="Here is a Detailed information about your disputes raised related to your work"
       />
-      <div className="px-10 mt-[85px]">
+      <div className="md:px-10 md:mt-[85px] mt-[95px]">
         <Overview dispute={true} />
 
         <ProjectTable

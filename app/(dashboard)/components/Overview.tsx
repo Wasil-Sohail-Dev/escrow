@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import BlockedAlert from "./BlockedAlert";
 
 type TabOption = "active" | "dispute" | "completed" | "all";
 
@@ -31,43 +32,47 @@ const Overview = ({ dispute }: { dispute?: boolean }) => {
   };
   return (
     <>
-      <div
-        className={`mb-4 flex justify-end ${
-          dispute
-            ? "sm:justify-between  sm:flex-row flex-col sm:gap-0 gap-6 items-center"
-            : "justify-end"
-        }`}
-      >
-        {dispute && (
-          <div className="flex items-center text-[20px] font-[800] leading-[24px] text-[#3A3A3A] gap-6 dark:text-dark-text">
-            Sort by:{" "}
-            <span className="text-[14px] font-[500] leading-[16.8px] underline">
-              Status
-            </span>{" "}
-            <span className="text-[14px] font-[500] leading-[16.8px]">|</span>{" "}
-            <span className="text-[14px] font-[500] leading-[16.8px] underline">
-              Date
-            </span>
-          </div>
-        )}
-        <Button
-          className={`bg-primary hover:bg-primary/90 px-6 py-6 rounded-md flex items-center gap-2 text-small-medium text-white ${
+      {true ? (
+        <div
+          className={`mb-4 flex justify-end ${
             dispute
-              ? "bg-[#E71D1D] hover:bg-[#E71D1D]/90"
-              : "bg-primary hover:bg-primary/90"
+              ? "sm:justify-between  sm:flex-row flex-col sm:gap-0 gap-6 items-center"
+              : "justify-end"
           }`}
-          onClick={() => {
-            if (dispute) {
-              router.push("/create-dispute");
-            } else {
-              router.push("/create-contract");
-            }
-          }}
         >
-          <Plus />
-          Create New Contract
-        </Button>
-      </div>
+          {dispute && (
+            <div className="flex items-center text-[20px] font-[800] leading-[24px] text-[#3A3A3A] gap-6 dark:text-dark-text">
+              Sort by:{" "}
+              <span className="text-[14px] font-[500] leading-[16.8px] underline">
+                Status
+              </span>{" "}
+              <span className="text-[14px] font-[500] leading-[16.8px]">|</span>{" "}
+              <span className="text-[14px] font-[500] leading-[16.8px] underline">
+                Date
+              </span>
+            </div>
+          )}
+          <Button
+            className={`bg-primary hover:bg-primary/90 px-6 py-6 rounded-md flex items-center gap-2 text-small-medium text-white ${
+              dispute
+                ? "bg-[#E71D1D] hover:bg-[#E71D1D]/90"
+                : "bg-primary hover:bg-primary/90"
+            }`}
+            onClick={() => {
+              if (dispute) {
+                router.push("/create-dispute");
+              } else {
+                router.push("/create-contract");
+              }
+            }}
+          >
+            <Plus />
+            Create New Contract
+          </Button>
+        </div>
+      ) : (
+        <BlockedAlert />
+      )}
 
       <div
         className="grid lg:grid-cols-4 md:grid-cols-2 max-md:grid-cols-1 

@@ -39,8 +39,6 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      // Here you would typically make an API call to your backend
-      // to handle the password reset request
       const response = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: {
@@ -63,10 +61,10 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="flex flex-col gap-10 max-md:px-3 max-md:mt-7 w-full max-w-md border border-white-3 p-10 shadow-md rounded">
-      <div className="">
-        <h1 className="text-heading1-semibold text-dark-1">Reset Password</h1>
-        <p className="text-small-regular text-dark-2">
+    <div className="flex flex-col gap-6 w-full max-w-[500px] bg-white dark:bg-dark-input-bg p-6 py-10 border border-[#E8EAEE] dark:border-dark-border shadow-sm rounded-sm">
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-semibold text-paragraph dark:text-dark-text">Reset Password</h1>
+        <p className="text-sm text-paragraph/60 dark:text-dark-text/60">
           Enter the email you used to create your account so we can send you instructions on how to reset your password.
         </p>
       </div>
@@ -77,7 +75,7 @@ const ForgotPassword = () => {
             Password reset instructions have been sent to your email.
           </p>
           <Link href="/login">
-            <Button className="primary-btn w-full">
+            <Button className="h-11 bg-primary hover:bg-primary/90 text-white w-full rounded-lg">
               Back to Login
             </Button>
           </Link>
@@ -86,41 +84,50 @@ const ForgotPassword = () => {
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleForgotPassword)}
-            className="flex flex-col gap-5 mt-5"
+            className="flex flex-col gap-4"
           >
-            {/* Email Field */}
             <FormField
               control={form.control}
               name="email"
-              render={({ field, fieldState }) => (
-                <FormItem>
-                  <FormLabel className="text-dark-1">Enter registered email or phone number</FormLabel>
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel className="text-sm text-paragraph dark:text-dark-text">
+                    Enter registered email or phone number
+                  </FormLabel>
                   <Input
                     {...field}
                     type="email"
                     placeholder="Enter your email"
-                    className="border-white-3"
+                    className="h-11 border dark:bg-dark-input-bg border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
                     required
                     disabled={loading}
                   />
-                  {/* Display error message inline */}
-                  {fieldState.error?.message && (
-                    <FormMessage>{fieldState.error.message}</FormMessage>
-                  )}
+                  <FormMessage />
                 </FormItem>
               )}
             />
 
             {error && (
-              <p className="text-red-500">{error}</p>
+              <p className="text-error-accent text-sm">{error}</p>
             )}
 
-            <Button type="submit" className="primary-btn" disabled={loading}>
-              {loading ? <div className="spinner"></div> : "Send"}
+            <Button 
+              type="submit" 
+              className="h-11 bg-primary hover:bg-primary/90 text-white rounded-lg"
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                "Send"
+              )}
             </Button>
 
-            <Link href="/login">
-              <Button variant="outline" className="w-full">
+            <Link href="/login" className="w-full">
+              <Button 
+                variant="outline" 
+                className="h-11 w-full border border-[#E8EAEE] dark:border-dark-border hover:bg-white/90 dark:hover:bg-dark-input-bg rounded-lg text-paragraph dark:text-dark-text"
+              >
                 Back to Login
               </Button>
             </Link>

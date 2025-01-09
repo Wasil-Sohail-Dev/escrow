@@ -7,6 +7,7 @@ import Image from "next/image";
 import WorkSubmissionModal from "@/components/modals/WorkSubmissionModal";
 import RevisionRequestModal from "@/components/modals/RevisionRequestModal";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface MilestoneFile {
   name: string;
@@ -69,6 +70,7 @@ const milestones: Milestone[] = [
 ];
 
 const ContactDetails = () => {
+  const router = useRouter();
   const [isWorkModalOpen, setIsWorkModalOpen] = useState(false);
   const [isRevisionModalOpen, setIsRevisionModalOpen] = useState(false);
 
@@ -81,9 +83,15 @@ const ContactDetails = () => {
       <div className="flex-1 mt-[85px]">
         <div className="flex lg:flex-row flex-col justify-between gap-6 lg:gap-0 w-full">
           <div className="flex flex-col gap-6 max-w-3xl">
-            <h2 className="text-paragraph dark:text-white text-heading3-bold">
-              Graphic Designing
-            </h2>
+            <div className="flex justify-between items-center">
+              <h2 className="text-paragraph dark:text-white text-heading3-bold">
+                Graphic Designing
+              </h2>
+            <div className="flex gap-2">
+              <Button variant="secondary" className="text-base-medium text-white rounded-[12px]">Decline</Button>
+                <Button className="text-base-medium text-white rounded-[12px]">Accept</Button>
+              </div>
+            </div>
             <div className="border-b border-[#D0D0D04D] dark:border-dark-border pb-6">
               <p className="text-sm text-paragraph dark:text-dark-2 text-small-medium font-[400]">
                 Contract ID: 144453
@@ -268,7 +276,7 @@ const ContactDetails = () => {
                 </div>
               </div>
               <div className=" mt-4 md:mt-0 flex justify-end">
-                <Button
+                {/* <Button
                   onClick={() => setIsRevisionModalOpen(true)}
                   className={`text-[14px] font-[700] leading-[20px] ${
                     milestone.status === "completed"
@@ -277,6 +285,18 @@ const ContactDetails = () => {
                   } text-white px-2 md:px-6 rounded-lg transition-colors md:h-[46px] h-[36px]`}
                 >
                   Request Review
+                </Button> */}
+                <Button
+                  onClick={() => {
+                    router.push("/milestone-submission");
+                  }}
+                  className={`text-[14px] font-[700] leading-[20px] ${
+                    milestone.status === "completed"
+                      ? "bg-primary hover:bg-primary-500 dark:bg-primary dark:hover:bg-primary-500 dark:text-dark-text"
+                      : "bg-[#CACED8] hover:bg-[#CACED8]/90 dark:bg-[#CACED8] dark:hover:bg-[#CACED8]/90 dark:text-white"
+                  } text-white px-6 md:px-10 rounded-lg transition-colors md:h-[46px] h-[36px]`}
+                >
+                  Submit Tast
                 </Button>
               </div>
             </div>

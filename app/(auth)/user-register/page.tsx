@@ -140,14 +140,13 @@ const Page = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-[400px] bg-white dark:bg-dark-input-bg p-8 border border-[#E8EAEE] dark:border-dark-border">
+    <div className="flex flex-col gap-6 w-full max-w-[500px] bg-white dark:bg-dark-input-bg p-12 my-12 border border-[#E8EAEE] dark:border-dark-border">
       <div className="text-center space-y-1">
-        <h1 className="text-2xl font-semibold text-paragraph dark:text-dark-text">Sign up</h1>
+        <h1 className="text-3xl font-semibold text-paragraph dark:text-dark-text">Sign up</h1>
         <p className="text-sm text-paragraph/60 dark:text-dark-text/60">
           Sign up now to get started with an account
         </p>
       </div>
-
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSignUp)}
@@ -179,7 +178,10 @@ const Page = () => {
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="space-y-2">
+                <FormLabel className="text-sm text-paragraph dark:text-dark-text">
+                  Email
+                </FormLabel>
                 <Input
                   {...field}
                   type="email"
@@ -197,11 +199,14 @@ const Page = () => {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="space-y-2">
+                <FormLabel className="text-sm text-paragraph dark:text-dark-text">
+                  Password
+                </FormLabel>
                 <Input
                   {...field}
                   type="password"
-                  placeholder="Password"
+                  placeholder="••••••••"
                   className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
                   disabled={loading}
                 />
@@ -215,11 +220,14 @@ const Page = () => {
             control={form.control}
             name="cnfPassword"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="space-y-2">
+                <FormLabel className="text-sm text-paragraph dark:text-dark-text">
+                  Confirm Password
+                </FormLabel>
                 <Input
                   {...field}
                   type="password"
-                  placeholder="Confirm password"
+                  placeholder="••••••••"
                   className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
                   disabled={loading}
                 />

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Banknote, File, FileTerminal, Menu, SquarePen, X } from "lucide-react";
+import { Banknote, File, FileTerminal, Menu, MessageCircleMore, SquarePen, X } from "lucide-react";
 import {
   Settings,
   MessageSquare,
@@ -31,6 +31,7 @@ const Sidebar = () => {
         )}
       </button>
       <aside
+      onClick={() => setIsOpen(!isOpen)}
         className={`z-40 pt-16 md:pt-2
   fixed md:relative h-screen overflow-y-auto scrollbar-hide
   w-[118px] bg-sidebar dark:bg-dark-bg border-r border-sidebar-border dark:border-dark-border
@@ -113,6 +114,18 @@ const Sidebar = () => {
               <Bell
                 className={`w-6 h-6 ${
                   pathname === "/notifications"
+                    ? "text-primary"
+                    : "text-sidebar-foreground dark:text-dark-icon"
+                }`}
+              />
+            </Link>
+            <Link
+              href="/dispute-chat"
+              className="p-3 hover:bg-sidebar-accent dark:hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <MessageCircleMore
+                className={`w-6 h-6 ${
+                  pathname === "/dispute-chat"
                     ? "text-primary"
                     : "text-sidebar-foreground dark:text-dark-icon"
                 }`}

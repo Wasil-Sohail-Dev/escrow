@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Settings, Moon, Sun, LogOut, HelpCircle } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
 
 export default function Topbar({
   title,
@@ -18,22 +17,12 @@ export default function Topbar({
   description: string;
 }) {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null;
-  }
-
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
   return (
-    <div className="fixed top-0 right-0 md:left-[118px] left-0 z-40 bg-white dark:bg-dark-bg border-b dark:border-dark-border">
+    <div className="fixed top-0 right-0 md:left-[118px] left-0 z-40 bg-white dark:bg-dark-bg border-b border-[#6767670A] dark:border-dark-border">
 
     <nav className="px-10 py-4 max-lg:px-8 max-md:px-4 bg-white dark:bg-dark-bg border-b border-[#6767670A] dark:border-dark-border">
       <div className="flex items-center justify-between gap-4">

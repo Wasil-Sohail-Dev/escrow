@@ -28,7 +28,7 @@ export default function Layout({
       </Link>
 
       <ThemeToggle />
-
+      
       {/* Content */}
       <Suspense fallback={<div>Loading...</div>}>
         {children}

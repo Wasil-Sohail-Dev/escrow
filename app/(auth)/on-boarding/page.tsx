@@ -17,114 +17,42 @@ import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-
-interface JwtPayload {
-  email: string;
-  token: string;
-  userStatus: string;
-}
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Validation Schema
 const onboardingSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  userType: z.string().min(1, "User type is required"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   userName: z.string().min(1, "Username is required"),
   phone: z.string().min(1, "Phone number is required"),
-  companyName: z.string().optional(),
-  companyAddress: z.string().optional(),
+  companyName: z.string().min(1, "Company name is required"),
+  companyId: z.string().min(1, "Company ID is required"),
+  companyAddress: z.string().min(1, "Company address is required"),
+  acceptTerms: z.boolean().refine((data) => data === true, {
+    message: "You must accept the terms and conditions",
+  }),
 });
 
 type OnboardingFormValues = z.infer<typeof onboardingSchema>;
 
 const Page = () => {
   const [loading, setLoading] = useState(false);
-  const [userType, setUserType] = useState<string>("");
-
   const { toast } = useToast();
   const router = useRouter();
 
   const form = useForm<OnboardingFormValues>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
-      email: "",
-      userType: "",
       firstName: "",
       lastName: "",
       userName: "",
       phone: "",
       companyName: "",
+      companyId: "",
       companyAddress: "",
+      acceptTerms: false,
     },
   });
-
-  // Fetch user data from the database
-  const fetchUserData = useCallback(
-    async (email: string) => {
-      setLoading(true);
-      try {
-        const response = await axios.get(`/api/user-data`, {
-          params: { email },
-        });
-        const userData = response.data.user; // Adjusted to match backend response structure
-
-        // Populate the form with user data
-        form.reset({
-          email: userData.email,
-          userType: userData.userType,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          userName: userData.userName,
-          phone: userData.phone,
-          companyName: userData.companyName || "",
-          companyAddress: userData.companyAddress || "",
-        });
-
-        setUserType(userData.userType); // Set userType for conditional rendering
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch user data. Please try again.",
-          variant: "destructive",
-        });
-        router.push("/user-register"); // Redirect on error
-      } finally {
-        setLoading(false);
-      }
-    },
-    [form, router, toast]
-  );
-
-  useEffect(() => {
-    // Parse JWT from localStorage
-    const rawJwt = localStorage.getItem("TpAuthToken");
-
-    if (!rawJwt) {
-      router.push("/user-register");
-      return;
-    }
-
-    try {
-      const jwt: JwtPayload = JSON.parse(rawJwt);
-
-      if (
-        !jwt.email?.trim() ||
-        !jwt.token?.trim() ||
-        jwt.userStatus === "active"
-      ) {
-        router.push("/user-register");
-        return;
-      }
-
-      // Fetch user data
-      fetchUserData(jwt.email);
-    } catch (error) {
-      console.error("Failed to parse JWT:", error);
-      router.push("/user-register");
-    }
-  }, [router, fetchUserData]);
 
   const handleOnboarding = async (data: OnboardingFormValues) => {
     setLoading(true);
@@ -139,20 +67,16 @@ const Page = () => {
           variant: "default",
         });
 
-        // Extract the onboarding token from the response
         const { email, onboardingToken } = response.data.user;
-
         localStorage.removeItem("TpAuthToken");
 
-        // Call NextAuth's signIn function with the onboarding token
         const result = await signIn("credentials", {
           redirect: false,
           email,
-          onboardingToken, // Pass the onboarding token here
+          onboardingToken,
         });
 
         if (result?.ok) {
-          // Redirect to home page after successful login
           router.push("/home");
         } else {
           toast({
@@ -180,122 +104,179 @@ const Page = () => {
   };
 
   return (
-    <div className="flex flex-col gap-5 max-md:px-3 max-md:mt-7 w-full max-w-md border border-white-3 p-10 shadow-md rounded">
-      <h1 className="text-heading1-semibold text-dark-1">Onboarding</h1>
-      <p className="text-small-regular text-dark-2">
-        Complete your onboarding to start using the platform.
-      </p>
+    <div className="flex flex-col gap-6 w-full max-w-[500px] bg-white dark:bg-dark-input-bg p-12 py-10 my-12 border border-[#E8EAEE] dark:border-dark-border shadow-sm rounded-sm">
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-semibold text-paragraph dark:text-dark-text">
+          Onboarding
+        </h1>
+        <p className="text-sm text-paragraph/60 dark:text-dark-text/60">
+          Sign up now to get started with an account
+        </p>
+      </div>
 
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleOnboarding)}
-          className="flex flex-col gap-5 mt-5"
+          className="flex flex-col gap-4"
         >
-          {/* Email */}
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <Input {...field} type="email" disabled />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm text-paragraph dark:text-dark-text">
+                    First Name
+                  </FormLabel>
+                  <Input
+                    {...field}
+                    placeholder="Enter your First Name"
+                    className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {/* User Type */}
-          <FormField
-            control={form.control}
-            name="userType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>User Type</FormLabel>
-                <Input {...field} type="text" disabled />
-              </FormItem>
-            )}
-          />
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm text-paragraph dark:text-dark-text">
+                    Last Name
+                  </FormLabel>
+                  <Input
+                    {...field}
+                    placeholder="Enter your Last Name"
+                    className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
-          {/* First Name */}
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First Name</FormLabel>
-                <Input {...field} type="text" />
-              </FormItem>
-            )}
-          />
-
-          {/* Last Name */}
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last Name</FormLabel>
-                <Input {...field} type="text" />
-              </FormItem>
-            )}
-          />
-
-          {/* Username */}
           <FormField
             control={form.control}
             name="userName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Username</FormLabel>
-                <Input {...field} type="text" />
+                <FormLabel className="text-sm text-paragraph dark:text-dark-text">
+                  Username
+                </FormLabel>
+                <Input
+                  {...field}
+                  placeholder="Enter your username"
+                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                />
+                <FormMessage />
               </FormItem>
             )}
           />
 
-          {/* Phone */}
           <FormField
             control={form.control}
             name="phone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Phone</FormLabel>
-                <Input {...field} type="text" />
+                <FormLabel className="text-sm text-paragraph dark:text-dark-text">
+                  Phone Number
+                </FormLabel>
+                <Input
+                  {...field}
+                  placeholder="Enter your Phone Number"
+                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                />
+                <FormMessage />
               </FormItem>
             )}
           />
 
-          {/* Company Fields (Conditional) */}
-          {userType === "vendor" && (
-            <>
-              {/* Company Name */}
-              <FormField
-                control={form.control}
-                name="companyName"
-                render={({ field, fieldState }) => (
-                  <FormItem>
-                    <FormLabel>Company Name</FormLabel>
-                    <Input {...field} type="text" />
-                    <FormMessage>{fieldState.error?.message}</FormMessage>
-                  </FormItem>
-                )}
-              />
+          <FormField
+            control={form.control}
+            name="companyName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm text-paragraph dark:text-dark-text">
+                  Company Name
+                </FormLabel>
+                <Input
+                  {...field}
+                  placeholder="Enter Company Name"
+                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              {/* Company Address */}
-              <FormField
-                control={form.control}
-                name="companyAddress"
-                render={({ field, fieldState }) => (
-                  <FormItem>
-                    <FormLabel>Company Address</FormLabel>
-                    <Input {...field} type="text" />
-                    <FormMessage>{fieldState.error?.message}</FormMessage>
-                  </FormItem>
-                )}
-              />
-            </>
-          )}
+          <FormField
+            control={form.control}
+            name="companyId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm text-paragraph dark:text-dark-text">
+                  Company ID
+                </FormLabel>
+                <Input
+                  {...field}
+                  placeholder="Enter Company ID"
+                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-          <Button type="submit" disabled={loading}>
-            {loading ? "Loading..." : "Complete Onboarding"}
+          <FormField
+            control={form.control}
+            name="companyAddress"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm text-paragraph dark:text-dark-text">
+                  Company Address
+                </FormLabel>
+                <Input
+                  {...field}
+                  placeholder="Enter Company Address"
+                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="acceptTerms"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <div className="space-y-1 leading-none">
+                  <FormLabel className="text-sm text-paragraph dark:text-dark-text">
+                    I agree to the terms and conditions
+                  </FormLabel>
+                  <FormMessage />
+                </div>
+              </FormItem>
+            )}
+          />
+
+          <Button 
+            type="submit" 
+            className="h-11 bg-primary hover:bg-primary/90 text-white rounded-lg"
+            disabled={loading}
+          >
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              "Complete"
+            )}
           </Button>
         </form>
       </Form>

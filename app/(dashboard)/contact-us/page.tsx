@@ -44,19 +44,19 @@ const ContactUsPage = () => {
             </div>
 
             <div className="flex lg:flex-col gap-4">
-              <div className="flex items-center justify-center w-[32px] h-[32px] rounded-full border border-[#B7B7B7] hover:bg-white-2 dark:hover:bg-dark-input-bg dark:border-dark-border transition-colors cursor-pointer">
+              <div className="flex items-center justify-center w-[32px] h-[32px] rounded-full border border-[#B7B7B7] hover:bg-white-2 dark:hover:bg-dark-input-bg transition-colors cursor-pointer">
                 <Facebook
                   size={12}
                   className="text-paragraph dark:text-dark-text"
                 />
               </div>
-              <div className="flex items-center justify-center w-[32px] h-[32px] rounded-full border border-[#B7B7B7] hover:bg-white-2 dark:hover:bg-dark-input-bg dark:border-dark-border transition-colors cursor-pointer">
+              <div className="flex items-center justify-center w-[32px] h-[32px] rounded-full border border-[#B7B7B7] hover:bg-white-2 dark:hover:bg-dark-input-bg transition-colors cursor-pointer">
                 <Instagram
                   size={12}
                   className="text-paragraph dark:text-dark-text"
                 />
               </div>
-              <div className="flex items-center justify-center w-[32px] h-[32px] rounded-full border border-[#B7B7B7] hover:bg-white-2 dark:hover:bg-dark-input-bg dark:border-dark-border transition-colors cursor-pointer">
+              <div className="flex items-center justify-center w-[32px] h-[32px] rounded-full border border-[#B7B7B7] hover:bg-white-2 dark:hover:bg-dark-input-bg transition-colors cursor-pointer">
                 <Twitter
                   size={12}
                   className="text-paragraph dark:text-dark-text"

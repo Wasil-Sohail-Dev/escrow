@@ -115,7 +115,7 @@ const CreateContract = () => {
                 {templates.reduce((acc: JSX.Element[][], template, i) => {
                   if (i % 2 === 0) acc.push([]);
                   acc[acc.length - 1].push(
-                    <div key={template.id} className="flex items-center space-x-2">
+                    <div key={template.id} className="flex sm:items-center items-start space-x-2">
                       <Checkbox 
                         id={template.id}
                         checked={selectedTemplate === template.id}
@@ -128,7 +128,7 @@ const CreateContract = () => {
                       />
                       <label
                         htmlFor={template.id}
-                        className="text-[16px] font-[400] leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-[#64748B] dark:text-dark-text/60"
+                        className="sm:text-[16px] text-sm font-[400] leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-[#64748B] dark:text-dark-text/60"
                       >
                         {template.label}
                       </label>

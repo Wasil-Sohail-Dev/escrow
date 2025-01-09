@@ -61,9 +61,9 @@ const Page = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-[400px] bg-white dark:bg-dark-input-bg p-8 border border-[#E8EAEE] dark:border-dark-border">
+    <div className="flex flex-col gap-6 w-full max-w-[500px] bg-white dark:bg-dark-input-bg p-12 border border-[#E8EAEE] dark:border-dark-border">
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold text-paragraph dark:text-dark-text">
+        <h1 className="text-3xl font-semibold text-paragraph dark:text-dark-text">
           Welcome back
         </h1>
         <p className="text-sm text-paragraph/60 dark:text-dark-text/60">
