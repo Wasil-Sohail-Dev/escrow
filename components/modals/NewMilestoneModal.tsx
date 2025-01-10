@@ -11,6 +11,7 @@ import {
   ModalTitle,
   ModalDescription,
 } from "@/components/ui/modal";
+import { useRouter } from 'next/navigation';
 
 interface NewMilestoneModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ interface NewMilestoneModalProps {
 }
 
 const NewMilestoneModal = ({ isOpen, onClose, onAccept, onDecline }: NewMilestoneModalProps) => {
+  const router = useRouter();
   return (
     <Modal open={isOpen} onOpenChange={onClose}>
       <ModalContent className="w-[95%] max-w-[600px] px-4 sm:px-6 md:px-8 overflow-hidden bg-white dark:bg-dark-bg py-6 md:py-12">
@@ -28,7 +30,7 @@ const NewMilestoneModal = ({ isOpen, onClose, onAccept, onDecline }: NewMileston
             onClick={onClose}
             className="absolute md:right-4 right-6 md:top-0 top-4 text-[#8A8F9B] hover:text-paragraph dark:text-dark-2 dark:hover:text-dark-text"
           >
-            <X className="w-6 h-6 text-primary" />
+            <X className="md:w-8 md:h-8 w-6 h-6 text-primary" />
           </button>
           <div className="mx-auto w-16 h-16 sm:w-[140px] sm:h-[140px] bg-[#E6FBF6] rounded-[40px] flex items-center justify-center">
             <Image
@@ -48,7 +50,7 @@ const NewMilestoneModal = ({ isOpen, onClose, onAccept, onDecline }: NewMileston
             </p>
             <div className="mt-4">
               <div
-                onClick={() => window.location.href = '/milestone-details'}
+                onClick={() => router.push('/milestone-details')}
                 className="text-[14px] sm:text-[15px] md:text-[16px] font-[500] leading-[16px] sm:leading-[17px] md:leading-[19px] text-primary underline bg-transparent hover:bg-transparent"
               >
                 View Details

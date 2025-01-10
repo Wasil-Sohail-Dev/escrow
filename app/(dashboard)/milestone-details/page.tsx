@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import FilterButton from "../components/FilterButton";
 import { milestoneData } from "@/lib/data/transactions";
 import { CircularProgressbar } from "react-circular-progressbar";
+import { useTheme } from "next-themes";
 
 // Constants
 const FILTER_OPTIONS = {
@@ -90,7 +91,7 @@ const TableHeader= () => {
 
 const MileStoneDetails = () => {
   const [currentPage, setCurrentPage] = useState(1);
-
+  const { theme } = useTheme();
   const itemsPerPage = 5;
   const totalItems = milestoneData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -230,7 +231,7 @@ const MileStoneDetails = () => {
                                 strokeLinecap: 'round',
                               },
                               text: {
-                                fill: '#101828',
+                                fill: theme === 'dark' ? '#fff' : '#101828',
                                 fontSize: '24px',
                                 dominantBaseline: 'middle',
                                 textAnchor: 'middle',

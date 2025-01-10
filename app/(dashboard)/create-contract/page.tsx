@@ -237,7 +237,7 @@ const CreateContract = () => {
                       id={type}
                       checked={formData.paymentType === type}
                       onCheckedChange={() => handleInputChange('paymentType', type)}
-                      className="border-[#E8EAEE] dark:border-dark-border rounded-full"
+                      className="border-[#E8EAEE] rounded-full"
                     />
                     <label 
                       htmlFor={type} 

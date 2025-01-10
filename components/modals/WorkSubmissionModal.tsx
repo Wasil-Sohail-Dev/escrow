@@ -97,7 +97,6 @@ const WorkSubmissionModal = ({ isOpen, onClose, setIsRevisionModalOpen }: WorkSu
               </Button>
               <Button 
               onClick={()=>{
-                  onClose();
                   setIsRevisionModalOpen()
               }}
                 className="bg-white hover:bg-white/90 text-black border-2 border-primary dark:bg-dark-input-bg dark:text-dark-text dark:border-primary text-[12px] sm:text-[13px] md:text-[14px] font-[600] leading-[16px] h-[36px] sm:h-[38px] md:h-[42px] rounded-lg"

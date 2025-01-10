@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Settings, Moon, Sun, LogOut, HelpCircle } from "lucide-react";
 import { useTheme } from "next-themes";
+import Link from "next/link";
 
 export default function Topbar({
   title,
@@ -83,14 +84,19 @@ export default function Topbar({
                 align="end"
                 className="w-[200px] dark:bg-dark-bg dark:border-dark-border"
               >
+                <Link href="/settings">
+
                 <DropdownMenuItem className="gap-2 cursor-pointer text-subtle-medium dark:text-dark-text dark:hover:bg-white/5">
                   <Settings size={14} />
                   Profile Settings
                 </DropdownMenuItem>
+                </Link>
+                <Link href="/dispute-management-screen">
                 <DropdownMenuItem className="gap-2 cursor-pointer text-subtle-medium dark:text-dark-text dark:hover:bg-white/5">
                   <HelpCircle size={14} />
                   Dispute
                 </DropdownMenuItem>
+                </Link>
                 <DropdownMenuItem
                   className="gap-2 cursor-pointer text-subtle-medium dark:text-dark-text dark:hover:bg-white/5"
                   onClick={toggleTheme}
