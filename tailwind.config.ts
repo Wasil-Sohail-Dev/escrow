@@ -65,7 +65,8 @@ const config: Config = {
 					accent: 'hsl(var(--sidebar-accent))',
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: '#E8EAEECC',
-					ring: 'hsl(var(--sidebar-ring))'
+					ring: 'hsl(var(--sidebar-ring))',
+					icon: '#CACED8'
 				},
 			},
 			fontSize: {

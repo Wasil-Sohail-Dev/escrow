@@ -106,7 +106,7 @@ export default function Topbar({
                 </DropdownMenuItem>
                 <DropdownMenuItem className="gap-2 cursor-pointer text-subtle-medium dark:text-dark-text dark:hover:bg-white/5 border-t dark:border-dark-text/10">
                   <LogOut size={14} />
-                  Delete Account
+                  Log Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
