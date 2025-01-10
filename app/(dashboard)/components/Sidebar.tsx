@@ -37,9 +37,9 @@ const Sidebar = () => {
         className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-sidebar-accent dark:bg-dark-bg ml-2"
       >
         {isOpen ? (
-          <X className="w-6 h-6 text-[#CACED8] text-sidebar-foreground dark:text-dark-icon" />
+          <X className="w-6 h-6 text-sidebar-icon text-sidebar-foreground dark:text-dark-icon" />
         ) : (
-          <Menu className="w-6 h-6 text-[#CACED8] text-sidebar-foreground dark:text-dark-icon" />
+          <Menu className="w-6 h-6 text-sidebar-icon text-sidebar-foreground dark:text-dark-icon" />
         )}
       </button>
       <aside
@@ -76,13 +76,11 @@ const Sidebar = () => {
                     pathname.includes("/home") ||
                     pathname.includes("/milestone-details")
                       ? "text-primary"
-                      : "text-[#CACED8] text-sidebar-foreground dark:text-dark-icon"
+                      : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
                   }`} />
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                Dashboard
-              </TooltipContent>
+              <TooltipContent>Dashboard</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -96,13 +94,11 @@ const Sidebar = () => {
                     pathname === "/transection-details" ||
                     pathname === "/make-payment"
                       ? "text-primary"
-                      : "text-[#CACED8] text-sidebar-foreground dark:text-dark-icon"
+                      : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
                   }`} />
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                Contact Details
-              </TooltipContent>
+              <TooltipContent>Contact Details</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -117,14 +113,12 @@ const Sidebar = () => {
                       pathname === "/pre-build-contracts" ||
                       pathname === "/pre-build-details"
                         ? "text-primary"
-                        : "text-[#CACED8] text-sidebar-foreground dark:text-dark-icon"
+                        : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
                     }`}
                   />
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                Create Contract
-              </TooltipContent>
+              <TooltipContent>Create Contract</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -137,14 +131,12 @@ const Sidebar = () => {
                     className={`w-7 h-7 ${
                       pathname === "/payment-history"
                         ? "text-primary"
-                        : "text-[#CACED8] text-sidebar-foreground dark:text-dark-icon"
+                        : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
                     }`}
                   />
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                Payment History
-              </TooltipContent>
+              <TooltipContent>Payment History</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -157,14 +149,12 @@ const Sidebar = () => {
                     className={`w-6 h-6 ${
                       pathname === "/notifications"
                         ? "text-primary"
-                        : "text-[#CACED8] text-sidebar-foreground dark:text-dark-icon"
+                        : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
                     }`}
                   />
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                Notifications
-              </TooltipContent>
+              <TooltipContent>Notifications</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -178,14 +168,12 @@ const Sidebar = () => {
                       pathname.includes("/dispute-management-screen") ||
                       pathname.includes("/create-dispute")
                         ? "text-primary"
-                        : "text-[#CACED8] text-sidebar-foreground dark:text-dark-icon"
+                        : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
                     }`}
                   />
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                Dispute Management
-              </TooltipContent>
+              <TooltipContent>Dispute Management</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -198,14 +186,12 @@ const Sidebar = () => {
                     className={`w-7 h-7 ${
                       pathname === "/dispute-chat"
                         ? "text-primary"
-                        : "text-[#CACED8] text-sidebar-foreground dark:text-dark-icon"
+                        : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
                     }`}
                   />
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                Dispute Chat
-              </TooltipContent>
+              <TooltipContent>Dispute Chat</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -218,14 +204,12 @@ const Sidebar = () => {
                     className={`w-7 h-7 ${
                       pathname === "/contact-us"
                         ? "text-primary"
-                        : "text-[#CACED8] text-sidebar-foreground dark:text-dark-icon"
+                        : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
                     }`}
                   />
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                Contact Us
-              </TooltipContent>
+              <TooltipContent>Contact Us</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -238,14 +222,12 @@ const Sidebar = () => {
                     className={`w-7 h-7 ${
                       pathname.includes("/terms-conditions")
                         ? "text-primary"
-                        : "text-[#CACED8] text-sidebar-foreground dark:text-dark-icon"
+                        : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
                     }`}
                   />
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                Terms & Conditions
-              </TooltipContent>
+              <TooltipContent>Terms & Conditions</TooltipContent>
             </Tooltip>
           </div>
 
@@ -260,25 +242,21 @@ const Sidebar = () => {
                     className={`w-7 h-7 ${
                       pathname === "/settings"
                         ? "text-primary"
-                        : "text-[#CACED8] text-sidebar-foreground dark:text-dark-icon"
+                        : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
                     }`}
                   />
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                Settings
-              </TooltipContent>
+              <TooltipContent>Settings</TooltipContent>
             </Tooltip>
 
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="cursor-pointer p-3 hover:bg-sidebar-accent dark:hover:bg-white/10 rounded-lg transition-colors">
-                  <LogoutIcon className="w-7 h-7 text-[#CACED8] text-sidebar-foreground dark:text-dark-icon" />
+                  <LogoutIcon className="w-7 h-7 text-sidebar-icon text-sidebar-foreground dark:text-dark-icon" />
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="right" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                Logout
-              </TooltipContent>
+              <TooltipContent>Logout</TooltipContent>
             </Tooltip>
           </div>
         </div>
