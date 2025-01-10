@@ -225,7 +225,7 @@ const DisputeChat = () => {
             <span className="text-[14px] font-[400] leading-[16.41px] text-primary">ID: 12363622</span>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 mt-4">
+        <div className="flex-1 overflow-y-auto scrollbar-hide px-4 md:px-6 lg:px-8 mt-4">
           <div className="max-w-6xl mx-auto space-y-6 mb-12">
             {messages.map((message) => (
               <div
@@ -298,7 +298,7 @@ const DisputeChat = () => {
                   className="w-full p-2 md:p-4 text-paragraph dark:text-dark-text placeholder:text-[#A0A0A0] dark:placeholder:text-dark-2 text-[16px] md:text-[20px] lg:text-[24px] font-[400] leading-normal md:leading-[29.05px] resize-none focus:outline-none "
                 />
               </div>
-              <Paperclip size={34} className="cursor-pointer dark:text-dark-text" />
+              <Paperclip className="cursor-pointer dark:text-dark-text" />
               <Button
                 onClick={handleSendMessage}
                 className="bg-primary hover:bg-primary-500 text-white dark:text-dark-text h-10 md:h-12 px-4 md:px-6 rounded-[12px] flex items-center gap-1 md:gap-2 whitespace-nowrap"
