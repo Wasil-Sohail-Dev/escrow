@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Topbar from "../components/Topbar";
+import Topbar from "../../../components/dashboard/Topbar";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -9,7 +9,7 @@ import StarterKit from '@tiptap/starter-kit';
 import TextStyle from "@tiptap/extension-text-style";
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
-import MenuBar from "../components/EditorMenu";
+import MenuBar from "../../../components/dashboard/EditorMenu";
 const Page = () => {
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 

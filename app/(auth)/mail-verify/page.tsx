@@ -13,6 +13,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { signIn } from "next-auth/react";
 
 type VerifyCodeFormValues = {
   otp: string;
@@ -32,35 +33,36 @@ const Page = () => {
 
   const router = useRouter();
 
-  // useEffect(() => {
-  //   const rawJwt = localStorage.getItem("TpAuthToken");
+  useEffect(() => {
+    const rawJwt = localStorage.getItem("TpAuthToken");
 
-  //   if (!rawJwt) {
-  //     router.push("/user-register");
-  //     return;
-  //   }
+    if (!rawJwt) {
+      router.push("/user-register");
+      return;
+    }
 
-  //   try {
-  //     const parsedJwt: JwtPayload = JSON.parse(rawJwt);
-  //     if (
-  //       !parsedJwt.email?.trim() ||
-  //       !parsedJwt.token?.trim() ||
-  //       parsedJwt.userStatus === "verified"
-  //     ) {
-  //       router.push("/user-register");
-  //     } else {
-  //       setJwt(parsedJwt);
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to parse JWT from localStorage:", error);
-  //     router.push("/user-register");
-  //   }
-  // }, [router]);
-  //
+    try {
+      const parsedJwt: JwtPayload = JSON.parse(rawJwt);
+      if (
+        !parsedJwt.email?.trim() ||
+        !parsedJwt.token?.trim() ||
+        parsedJwt.userStatus === "verified"
+      ) {
+        router.push("/user-register");
+      } else {
+        setJwt(parsedJwt);
+      }
+    } catch (error) {
+      console.error("Failed to parse JWT from localStorage:", error);
+      router.push("/user-register");
+    }
+  }, [router]);
   const form = useForm<VerifyCodeFormValues>();
 
   const handleVerifyCode = async () => {
     setError("");
+
+    console.log(jwt);
 
     if (otp.trim().length < 6) {
       setError("Please enter the 6-digit OTP.");
@@ -78,7 +80,14 @@ const Page = () => {
       if (response.status === 200) {
         const updatedJwt = { ...jwt, userStatus: "verified" };
         localStorage.setItem("TpAuthToken", JSON.stringify(updatedJwt));
+        // const { email, onboardingToken } = response.data.user;
+        // localStorage.removeItem("TpAuthToken");
 
+        // const result = await signIn("credentials", {
+        //   redirect: false,
+        //   email,
+        //   onboardingToken,
+        // });
         setTimeout(() => {
           router.push("/on-boarding");
         }, 300);
@@ -95,7 +104,7 @@ const Page = () => {
     }
   };
 
-  // if (!jwt) return null;
+  // if (!jwt) return null;  
 
   return (
     <div className="flex flex-col gap-12 w-full max-w-[500px] bg-white dark:bg-dark-input-bg p-12 py-10 border border-[#E8EAEE] dark:border-dark-border shadow-sm rounded-sm">
@@ -105,8 +114,8 @@ const Page = () => {
         </h1>
         <p className="text-sm text-paragraph/60 dark:text-dark-text/60">
           Enter the passcode you just received on your email address ending with{" "}
-          {/* {jwt.email.replace(/(.{1,2}).+(.{1})@(.{1}).+/, "$1***$2@$3***")} */}
-          ******in@gmail.com
+          {jwt?.email.replace(/(.{1,2}).+(.{1})@(.{1}).+/, "$1***$2@$3***")}
+          {/* ******in@gmail.com */}
         </p>
       </div>
 

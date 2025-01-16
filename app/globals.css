@@ -8,7 +8,7 @@
   margin: 0;
   scroll-behavior: smooth;
   outline: none;
-  /* overflow: hidden; */
+  overflow: hidden;
 }
 
 html,

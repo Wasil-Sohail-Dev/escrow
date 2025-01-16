@@ -3,11 +3,11 @@
 import React, { use, useState } from "react";
 import { Clock3, Flag, CreditCard } from "lucide-react";
 import { disputeData, transactions } from "@/lib/data/transactions";
-import Topbar from "../../components/Topbar";
-import HeadBar from "../../components/HeadBar";
-import FilterButton from "../../components/FilterButton";
-import PaymentHistory from "../../components/PaymentHistory";
-import Pagination from "../../components/Pagination";
+import Topbar from "../../../../components/dashboard/Topbar";
+import HeadBar from "../../../../components/dashboard/HeadBar";
+import FilterButton from "../../../../components/dashboard/FilterButton";
+import PaymentHistory from "../../../../components/dashboard/PaymentHistory";
+import Pagination from "../../../../components/dashboard/Pagination";
 
 const FILTER_OPTIONS = {
   dateRange: [

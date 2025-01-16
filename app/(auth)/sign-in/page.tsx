@@ -29,6 +29,8 @@ type SignInFormValues = z.infer<typeof signInSchema>;
 const Page = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [facebookLoading, setFacebookLoading] = useState(false);
   const router = useRouter();
 
   const form = useForm<SignInFormValues>({
@@ -48,7 +50,7 @@ const Page = () => {
       email: data.email,
       password: data.password,
     });
-
+console.log(result,"result");
     if (result?.error) {
       setError(result.error);
     } else if (result?.ok) {
@@ -58,6 +60,40 @@ const Page = () => {
     }
 
     setLoading(false);
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setGoogleLoading(true);
+      const result = await signIn("google", { redirect: false });
+
+      if (result?.error) {
+        setError("Failed to sign in with Google.");
+      } else if (result?.ok && result.url) {
+        router.push(result.url);
+      }
+    } catch (error) {
+      setError("Something went wrong with Google sign-in.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleFacebookSignIn = async () => {
+    try {
+      setFacebookLoading(true);
+      const result = await signIn("facebook", { redirect: false });
+
+      if (result?.error) {
+        setError("Failed to sign in with Facebook.");
+      } else if (result?.ok && result.url) {
+        router.push(result.url);
+      }
+    } catch (error) {
+      setError("Something went wrong with Facebook sign-in.");
+    } finally {
+      setFacebookLoading(false);
+    }
   };
 
   return (
@@ -153,17 +189,34 @@ const Page = () => {
           type="button"
           variant="outline"
           className="h-11 border border-[#E8EAEE] dark:border-dark-border hover:bg-white/90 dark:hover:bg-dark-input-bg rounded-lg text-paragraph dark:text-dark-text flex items-center justify-center gap-2"
+          onClick={handleGoogleSignIn}
+          disabled={googleLoading}
         >
-          <Image src="/assets/google.svg" alt="Google" width={20} height={20} />
-          Sign in with Google
+          {googleLoading ? (
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <>
+              <Image src="/assets/google.svg" alt="Google" width={20} height={20} />
+              Sign in with Google
+            </>
+          )}
         </Button>
+
         <Button 
           type="button"
           variant="outline"
           className="h-11 border border-[#E8EAEE] dark:border-dark-border hover:bg-white/90 dark:hover:bg-dark-input-bg rounded-lg text-paragraph dark:text-dark-text flex items-center justify-center gap-2"
+          onClick={handleFacebookSignIn}
+          disabled={facebookLoading}
         >
-          <Image src="/assets/facebook.svg" alt="Facebook" width={20} height={20} />
-          Sign in with Facebook
+          {facebookLoading ? (
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <>
+              <Image src="/assets/facebook.svg" alt="Facebook" width={20} height={20} />
+              Sign in with Facebook
+            </>
+          )}
         </Button>
       </div>
 

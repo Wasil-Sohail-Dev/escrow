@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import Topbar from "../components/Topbar";
+import Topbar from "../../../components/dashboard/Topbar";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { Paperclip, Send, Upload } from "lucide-react";

@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
-import Topbar from "../components/Topbar";
+import Topbar from "../../../components/dashboard/Topbar";
 
 export default function MakePayment() {
   return (

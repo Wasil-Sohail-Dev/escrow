@@ -1,8 +1,8 @@
 "use client";
 
-import ProjectTable from "../components/PaymentHistory";
-import Topbar from "../components/Topbar";
-import Overview from "../components/Overview";
+import ProjectTable from "../../../components/dashboard/PaymentHistory";
+import Topbar from "../../../components/dashboard/Topbar";
+import Overview from "../../../components/dashboard/Overview";
 import { disputeData } from "@/lib/data/transactions";
 
 export default function DisputeManagementScreen() {

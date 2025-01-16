@@ -1,159 +1,389 @@
 "use client";
 
-import React, { useState } from 'react';
-import Topbar from '../components/Topbar';
+import React, { useEffect, useState } from "react";
+import Topbar from "../../../components/dashboard/Topbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import Image from 'next/image';
-import { Plus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import Image from "next/image";
+import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/contexts/UserContext";
+import axios from "axios";
+import { useToast } from "@/hooks/use-toast";
 
 const CreateContract = () => {
+  const { user } = useUser();
   const router = useRouter();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
-    contractId: '',
-    vendorEmail: '',
-    contractTitle: '',
-    startDate: '',
-    endDate: '',
-    description: '',
-    paymentType: '',
-    totalPayment: '',
-    milestones: [{
-      name: '',
-      amount: '',
-      description: '',
-      startDate: '',
-      endDate: ''
-    }],
-    documents: []
+    contractId: "",
+    vendorEmail: "",
+    title: "",
+    startDate: "",
+    endDate: "",
+    description: "",
+    paymentType: "fixed",
+    totalPayment: "",
+    milestones: [
+      {
+        name: "",
+        amount: "",
+        description: "",
+        startDate: "",
+        endDate: "",
+      },
+    ],
+    documents: [],
   });
 
-  const [selectedTemplate, setSelectedTemplate] = useState('kitchen-design');
+  const [vendorEmailError, setVendorEmailError] = useState("");
+  const [isVendorValid, setIsVendorValid] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
+  const [contractDateError, setContractDateError] = useState("");
+  const [milestoneDateErrors, setMilestoneDateErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    const initiateContract = async () => {
+      try {
+        const { data } = await axios.get("/api/initiate-contract");
+        if (data) {
+          console.log(data.contractId, "datadata");
+          setFormData((prev) => ({
+            ...prev,
+            contractId: data.contractId,
+          }));
+        }
+      } catch (error) {
+        console.error("Error initiating contract:", error);
+      }
+    };
+
+    initiateContract();
+  }, []);
+
+  useEffect(() => {
+    const checkEmail = async () => {
+      setVendorEmailError("");
+
+      if (!formData.vendorEmail || !formData.vendorEmail.includes(".com"))
+        return;
+
+      try {
+        const { data } = await axios.get(
+          `/api/check-vendor-mail?vendorEmail=${formData.vendorEmail}`
+        );
+        if (data.message === "Vendor email is valid.") {
+          setIsVendorValid(true);
+          toast({
+            title: "Valid vendor email",
+            description: "The vendor email is valid",
+            variant: "default",
+          });
+        }
+      } catch (error: any) {
+        setIsVendorValid(false);
+        if (error.response?.data?.error) {
+          setVendorEmailError(error.response.data.error);
+          toast({
+            title: "Invalid vendor email",
+            description: error.response.data.error,
+            variant: "destructive",
+          });
+        } else {
+          setVendorEmailError("Error checking vendor email");
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      checkEmail();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.vendorEmail]);
+
+  const [selectedTemplate, setSelectedTemplate] = useState("kitchen-design");
 
   const templates = [
-    {id: 'kitchen-design', label: 'Kitchen Design'},
-    {id: 'graphic-design', label: 'Graphic Design'}, 
-    {id: 'home-renovation', label: 'Home Renovation'},
-    {id: 'it-support', label: 'IT Support'},
-    {id: 'website-development', label: 'Website Development'},
-    {id: 'product-delivery', label: 'Product Delivery'}
+    { id: "kitchen-design", label: "Kitchen Design" },
+    { id: "graphic-design", label: "Graphic Design" },
+    { id: "home-renovation", label: "Home Renovation" },
+    { id: "it-support", label: "IT Support" },
+    { id: "website-development", label: "Website Development" },
+    { id: "product-delivery", label: "Product Delivery" },
   ];
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
+
+    if (field === "startDate" || field === "endDate") {
+      const start = field === "startDate" ? value : formData.startDate;
+      const end = field === "endDate" ? value : formData.endDate;
+      
+      if (start && end && !validateDates(start, end)) {
+        setContractDateError("Start date must be before end date");
+      } else {
+        setContractDateError("");
+      }
+    }
   };
 
   const handleMilestoneChange = (index: number, field: string, value: string) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const updatedMilestones = [...prev.milestones];
       updatedMilestones[index] = {
         ...updatedMilestones[index],
-        [field]: value
+        [field]: value,
       };
+
+      if (field === "startDate" || field === "endDate") {
+        const start = field === "startDate" ? value : updatedMilestones[index].startDate;
+        const end = field === "endDate" ? value : updatedMilestones[index].endDate;
+        
+        setMilestoneDateErrors((prev) => {
+          const newErrors = [...prev];
+          if (start && end && !validateDates(start, end)) {
+            newErrors[index] = "Start date must be before end date";
+          } else {
+            newErrors[index] = "";
+          }
+          return newErrors;
+        });
+      }
+
       return {
         ...prev,
-        milestones: updatedMilestones
+        milestones: updatedMilestones,
       };
     });
   };
 
   const addNewMilestone = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      milestones: [...prev.milestones, {
-        name: '',
-        amount: '',
-        description: '',
-        startDate: '',
-        endDate: ''
-      }]
+      milestones: [
+        ...prev.milestones,
+        {
+          name: "",
+          amount: "",
+          description: "",
+          startDate: "",
+          endDate: "",
+        },
+      ],
     }));
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      setFormData((prev: any ) => ({
+      setFormData((prev: any) => ({
         ...prev,
-        documents: [...prev.documents, ...Array.from(files)]
+        documents: [...prev.documents, ...Array.from(files)],
       }));
     }
   };
 
+  const validatePayments = () => {
+    const totalProjectPayment = parseFloat(formData.totalPayment) || 0;
+    const milestoneTotalAmount = formData.milestones.reduce(
+      (sum, milestone) => sum + (parseFloat(milestone.amount) || 0),
+      0
+    );
+
+    if (totalProjectPayment !== milestoneTotalAmount) {
+      setPaymentError(
+        `Total milestone amounts (${milestoneTotalAmount}) must equal total project payment (${totalProjectPayment})`
+      );
+      return false;
+    }
+
+    setPaymentError("");
+    return true;
+  };
+
+  const validateDates = (startDate: string, endDate: string): boolean => {
+    if (!startDate || !endDate) return true;
+    return new Date(startDate) < new Date(endDate);
+  };
+
+  const onSubmit = async () => {
+    if (!isVendorValid) {
+      toast({
+        title: "Invalid vendor",
+        description: "Please enter a valid vendor email",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!validatePayments()) {
+      toast({
+        title: "Invalid payments",
+        description: paymentError,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!validateDates(formData.startDate, formData.endDate)) {
+      toast({
+        title: "Invalid dates",
+        description: "Contract start date must be before end date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const invalidMilestones = formData.milestones.some((milestone, index) => 
+      !validateDates(milestone.startDate, milestone.endDate)
+    );
+
+    if (invalidMilestones) {
+      toast({
+        title: "Invalid milestone dates",
+        description: "All milestone start dates must be before their end dates",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      const response = await fetch("/api/create-contract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          clientEmail: user?.email,
+          budget: parseFloat(formData.totalPayment),
+          milestones: formData.milestones.map((m: any) => ({
+            title: m.name,
+            amount: parseFloat(m.amount),
+            description: m.description,
+            startDate: new Date(m.startDate).toISOString(),
+            endDate: new Date(m.endDate).toISOString(),
+          })),
+          startDate: new Date(formData.startDate).toISOString(),
+          endDate: new Date(formData.endDate).toISOString(),
+          contractTemplate: selectedTemplate,
+        }),
+      });
+
+      if (response.ok) {
+        router.push("/home");
+        toast({
+          title: "Success",
+          description: "Contract created successfully, Please check your email for the contract details on " + formData.vendorEmail,
+          variant: "default",
+        });
+      }
+      else{
+        console.log("claaa",response);
+        toast({
+          title: "Warning",
+          description: "Please try again",
+          variant: "warning",
+        });
+      }
+    } catch (error) {
+      
+      console.log("cla");
+      
+      console.error("Error creating contract:", error);
+      toast({
+        title: "Warning",
+        description: "Please try again",
+        variant: "warning",
+      });
+    }
+  };
+
+  useEffect(() => {
+    validatePayments();
+  }, [formData.totalPayment, formData.milestones]);
+
   return (
     <>
-      <Topbar 
-        title='Create Your Contract' 
-        description='Add the following details in order to create your contract' 
+      <Topbar
+        title="Create Your Contract"
+        description="Add the following details in order to create your contract"
       />
-      <div className='mt-[85px]'>
-        <div className='w-full'>
-          <div className='mb-8 flex justify-between items-center'>
+      <div className="mt-[85px]">
+        <div className="w-full">
+          <div className="mb-8 flex justify-between items-center">
             <h1 className="text-[22px] lg:text-[24px] font-bold mb-2 text-[#292929] dark:text-dark-text">
               Create Contract
             </h1>
-            <Button 
-              onClick={() => router.push('/pre-build-contracts')} 
+            <Button
+              onClick={() => router.push("/pre-build-contracts")}
               className="h-[38px] lg:h-[42px] bg-primary hover:bg-primary/90 text-white dark:text-dark-text"
             >
               Use Pre-build Templates
             </Button>
           </div>
 
-          <div className='mb-8 flex md:justify-between flex-col md:flex-row items-center border-y border-[#D0D0D0] dark:border-dark-border py-8'>
+          <div className="mb-8 flex md:justify-between flex-col md:flex-row items-center border-y border-[#D0D0D0] dark:border-dark-border py-8">
             <h1 className="text-[22px] lg:text-[22px] font-[500] leading-[30px] mb-2 text-[#292929] dark:text-dark-text">
               Contract Template
             </h1>
             <div>
               <div className="flex flex-row sm:gap-10 gap-4">
-                {templates.reduce((acc: JSX.Element[][], template, i) => {
-                  if (i % 2 === 0) acc.push([]);
-                  acc[acc.length - 1].push(
-                    <div key={template.id} className="flex sm:items-center items-start space-x-2">
-                      <Checkbox 
-                        id={template.id}
-                        checked={selectedTemplate === template.id}
-                        onCheckedChange={() => setSelectedTemplate(template.id)}
-                        className={`${
-                          selectedTemplate === template.id 
-                            ? "border-[#00BA88] data-[state=checked]:bg-[#00BA88] data-[state=checked]:border-[#00BA88]" 
-                            : "border-[#E8EAEE]"
-                        } rounded-full`}
-                      />
-                      <label
-                        htmlFor={template.id}
-                        className="sm:text-[16px] text-sm font-[400] leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-[#64748B] dark:text-dark-text/60"
+                {templates
+                  .reduce((acc: JSX.Element[][], template, i) => {
+                    if (i % 2 === 0) acc.push([]);
+                    acc[acc.length - 1].push(
+                      <div
+                        key={template.id}
+                        className="flex sm:items-center items-start space-x-2"
                       >
-                        {template.label}
-                      </label>
+                        <Checkbox
+                          id={template.id}
+                          checked={selectedTemplate === template.id}
+                          onCheckedChange={() =>
+                            setSelectedTemplate(template.id)
+                          }
+                          className={`${
+                            selectedTemplate === template.id
+                              ? "border-[#00BA88] data-[state=checked]:bg-[#00BA88] data-[state=checked]:border-[#00BA88]"
+                              : "border-[#E8EAEE]"
+                          } rounded-full`}
+                        />
+                        <label
+                          htmlFor={template.id}
+                          className="sm:text-[16px] text-sm font-[400] leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-[#64748B] dark:text-dark-text/60"
+                        >
+                          {template.label}
+                        </label>
+                      </div>
+                    );
+                    return acc;
+                  }, [])
+                  .map((column, i) => (
+                    <div key={i} className="flex flex-col gap-4">
+                      {column}
                     </div>
-                  );
-                  return acc;
-                }, []).map((column, i) => (
-                  <div key={i} className="flex flex-col gap-4">
-                    {column}
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           </div>
 
-          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-20">
               <div className="space-y-2">
                 <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
                   Contract ID
                 </label>
-                <Input 
+                <Input
                   type="text"
+                  disabled
                   value={formData.contractId}
-                  onChange={(e) => handleInputChange('contractId', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("contractId", e.target.value)
+                  }
                   placeholder="Enter contract ID"
                   className="h-[48px] lg:h-[52px] dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
                 />
@@ -163,13 +393,26 @@ const CreateContract = () => {
                 <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
                   Vendor Email
                 </label>
-                <Input 
+                <Input
                   type="email"
                   value={formData.vendorEmail}
-                  onChange={(e) => handleInputChange('vendorEmail', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("vendorEmail", e.target.value)
+                  }
                   placeholder="Enter vendor email"
-                  className="h-[48px] lg:h-[52px] dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                  className={`h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
+                    vendorEmailError
+                      ? "border-red-500 focus-visible:ring-red-500"
+                      : isVendorValid
+                      ? "border-green-500 focus-visible:ring-green-500"
+                      : "border-[#D1D5DB] dark:border-dark-border"
+                  } rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40`}
                 />
+                {vendorEmailError && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {vendorEmailError}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -177,10 +420,10 @@ const CreateContract = () => {
               <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
                 Contract Title
               </label>
-              <Input 
+              <Input
                 type="text"
-                value={formData.contractTitle}
-                onChange={(e) => handleInputChange('contractTitle', e.target.value)}
+                value={formData.title}
+                onChange={(e) => handleInputChange("title", e.target.value)}
                 placeholder="eg. Graphic Design"
                 className="h-[48px] lg:h-[52px] dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
               />
@@ -191,12 +434,14 @@ const CreateContract = () => {
                 <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
                   Start Date
                 </label>
-                <Input 
+                <Input
                   type="date"
                   value={formData.startDate}
-                  onChange={(e) => handleInputChange('startDate', e.target.value)}
+                  onChange={(e) => handleInputChange("startDate", e.target.value)}
                   placeholder="MM/DD/YYYY"
-                  className="h-[48px] lg:h-[52px] dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                  className={`h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
+                    contractDateError ? "border-red-500" : "border-[#D1D5DB]"
+                  } dark:border-dark-border rounded-lg`}
                 />
               </div>
 
@@ -204,13 +449,20 @@ const CreateContract = () => {
                 <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
                   End Date
                 </label>
-                <Input 
+                <Input
                   type="date"
                   value={formData.endDate}
-                  onChange={(e) => handleInputChange('endDate', e.target.value)}
+                  onChange={(e) => handleInputChange("endDate", e.target.value)}
                   placeholder="MM/DD/YYYY"
-                  className="h-[48px] lg:h-[52px] dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                  className={`h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
+                    contractDateError ? "border-red-500" : "border-[#D1D5DB]"
+                  } dark:border-dark-border rounded-lg`}
                 />
+              {contractDateError && (
+                <div className="col-span-full">
+                  <p className="text-sm text-red-500">{contractDateError}</p>
+                </div>
+              )}
               </div>
             </div>
 
@@ -218,9 +470,11 @@ const CreateContract = () => {
               <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
                 Contract Description
               </label>
-              <Textarea 
+              <Textarea
                 value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
                 placeholder="eg. It includes..."
                 className="min-h-[120px] dark:bg-dark-input-bg border border-[#E8EAEE] dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
               />
@@ -231,61 +485,70 @@ const CreateContract = () => {
                 Payment Terms
               </label>
               <div className="flex gap-8 ml-10">
-                {['hourly', 'fixed'].map(type => (
+                {["hourly", "fixed"].map((type) => (
                   <div key={type} className="flex items-center space-x-2">
-                    <Checkbox 
+                    <Checkbox
                       id={type}
                       checked={formData.paymentType === type}
-                      onCheckedChange={() => handleInputChange('paymentType', type)}
+                      onCheckedChange={() =>
+                        handleInputChange("paymentType", type)
+                      }
                       className="border-[#E8EAEE] rounded-full"
                     />
-                    <label 
-                      htmlFor={type} 
+                    <label
+                      htmlFor={type}
                       className="text-[14px] text-[#292929] dark:text-dark-text"
                     >
-                      {type === 'hourly' ? 'Hourly' : 'Fixed Price'}
+                      {type === "hourly" ? "Hourly" : "Fixed Price"}
                     </label>
                   </div>
                 ))}
               </div>
             </div>
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-20'>
-            <div className="space-y-2 flex-1">
-              <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
-                Total Project Payment
-              </label>
-              <Input 
-                type="text"
-                value={formData.totalPayment}
-                onChange={(e) => handleInputChange('totalPayment', e.target.value)}
-                placeholder="$2500"
-                className="h-[48px] lg:h-[52px] dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-20">
+              <div className="space-y-2 flex-1">
+                <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
+                  Total Project Payment
+                </label>
+                <Input
+                  type="number"
+                  value={formData.totalPayment}
+                  onChange={(e) =>
+                    handleInputChange("totalPayment", e.target.value)
+                  }
+                  placeholder="$2500"
+                  className="h-[48px] lg:h-[52px] dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                />
+              </div>
+              <div className="md:block hidden flex-1"></div>
             </div>
-    <div className='md:block hidden flex-1'></div>
-                </div>
 
             <div className="">
-              <div 
+              <div
                 className="flex justify-between items-center mb-6 cursor-pointer"
                 onClick={addNewMilestone}
               >
                 <h2 className="text-body-medium text-primary text-[15px] flex items-center">
-                  <Plus className='mr-2' /> Add New Milestone
+                  <Plus className="mr-2" /> Add New Milestone
                 </h2>
               </div>
 
               {formData.milestones.map((milestone, index) => (
                 <div key={index} className="space-y-6">
+                  <h2 className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold mt-5">
+                    Milestone No ({index + 1})
+                  </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-20">
                     <div className="space-y-2">
                       <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
                         Milestone Name
                       </label>
-                      <Input 
+                      <Input
                         type="text"
                         value={milestone.name}
-                        onChange={(e) => handleMilestoneChange(index, 'name', e.target.value)}
+                        onChange={(e) =>
+                          handleMilestoneChange(index, "name", e.target.value)
+                        }
                         placeholder="eg. Floor Planning"
                         className="h-[48px] lg:h-[52px] dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
                       />
@@ -295,13 +558,20 @@ const CreateContract = () => {
                       <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
                         Milestone Amount
                       </label>
-                      <Input 
-                        type="text"
+                      <Input
+                        type="number"
                         value={milestone.amount}
-                        onChange={(e) => handleMilestoneChange(index, 'amount', e.target.value)}
+                        onChange={(e) =>
+                          handleMilestoneChange(index, "amount", e.target.value)
+                        }
                         placeholder="$500"
                         className="h-[48px] lg:h-[52px] dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
                       />
+                      {paymentError && (
+                        <div className="col-span-full mt-2">
+                          <p className="text-sm text-red-500">{paymentError}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -309,9 +579,15 @@ const CreateContract = () => {
                     <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
                       Milestone Description
                     </label>
-                    <Textarea 
+                    <Textarea
                       value={milestone.description}
-                      onChange={(e) => handleMilestoneChange(index, 'description', e.target.value)}
+                      onChange={(e) =>
+                        handleMilestoneChange(
+                          index,
+                          "description",
+                          e.target.value
+                        )
+                      }
                       placeholder="eg. The Graphic Design process..."
                       className="min-h-[120px] dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
                     />
@@ -322,12 +598,14 @@ const CreateContract = () => {
                       <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
                         Start Date
                       </label>
-                      <Input 
+                      <Input
                         type="date"
                         value={milestone.startDate}
-                        onChange={(e) => handleMilestoneChange(index, 'startDate', e.target.value)}
+                        onChange={(e) => handleMilestoneChange(index, "startDate", e.target.value)}
                         placeholder="MM/DD/YYYY"
-                        className="h-[48px] lg:h-[52px] dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                        className={`h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
+                          milestoneDateErrors[index] ? "border-red-500" : "border-[#D1D5DB]"
+                        } dark:border-dark-border rounded-lg`}
                       />
                     </div>
 
@@ -335,13 +613,20 @@ const CreateContract = () => {
                       <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
                         End Date
                       </label>
-                      <Input 
+                      <Input
                         type="date"
                         value={milestone.endDate}
-                        onChange={(e) => handleMilestoneChange(index, 'endDate', e.target.value)}
+                        onChange={(e) => handleMilestoneChange(index, "endDate", e.target.value)}
                         placeholder="MM/DD/YYYY"
-                        className="h-[48px] lg:h-[52px] dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                        className={`h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
+                          milestoneDateErrors[index] ? "border-red-500" : "border-[#D1D5DB]"
+                        } dark:border-dark-border rounded-lg`}
                       />
+                    {milestoneDateErrors[index] && (
+                      <div className="col-span-full">
+                        <p className="text-sm text-red-500">{milestoneDateErrors[index]}</p>
+                      </div>
+                    )}
                     </div>
                   </div>
                 </div>
@@ -353,16 +638,24 @@ const CreateContract = () => {
                 Upload Documents (Optional)
               </label>
               <div className="border-2 border-dashed border-[#CACED8] dark:border-dark-border rounded-lg p-6 md:p-8 text-center cursor-pointer dark:bg-dark-input-bg hover:border-primary dark:hover:border-primary transition-colors">
-                <input 
-                  type="file" 
-                  className="hidden" 
+                <input
+                  type="file"
+                  className="hidden"
                   id="file-upload"
                   onChange={handleFileUpload}
-                  multiple 
+                  multiple
                 />
-                <label htmlFor="file-upload" className="w-full h-full cursor-pointer">
+                <label
+                  htmlFor="file-upload"
+                  className="w-full h-full cursor-pointer"
+                >
                   <div className="flex justify-center mb-2">
-                    <Image src={"/assets/download2.svg"} alt="upload" width={40} height={30} />
+                    <Image
+                      src={"/assets/download2.svg"}
+                      alt="upload"
+                      width={40}
+                      height={30}
+                    />
                   </div>
                   <p className="text-subtle-medium text-[#64748B] dark:text-dark-text/60">
                     Drag and drop file here or{" "}
@@ -380,13 +673,16 @@ const CreateContract = () => {
           <Button className="w-full sm:w-auto h-[42px] px-6 md:px-10 border bg-transparent text-[#292929] border-primary hover:text-primary hover:bg-transparent rounded-lg transition-colors dark:text-dark-text dark:hover:text-primary dark:bg-dark-input-bg">
             Preview
           </Button>
-          <Button className="w-full sm:w-auto h-[42px] px-6 md:px-10 bg-primary hover:bg-primary/90 text-[16px] font-[700] leading-[19.6px] text-white dark:text-dark-text rounded-lg transition-colors">
+          <Button
+            onClick={onSubmit}
+            className="w-full sm:w-auto h-[42px] px-6 md:px-10 bg-primary hover:bg-primary/90 text-[16px] font-[700] leading-[19.6px] text-white dark:text-dark-text rounded-lg transition-colors"
+          >
             Save
           </Button>
         </div>
       </div>
     </>
   );
-}
+};
 
 export default CreateContract;

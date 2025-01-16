@@ -5,15 +5,15 @@ import Image from "next/image";
 import { Search, ChevronDown, Clock3, Flag, CreditCard, Ticket } from "lucide-react";
 
 // Components
-import Topbar from "../components/Topbar";
-import HeadBar from "../components/HeadBar";
-import PaymentOverview from "../components/PaymentOverview";
+import Topbar from "../../../components/dashboard/Topbar";
+import HeadBar from "../../../components/dashboard/HeadBar";
+import PaymentOverview from "../../../components/dashboard/PaymentOverview";
 import { Input } from "@/components/ui/input";
-import Pagination from "../components/Pagination";
+import Pagination from "../../../components/dashboard/Pagination";
 
 // Utils & Types
 import { cn } from "@/lib/utils";
-import FilterButton from "../components/FilterButton";
+import FilterButton from "../../../components/dashboard/FilterButton";
 import { transactions } from "@/lib/data/transactions";
 
 // Constants

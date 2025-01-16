@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import Sidebar from "./components/Sidebar";
+import Sidebar from "../../components/dashboard/Sidebar";
 
 export const metadata: Metadata = {
   title: "Auth Page",

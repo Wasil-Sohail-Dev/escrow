@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Topbar from "../components/Topbar";
+import Topbar from "../../../components/dashboard/Topbar";
 import { Button } from "@/components/ui/button";
 import EditContractModal from "@/components/modals/EditContractModal";
 import EnterDetailsModal from "@/components/modals/EnterDetailsModal";

@@ -9,7 +9,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,9 +18,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { JwtPayload } from "jsonwebtoken";
 
-// Validation Schema
-const onboardingSchema = z.object({
+const vendorSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   userName: z.string().min(1, "Username is required"),
@@ -33,32 +33,86 @@ const onboardingSchema = z.object({
   }),
 });
 
-type OnboardingFormValues = z.infer<typeof onboardingSchema>;
+const clientSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  userName: z.string().min(1, "Username is required"),
+  phone: z.string().min(1, "Phone number is required"),
+  acceptTerms: z.boolean().refine((data) => data === true, {
+    message: "You must accept the terms and conditions",
+  }),
+});
+
+type VendorFormValues = z.infer<typeof vendorSchema>;
+type ClientFormValues = z.infer<typeof clientSchema>;
 
 const Page = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const [jwt, setJwt] = useState<JwtPayload | null>(null);
 
-  const form = useForm<OnboardingFormValues>({
-    resolver: zodResolver(onboardingSchema),
+  useEffect(() => {
+    const getCookie = (name: string) => {
+      try {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+          const cookieValue = parts.pop()?.split(";").shift();
+          return cookieValue ? decodeURIComponent(cookieValue) : null;
+        }
+        return null;
+      } catch (error) {
+        console.log("Error parsing cookie:", error);
+        return null;
+      }
+    };
+
+    const tokenCookie = getCookie("TpAuthToken");
+    if (tokenCookie) {
+      try {
+        const parsedToken = JSON.parse(tokenCookie);
+        setJwt(parsedToken);
+      } catch (error) {
+        console.log("Error parsing token:", error);
+      }
+    }
+      const rawJwt = localStorage.getItem("TpAuthToken");
+      if (rawJwt) {
+        setJwt(JSON.parse(rawJwt));
+    }
+
+  }, []);
+
+  const form = useForm<VendorFormValues | ClientFormValues>({
+    resolver: zodResolver(jwt?.userType === "vendor" ? vendorSchema : clientSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
       userName: "",
       phone: "",
-      companyName: "",
-      companyId: "",
-      companyAddress: "",
+      ...(jwt?.userType === "vendor" && {
+        companyName: "",
+        companyId: "",
+        companyAddress: "",
+      }),
       acceptTerms: false,
     },
   });
-
-  const handleOnboarding = async (data: OnboardingFormValues) => {
+  const handleOnboarding = async (data: VendorFormValues | ClientFormValues) => {
     setLoading(true);
 
     try {
-      const response = await axios.post("/api/save-onboarding", data);
+      const apiData = jwt?.userType === "vendor" ? data : {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        userName: data.userName,
+        phone: data.phone,
+        acceptTerms: data.acceptTerms,
+        
+      };
+
+      const response = await axios.post("/api/save-onboarding", {...apiData,email:jwt?.email,userType:jwt?.userType});
 
       if (response.status === 200) {
         toast({
@@ -67,13 +121,14 @@ const Page = () => {
           variant: "default",
         });
 
-        const { email, onboardingToken } = response.data.user;
+        const { email, onboardingToken, userStatus } = response.data.user;
         localStorage.removeItem("TpAuthToken");
 
         const result = await signIn("credentials", {
           redirect: false,
           email,
           onboardingToken,
+          userStatus,
         });
 
         if (result?.ok) {
@@ -102,6 +157,8 @@ const Page = () => {
       setLoading(false);
     }
   };
+
+  console.log(jwt,"jwt");
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-[500px] bg-white dark:bg-dark-input-bg p-12 py-10 my-12 border border-[#E8EAEE] dark:border-dark-border shadow-sm rounded-sm">
@@ -193,59 +250,63 @@ const Page = () => {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="companyName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm text-paragraph dark:text-dark-text">
-                  Company Name
-                </FormLabel>
-                <Input
-                  {...field}
-                  placeholder="Enter Company Name"
-                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {jwt?.userType === "vendor" && (
+            <>
+              <FormField
+                control={form.control}
+                name="companyName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm text-paragraph dark:text-dark-text">
+                      Company Name
+                    </FormLabel>
+                    <Input
+                      {...field}
+                      placeholder="Enter Company Name"
+                      className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="companyId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm text-paragraph dark:text-dark-text">
-                  Company ID
-                </FormLabel>
-                <Input
-                  {...field}
-                  placeholder="Enter Company ID"
-                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="companyId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm text-paragraph dark:text-dark-text">
+                      Company ID
+                    </FormLabel>
+                    <Input
+                      {...field}
+                      placeholder="Enter Company ID"
+                      className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="companyAddress"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm text-paragraph dark:text-dark-text">
-                  Company Address
-                </FormLabel>
-                <Input
-                  {...field}
-                  placeholder="Enter Company Address"
-                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="companyAddress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm text-paragraph dark:text-dark-text">
+                      Company Address
+                    </FormLabel>
+                    <Input
+                      {...field}
+                      placeholder="Enter Company Address"
+                      className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
+          )}
 
           <FormField
             control={form.control}
@@ -267,8 +328,8 @@ const Page = () => {
             )}
           />
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="h-11 bg-primary hover:bg-primary/90 text-white rounded-lg"
             disabled={loading}
           >

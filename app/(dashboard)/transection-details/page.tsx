@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Topbar from "../components/Topbar";
+import Topbar from "../../../components/dashboard/Topbar";
 import { Input } from "@/components/ui/input";
 import {
   Search,
@@ -9,10 +9,10 @@ import {
   Flag,
   CreditCard,
 } from "lucide-react";
-import PaymentHistory from "../components/PaymentHistory";
-import Pagination from "../components/Pagination";
-import HeadBar from "../components/HeadBar";
-import FilterButton from "../components/FilterButton";
+import PaymentHistory from "../../../components/dashboard/PaymentHistory";
+import Pagination from "../../../components/dashboard/Pagination";
+import HeadBar from "../../../components/dashboard/HeadBar";
+import FilterButton from "../../../components/dashboard/FilterButton";
 import { transactions } from "@/lib/data/transactions";
 
 

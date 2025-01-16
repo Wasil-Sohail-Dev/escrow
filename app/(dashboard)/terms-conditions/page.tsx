@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Topbar from "../components/Topbar";
+import Topbar from "../../../components/dashboard/Topbar";
 
 const TermsConditionsPage = () => {
   return (

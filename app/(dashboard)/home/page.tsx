@@ -1,28 +1,21 @@
 "use client";
 
-import ProjectTable from "../components/PaymentHistory";
-import PaymentOverview from "../components/PaymentOverview";
-import Topbar from "../components/Topbar";
+import ProjectTable from "../../../components/dashboard/PaymentHistory";
+import PaymentOverview from "../../../components/dashboard/PaymentOverview";
+import Topbar from "../../../components/dashboard/Topbar";
 import { transactions } from "@/lib/data/transactions";
-import Overview from "../components/Overview";
-import NewMilestoneModal from "@/components/modals/NewMilestoneModal";
-import { useState } from "react";
+import Overview from "../../../components/dashboard/Overview";
 
 export default function Home() {
-  const [isOpen, setIsOpen] = useState(true);
 
-  const handleClose = () => {
-    setIsOpen(false);
-  }
-
-  return (
+  return ( 
     <>
-    <NewMilestoneModal 
+    {/* <NewMilestoneModal 
       isOpen={isOpen}
       onClose={handleClose}
       onAccept={() => {}}
       onDecline={() => {}}
-    />
+    /> */}
       <Topbar
         title="Overview"
         description="Detailed information about your work"

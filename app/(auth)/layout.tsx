@@ -1,8 +1,8 @@
+import ThemeToggle from "@/components/ThemeToggle";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
-import ThemeToggle from "./components/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "Auth Page",

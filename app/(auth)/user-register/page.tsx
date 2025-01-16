@@ -21,6 +21,8 @@ import { Switch } from "@/components/ui/switch";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
+import { getSession } from "next-auth/react";
 
 // Validation Schema
 const signUpSchema = z
@@ -53,7 +55,8 @@ type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 const Page = () => {
   const [loading, setLoading] = useState(false);
-
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [facebookLoading, setFacebookLoading] = useState(false);
   // localStorage.removeItem("TpAuthToken");
 
   const { toast } = useToast();
@@ -73,6 +76,8 @@ const Page = () => {
   const router = useRouter();
 
   const handleSignUp = async (data: SignUpFormValues) => {
+    console.log(data);
+    
     if (!data.acceptPolicy) {
       toast({
         title: "Warning",
@@ -86,8 +91,6 @@ const Page = () => {
 
     try {
       const response = await axios.post("/api/register", data);
-
-
       if (response.status === 201) {
         toast({
           title: "Success",
@@ -136,6 +139,100 @@ const Page = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setGoogleLoading(true);
+      // Get the current userType from form
+      const selectedUserType = form.getValues("userType");
+      console.log(selectedUserType,"selectedUserType");
+      
+      const result = await signIn("google", {
+        redirect: false,
+        userType: selectedUserType // Pass userType to the signIn function
+      });
+
+      console.log(result);
+      
+      
+      if (result?.error) {
+        toast({
+          title: "Error",
+          description: "Failed to sign in with Google",
+          variant: "destructive",
+        });
+      }
+      
+      if (result?.ok) {
+        // Store user data in localStorage
+        console.log("result", result);
+        const userData = {
+          userType: selectedUserType,
+          userStatus: "verified"
+        };
+        localStorage.setItem("TpAuthToken", JSON.stringify(userData));
+        
+        if (result.url) {
+          router.push(result.url);
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong with Google sign in",
+        variant: "destructive",
+      });
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleFacebookSignIn = async () => {
+    try {
+      setFacebookLoading(true);
+      // Get the current userType from form
+      const selectedUserType = form.getValues("userType");
+      console.log(selectedUserType,"selectedUserType");
+      
+      const result = await signIn("facebook", {
+        redirect: false,
+        userType: selectedUserType // Pass userType to the signIn function
+      });
+
+      console.log(result);
+      
+      
+      if (result?.error) {
+        toast({
+          title: "Error",
+          description: "Failed to sign in with Facebook",
+          variant: "destructive",
+        });
+      }
+      
+      if (result?.ok) {
+        // Store user data in localStorage
+        console.log("result", result);
+        const userData = {
+          userType: selectedUserType,
+          userStatus: "verified"
+        };
+        localStorage.setItem("TpAuthToken", JSON.stringify(userData));
+        
+        if (result.url) {
+          router.push(result.url);
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong with Google sign in",
+        variant: "destructive",
+      });
+    } finally {
+      setFacebookLoading(false);
     }
   };
 
@@ -283,17 +380,33 @@ const Page = () => {
           type="button"
           variant="outline"
           className="h-11 border border-[#E8EAEE] dark:border-dark-border hover:bg-white/90 dark:hover:bg-dark-input-bg rounded-lg text-paragraph dark:text-dark-text flex items-center justify-center gap-2"
+          onClick={handleGoogleSignIn}
+          disabled={googleLoading}
         >
-          <Image src="/assets/google.svg" alt="Google" width={20} height={20} />
-          Sign up with Google
+          {googleLoading ? (
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <>
+              <Image src="/assets/google.svg" alt="Google" width={20} height={20} />
+              Sign up with Google
+            </>
+          )}
         </Button>
         <Button 
           type="button"
           variant="outline"
           className="h-11 border border-[#E8EAEE] dark:border-dark-border hover:bg-white/90 dark:hover:bg-dark-input-bg rounded-lg text-paragraph dark:text-dark-text flex items-center justify-center gap-2"
+          onClick={handleFacebookSignIn}
+          disabled={facebookLoading}
         >
-          <Image src="/assets/facebook.svg" alt="Facebook" width={20} height={20} />
-          Sign up with Facebook
+          {facebookLoading ? (
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <>
+              <Image src="/assets/facebook.svg" alt="Facebook" width={20} height={20} />
+              Sign up with Facebook
+            </>
+          )}
         </Button>
       </div>
 

@@ -57,9 +57,18 @@ To get started with the project, clone the repository:
 
 `npm start`
 
+## user flow
+
+### Customer Status Flow:
+
+`pendingVerification → verified → active ↔ userInactive ↔ adminInactive`
+
+### Contract Status Flow:
+
+`draft → onboarding → funding_pending → funded → active → working → in_review ↔ cancelled ↔ disputed → in_process → resolved → completed`
+
 ## Support
 
 For any inquiries, please reach out to us at:  
 **Paklogics**  
 Email: [contact@paklogics.com](mailto:contact@paklogics.com)
-

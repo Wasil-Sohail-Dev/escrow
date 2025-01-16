@@ -4,13 +4,13 @@ import React, { useState } from "react";
 import { Search, Clock3, Flag, CreditCard } from "lucide-react";
 
 // Components
-import Topbar from "../components/Topbar";
+import Topbar from "../../../components/dashboard/Topbar";
 import { Input } from "@/components/ui/input";
-import Pagination from "../components/Pagination";
+import Pagination from "../../../components/dashboard/Pagination";
 
 // Utils & Types
 import { cn } from "@/lib/utils";
-import FilterButton from "../components/FilterButton";
+import FilterButton from "../../../components/dashboard/FilterButton";
 import { milestoneData } from "@/lib/data/transactions";
 import { CircularProgressbar } from "react-circular-progressbar";
 import { useTheme } from "next-themes";
