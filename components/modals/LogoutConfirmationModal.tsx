@@ -45,7 +45,7 @@ const LogoutConfirmationModal = ({ isOpen, onClose }: LogoutConfirmationModalPro
             </p>
           </div>
 
-          <div className="flex items-center justify-end gap-3 mt-3 border-t border-[#E3E3E3] pt-6">
+          <div className="flex items-center justify-end gap-3 mt-1 border-t border-[#E3E3E3] pt-6">
             <Button
               variant="outline"
               onClick={onClose}
