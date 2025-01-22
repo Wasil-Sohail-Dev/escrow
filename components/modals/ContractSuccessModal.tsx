@@ -20,7 +20,7 @@ interface ContractSuccessModalProps {
 const ContractSuccessModal = ({ isOpen, onClose, contractId }: ContractSuccessModalProps) => {
   const { toast } = useToast();
   const router = useRouter();
-  const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${contractId}`;
+  const inviteLink = `${process.env.NEXT_PUBLIC_BASE_URL}/invite/${contractId}`;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(inviteLink);

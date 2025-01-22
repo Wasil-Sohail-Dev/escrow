@@ -5,9 +5,6 @@ export async function middleware(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     const { pathname } = req.nextUrl;
 
-    console.log(token?.userType==="vendor","token");
-    
-
     // Skip middleware for the Stripe webhook route
     if (pathname === "/api/escrow-stripe-webhook") {
         console.log("Skipping middleware for webhook.");

@@ -64,6 +64,7 @@ const CreateContract = () => {
   const [milestoneDateErrors, setMilestoneDateErrors] = useState<string[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const initiateContract = async () => {
@@ -97,21 +98,23 @@ const CreateContract = () => {
         );
         if (data.message === "Vendor email is valid.") {
           setIsVendorValid(true);
-          toast({
-            title: "Valid vendor email",
-            description: "The vendor email is valid",
-            variant: "default",
-          });
+          // if (!sessionStorage.getItem('contractFormData')) {
+          //   toast({
+          //     title: "Valid vendor email",
+          //     description: "The vendor email is valid",
+          //     variant: "default",
+          //   });
+          // }
         }
       } catch (error: any) {
         setIsVendorValid(false);
         if (error.response?.data?.error) {
           setVendorEmailError(error.response.data.error);
-          toast({
-            title: "Invalid vendor email",
-            description: error.response.data.error,
-            variant: "destructive",
-          });
+          // toast({
+          //   title: "Invalid vendor email",
+          //   description: error.response.data.error,
+          //   variant: "destructive",
+          // });
         } else {
           setVendorEmailError("Error checking vendor email");
         }
@@ -303,6 +306,35 @@ const CreateContract = () => {
     return !hasErrors;
   };
 
+  const resetForm = () => {
+    setFormData({
+      contractId: "",
+      vendorEmail: "",
+      title: "",
+      startDate: "",
+      endDate: "",
+      description: "",
+      paymentType: "fixed",
+      totalPayment: "",
+      milestones: [
+        {
+          name: "",
+          amount: "",
+          description: "",
+          startDate: "",
+          endDate: "",
+        },
+      ],
+      documents: [],
+    });
+    setVendorEmailError("");
+    setIsVendorValid(false);
+    setPaymentError("");
+    setContractDateError("");
+    setMilestoneDateErrors([]);
+    setErrors({});
+  };
+
   const onSubmit = async () => {
     if (!validateForm()) {
       toast({
@@ -352,6 +384,8 @@ const CreateContract = () => {
       });
       return;
     }
+
+    setIsLoading(true);
     try {
       const response = await fetch("/api/create-contract", {
         method: "POST",
@@ -374,9 +408,17 @@ const CreateContract = () => {
       });
 
       if (response.ok) {
+        sessionStorage.removeItem('contractFormData');
+        resetForm();
         setIsSuccessModalOpen(true);
-      }
-      else{
+        const { data } = await axios.get("/api/initiate-contract");
+        if (data) {
+          setFormData(prev => ({
+            ...prev,
+            contractId: data.contractId,
+          }));
+        }
+      } else {
         toast({
           title: "Warning",
           description: "Please try again",
@@ -384,21 +426,41 @@ const CreateContract = () => {
         });
       }
     } catch (error) {
-      
-      console.log("cla");
-      
       console.error("Error creating contract:", error);
       toast({
         title: "Warning",
         description: "Please try again",
         variant: "warning",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     validatePayments();
   }, [formData.totalPayment, formData.milestones]);
+
+  // Add useEffect to load saved form data
+  useEffect(() => {
+    const savedFormData = sessionStorage.getItem('contractFormData');
+    if (savedFormData) {
+      try {
+      const parsedData = JSON.parse(savedFormData);
+      setFormData(parsedData);
+      // Clear the saved data after loading
+      sessionStorage.removeItem('contractFormData');
+      } catch (error) {
+        console.error('Error parsing saved form data:', error);
+      }
+    }
+  }, []);
+
+  const showPreview = () => {
+    // Store form data in sessionStorage before navigating
+    sessionStorage.setItem('contractFormData', JSON.stringify(formData));
+    router.push('/pre-build-details');
+  };
 
   return (
     <>
@@ -535,7 +597,7 @@ const CreateContract = () => {
                 </label>
                 <DatePicker
                   selected={formData.startDate ? new Date(formData.startDate) : null}
-                  onChange={(date) => handleInputChange("startDate", date ? date.toISOString().split('T')[0] : '')}
+                  onChange={(date: Date | null) => handleInputChange("startDate", date ? date.toISOString().split('T')[0] : '')}
                   dateFormat="MM/dd/yyyy"
                   placeholderText="Select start date"
                   className={`w-full h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
@@ -551,7 +613,7 @@ const CreateContract = () => {
                 </label>
                 <DatePicker
                   selected={formData.endDate ? new Date(formData.endDate) : null}
-                  onChange={(date) => handleInputChange("endDate", date ? date.toISOString().split('T')[0] : '')}
+                  onChange={(date: Date | null) => handleInputChange("endDate", date ? date.toISOString().split('T')[0] : '')}
                   dateFormat="MM/dd/yyyy"
                   placeholderText="Select end date"
                   className={`w-full h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
@@ -715,7 +777,7 @@ const CreateContract = () => {
                       </label>
                       <DatePicker
                         selected={milestone.startDate ? new Date(milestone.startDate) : null}
-                        onChange={(date) => handleMilestoneChange(index, "startDate", date ? date.toISOString().split('T')[0] : '')}
+                        onChange={(date: Date | null) => handleMilestoneChange(index, "startDate", date ? date.toISOString().split('T')[0] : '')}
                         dateFormat="MM/dd/yyyy"
                         placeholderText="Select start date"
                         className={`w-full h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
@@ -732,7 +794,7 @@ const CreateContract = () => {
                       </label>
                       <DatePicker
                         selected={milestone.endDate ? new Date(milestone.endDate) : null}
-                        onChange={(date) => handleMilestoneChange(index, "endDate", date ? date.toISOString().split('T')[0] : '')}
+                        onChange={(date: Date | null) => handleMilestoneChange(index, "endDate", date ? date.toISOString().split('T')[0] : '')}
                         dateFormat="MM/dd/yyyy"
                         placeholderText="Select end date"
                         className={`w-full h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
@@ -789,14 +851,26 @@ const CreateContract = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row justify-end items-center gap-4 pt-6">
-          <Button className="w-full sm:w-auto h-[42px] px-6 md:px-10 border bg-transparent text-[#292929] border-primary hover:text-primary hover:bg-transparent rounded-lg transition-colors dark:text-dark-text dark:hover:text-primary dark:bg-dark-input-bg">
+          <Button 
+            onClick={showPreview} 
+            className="w-full sm:w-auto h-[42px] px-6 md:px-10 border bg-transparent text-[#292929] border-primary hover:text-primary hover:bg-transparent rounded-lg transition-colors dark:text-dark-text dark:hover:text-primary dark:bg-dark-input-bg"
+            disabled={!formData.title || !formData.startDate || !formData.endDate || !formData.description || !formData.paymentType || !formData.totalPayment || !formData.milestones.every(milestone => milestone.name && milestone.amount && milestone.description && milestone.startDate && milestone.endDate)}
+          >
             Preview
           </Button>
           <Button
             onClick={onSubmit}
             className="w-full sm:w-auto h-[42px] px-6 md:px-10 bg-primary hover:bg-primary/90 text-[16px] font-[700] leading-[19.6px] text-white dark:text-dark-text rounded-lg transition-colors"
+            disabled={isLoading || !formData.title || !formData.startDate || !formData.endDate || !formData.description || !formData.paymentType || !formData.totalPayment || !formData.milestones.every(milestone => milestone.name && milestone.amount && milestone.description && milestone.startDate && milestone.endDate)}
           >
-            Save
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Saving...
+              </div>
+            ) : (
+              'Save'
+            )}
           </Button>
         </div>
       </div>

@@ -23,7 +23,6 @@ export default function Topbar({
     setTheme(theme === "dark" ? "light" : "dark");
   };
   const { user, loading } = useUser();
-  console.log("user", user);
   return (
     <div className="fixed top-0 right-0 md:left-[118px] left-0 z-40 bg-white dark:bg-dark-bg border-b border-[#6767670A] dark:border-dark-border">
       <nav className="px-10 py-4 max-lg:px-8 max-md:px-4 bg-white dark:bg-dark-bg border-b border-[#6767670A] dark:border-dark-border">

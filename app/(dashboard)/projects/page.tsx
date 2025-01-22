@@ -43,7 +43,7 @@ const Projects = () => {
         `/api/get-customer-contracts?customerId=${customerId}&role=${user?.userType}`
       );
       const { data } = await response.json();
-      setContracts(data);
+      setContracts([...data].filter((contract) => contract.status !== "cancelled"));
     } catch (error) {
       console.error("Error fetching contracts:", error);
     } finally {
@@ -66,7 +66,7 @@ const Projects = () => {
           <Loader size="lg" text="Loading contracts..." />
         ) : contracts && contracts.length > 0 ? (
           contracts.map((contract) => (
-            <ContractCard key={contract._id} contract={contract} />
+            <ContractCard key={contract._id} contract={contract} fetchContractStatus={fetchContractStatus} />
           ))
         ) : (
           <div className="flex justify-center items-center mt-[100px]">

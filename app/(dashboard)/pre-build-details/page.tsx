@@ -1,14 +1,42 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Topbar from "../../../components/dashboard/Topbar";
 import { Button } from "@/components/ui/button";
 import EditContractModal from "@/components/modals/EditContractModal";
 import EnterDetailsModal from "@/components/modals/EnterDetailsModal";
+import { useRouter } from "next/navigation";
 
 const PreBuildDetails = () => {
+  const router = useRouter();
+  const [formData, setFormData] = useState<any>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const savedFormData = sessionStorage.getItem('contractFormData');
+    if (savedFormData) {
+      try {
+        const parsedData = JSON.parse(savedFormData);
+        setFormData(parsedData);
+      } catch (error) {
+        console.error('Error parsing form data:', error);
+        router.push('/create-contract');
+      }
+    } else {
+      router.push('/create-contract');
+    }
+  }, [router]);
+
+  const handleBack = () => {
+    // Store the current form data before going back
+    if (formData) {
+      sessionStorage.setItem('contractFormData', JSON.stringify(formData));
+    }
+    router.push('/create-contract');
+  };
+
+console.log(formData,"formDataformData");
 
   return (
     <>
@@ -18,19 +46,28 @@ const PreBuildDetails = () => {
       />
       <div className="mt-[85px]">
         <div className="flex mb-4 sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
-          <h1 className="text-[32px] sm:text-[40px] lg:text-[53.42px] font-[700] leading-[42px] sm:leading-[48px] lg:leading-[83.33px] text-[#292929] dark:text-dark-text">
-            Home Renovation
-          </h1>
+          <div className="flex flex-col gap-4 items-start">
+            <Button
+              onClick={handleBack}
+              variant="outline"
+              className="h-10 px-4 py-2 text-[14px] font-[500] border-primary text-primary hover:bg-primary/10"
+            >
+              ← Back
+            </Button>
+            <h1 className="text-[32px] sm:text-[40px] lg:text-[53.42px] font-[700] leading-[42px] sm:leading-[48px] lg:leading-[83.33px] text-[#292929] dark:text-dark-text">
+              {formData?.title || 'Loading...'}
+            </h1>
+          </div>
           {/* Original Edit button and modal */}
-          <Button
+          {false && <Button
             onClick={() => setIsEditModalOpen(true)}
             className="bg-primary hover:bg-primary/90 text-white dark:text-dark-text px-6 md:px-8 text-[14px] font-[700]"
           >
             Edit
-          </Button>
+          </Button>}
         </div>
         <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-[400] leading-[28px] sm:leading-[32px] lg:leading-[35.2px] mb-4 text-[#292929] dark:text-dark-text/60">
-          Prepared by [your name] for [Vendor name] | [date goes here]
+          Contract ID: {formData?.contractId || 'Loading...'}
         </p>
 
         {/* Project Scope */}
@@ -39,10 +76,7 @@ const PreBuildDetails = () => {
             Project Scope
           </h2>
           <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-[400] leading-[28px] sm:leading-[32px] lg:leading-[35.2px] text-[#292929] dark:text-dark-text/60">
-            In this section you can give a brief introduction to the context of
-            what you will be doing, as well as any goals the client has
-            articulated to you. Lorem ipsum dolor sit amet, consectetur
-            adipiscing elit. Pellentesque non congue dui.
+            {formData?.description || 'Loading...'}
           </p>
         </div>
 
@@ -52,8 +86,7 @@ const PreBuildDetails = () => {
             Milestones
           </h2>
           <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-[400] leading-[28px] sm:leading-[32px] lg:leading-[35.2px] mb-4 text-[#292929] dark:text-dark-text/60">
-            Payment terms here. Client can pay all upfront, 50% upfront, or
-            incrementally (if it's a big project).
+            Total Payment: ${formData?.totalPayment || '0'} ({formData?.paymentType || 'fixed'})
           </p>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-[#919191] dark:border-dark-border text-[14px] sm:text-[16px] lg:text-[18px] text-left">
@@ -71,32 +104,19 @@ const PreBuildDetails = () => {
                 </tr>
               </thead>
               <tbody>
-                <tr className="dark:bg-dark-bg">
-                  <td className="border border-[#919191] dark:border-dark-border p-2 sm:p-3 lg:p-4 text-[#292929] dark:text-dark-text/60">
-                    The deliverable should be described here
-                  </td>
-                  <td className="border border-[#919191] dark:border-dark-border p-2 sm:p-3 lg:p-4 text-[#292929] dark:text-dark-text/60">
-                    $X,XXX.XX
-                  </td>
-                  <td className="border border-[#919191] dark:border-dark-border p-2 sm:p-3 lg:p-4 text-[#292929] dark:text-dark-text/60">
-                    Add terms and descriptions as necessary here. Outline
-                    specifically what you will do and what the client will
-                    receive.
-                  </td>
-                </tr>
-                <tr className="dark:bg-dark-bg">
-                  <td className="border border-[#919191] dark:border-dark-border p-2 sm:p-3 lg:p-4 text-[#292929] dark:text-dark-text/60">
-                    The deliverable should be described here
-                  </td>
-                  <td className="border border-[#919191] dark:border-dark-border p-2 sm:p-3 lg:p-4 text-[#292929] dark:text-dark-text/60">
-                    $X,XXX.XX
-                  </td>
-                  <td className="border border-[#919191] dark:border-dark-border p-2 sm:p-3 lg:p-4 text-[#292929] dark:text-dark-text/60">
-                    Add terms and descriptions as necessary here. Outline
-                    specifically what you will do and what the client will
-                    receive.
-                  </td>
-                </tr>
+                {formData?.milestones?.map((milestone: any, index: number) => (
+                  <tr key={index} className="dark:bg-dark-bg">
+                    <td className="border border-[#919191] dark:border-dark-border p-2 sm:p-3 lg:p-4 text-[#292929] dark:text-dark-text/60">
+                      {milestone.name}
+                    </td>
+                    <td className="border border-[#919191] dark:border-dark-border p-2 sm:p-3 lg:p-4 text-[#292929] dark:text-dark-text/60">
+                      ${milestone.amount}
+                    </td>
+                    <td className="border border-[#919191] dark:border-dark-border p-2 sm:p-3 lg:p-4 text-[#292929] dark:text-dark-text/60">
+                      {milestone.description}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
               <tfoot>
                 <tr className="bg-[#F8F8F8] dark:bg-dark-input-bg">
@@ -104,7 +124,7 @@ const PreBuildDetails = () => {
                     Total
                   </td>
                   <td className="border border-[#919191] dark:border-dark-border p-2 sm:p-3 lg:p-4 text-[#292929] dark:text-dark-text">
-                    $X,XXX.XX
+                    ${formData?.totalPayment || '0'}
                   </td>
                   <td className="border border-[#919191] dark:border-dark-border p-2 sm:p-3 lg:p-4"></td>
                 </tr>
@@ -119,58 +139,49 @@ const PreBuildDetails = () => {
             Process & Timeline
           </h2>
           <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-[400] leading-[28px] sm:leading-[32px] lg:leading-[35.2px] mb-4 text-[#292929] dark:text-dark-text/60">
-            Here you should describe the process and timing of the project.
-            Touch on meetings, when key project milestones will happen and what
-            the client should expect from you.
+            Project Duration: {formData ? `${new Date(formData.startDate).toLocaleDateString()} - ${new Date(formData.endDate).toLocaleDateString()}` : 'Loading...'}
           </p>
-          <div className="relative mt-8 md:max-w-3xl w-full overflow-x-auto pb-4">
-            <div className="min-w-[600px]">
+          <div className=" mt-8 md:max-w-3xl w-full overflow-x-auto pb-4">
+            <div className="min-w-[600px] relative">
               {/* Timeline line */}
-              <div className="absolute h-[2px] bg-[#D0D0D0] dark:bg-dark-border md:w-[85%] w-full top-[6px]"></div>
+              <div className="absolute h-[2px] bg-[#D0D0D0] dark:bg-dark-border w-full top-[6px]"></div>
 
               {/* Timeline points */}
               <div className="flex justify-between relative">
-                {/* Point 1 */}
+                {/* Project Start */}
                 <div className="flex flex-col">
                   <div className="w-3 h-3 bg-[#292929] dark:bg-dark-text rounded-full mb-2"></div>
                   <span className="text-[14px] sm:text-[16px] text-[#292929] dark:text-dark-text text-center">
-                    Design System
+                    Project Start
                   </span>
                   <span className="text-[12px] sm:text-[14px] text-[#A6A8AB] dark:text-dark-text/60 text-center">
-                    March 2024
+                    {formData ? new Date(formData.startDate).toLocaleDateString() : 'Loading...'}
                   </span>
                 </div>
 
-                {/* Point 2 */}
-                <div className="flex flex-col">
-                  <div className="w-3 h-3 bg-[#292929] dark:bg-dark-text rounded-full mb-2"></div>
-                  <span className="text-[14px] sm:text-[16px] text-[#292929] dark:text-dark-text text-center">
-                    Design System
-                  </span>
-                  <span className="text-[12px] sm:text-[14px] text-[#A6A8AB] dark:text-dark-text/60 text-center">
-                    March 2024
-                  </span>
-                </div>
+                {/* Milestones */}
+                {formData?.milestones?.map((milestone: any, index: number) => (
+                  <div key={index} className="flex flex-col">
+                    <div className="w-3 h-3 bg-[#292929] dark:bg-dark-text rounded-full mb-2"></div>
+                    <span className="text-[14px] sm:text-[16px] text-[#292929] dark:text-dark-text text-center">
+                      {milestone.name}
+                    </span>
+                    <span className="text-[12px] sm:text-[14px] text-[#A6A8AB] dark:text-dark-text/60 text-center">
+                      {new Date(milestone.startDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
 
-                {/* Point 3 */}
-                <div className="flex flex-col">
-                  <div className="w-3 h-3 bg-[#292929] dark:bg-dark-text rounded-full mb-2"></div>
-                  <span className="text-[14px] sm:text-[16px] text-[#292929] dark:text-dark-text text-center">
-                    Design System
-                  </span>
-                  <span className="text-[12px] sm:text-[14px] text-[#A6A8AB] dark:text-dark-text/60 text-center">
-                    March 2024
-                  </span>
-                </div>
+                
 
-                {/* Point 4 */}
+                {/* Project End */}
                 <div className="flex flex-col">
                   <div className="w-3 h-3 bg-[#292929] dark:bg-dark-text rounded-full mb-2"></div>
                   <span className="text-[14px] sm:text-[16px] text-[#292929] dark:text-dark-text text-center">
-                    Design System
+                    Project End
                   </span>
                   <span className="text-[12px] sm:text-[14px] text-[#A6A8AB] dark:text-dark-text/60 text-center">
-                    March 2024
+                    {formData ? new Date(formData.endDate).toLocaleDateString() : 'Loading...'}
                   </span>
                 </div>
               </div>
@@ -184,10 +195,14 @@ const PreBuildDetails = () => {
             Payment Terms
           </h2>
           <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-[400] leading-[28px] sm:leading-[32px] lg:leading-[35.2px] text-[#292929] dark:text-dark-text/60">
-            The Client shall pay the Contractor as follows: 25% of the total
-            project fee upon execution of this Agreement, which shall be
-            refundable in the event of termination of this Agreement by the
-            Client prior to the completion of the Work Product...
+            {formData ? (
+              <>
+                This contract follows a {formData.paymentType} payment structure with a total budget of ${formData.totalPayment}.
+                {formData.milestones.length > 0 && ` The payment will be distributed across ${formData.milestones.length} milestone(s).`}
+              </>
+            ) : (
+              'Loading...'
+            )}
           </p>
         </div>
 
@@ -200,6 +215,16 @@ const PreBuildDetails = () => {
             Neither party shall be liable for any failure or delay in
             performance under this Agreement to the extent such failure or delay
             is caused by events beyond the reasonable control of such party...
+          </p>
+        </div>
+
+        {/* Vendor Information */}
+        <div className="mb-6 border-t border-[#D0D0D0] dark:border-dark-border pt-6">
+          <h2 className="text-[20px] sm:text-[22px] lg:text-[24.57px] font-[700] leading-[35px] sm:leading-[39px] lg:leading-[43.25px] mb-2 text-[#292929] dark:text-dark-text">
+            Vendor Information
+          </h2>
+          <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-[400] leading-[28px] sm:leading-[32px] lg:leading-[35.2px] text-[#292929] dark:text-dark-text/60">
+            Vendor Email: {formData?.vendorEmail || 'Loading...'}
           </p>
         </div>
       </div>

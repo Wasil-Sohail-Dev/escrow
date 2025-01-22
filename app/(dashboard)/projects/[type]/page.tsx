@@ -67,7 +67,7 @@ const ProjectsPage = () => {
         {loading ? (
           <Loader size="lg" text="Loading contracts..." />
         ) : contracts && contracts.length > 0 ? contracts.map((contract) => (
-          <ContractCard key={contract._id} contract={contract} />
+          <ContractCard key={contract._id} contract={contract} fetchContractStatus={fetchContractStatus} />
         )):
           <div className="flex justify-center items-center mt-[100px]">
             <p className="text-base-regular text-[#0D1829B2] dark:text-dark-text/60">No contracts found in this status {type}</p>

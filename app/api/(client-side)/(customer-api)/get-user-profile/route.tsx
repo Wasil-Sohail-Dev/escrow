@@ -15,7 +15,6 @@ export async function GET(req: Request) {
 
     // Get session data (e.g., email)
     const session = await getServerSession({ req, res, ...authOptions });
-    console.log("session", session);
     const email = session?.user?.email;
 
     if (!email) {

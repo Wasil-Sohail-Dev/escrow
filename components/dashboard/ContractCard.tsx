@@ -9,7 +9,7 @@ import { useUser } from '@/contexts/UserContext'
 import { useContractAction } from '@/contexts/ContractActionContext'
 import { useToast } from '@/hooks/use-toast'
 
-const ContractCard = ({ contract }: { contract: Contract }) => {
+const ContractCard = ({ contract, fetchContractStatus }: { contract: Contract, fetchContractStatus: () => void }) => {
   const router = useRouter()
   const { user } = useUser();
   const { handleContractAction } = useContractAction();
@@ -17,6 +17,19 @@ const ContractCard = ({ contract }: { contract: Contract }) => {
   const handlePayment = () => {
     router.push(`/make-payment/${contract.contractId}`)
   }
+
+  const handleReject = async () => {
+    await handleContractAction(
+      contract.contractId, 
+      "reject", 
+      false,
+      () => {
+        fetchContractStatus();
+        // This will be called after successful rejection
+        router.refresh(); // Force a refresh of the current route
+      }
+    );
+  };
 
   return (
     <div
@@ -34,7 +47,7 @@ const ContractCard = ({ contract }: { contract: Contract }) => {
               <Button
                 variant="secondary"
                 className="text-base-medium text-white rounded-[12px]"
-                onClick={() => handleContractAction(contract.contractId, "reject")}
+                onClick={handleReject}
               >
                 Reject
               </Button>
