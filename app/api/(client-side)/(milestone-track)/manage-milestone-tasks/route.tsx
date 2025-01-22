@@ -7,6 +7,7 @@ import { Customer } from "@/models/CustomerSchema";
 enum MilestoneAction {
   VendorSubmitted = "vendor_submitted",
   ClientRequestedChanges = "client_requested_changes",
+  ClientApproved = "client_approved", // New action for client approval
 }
 
 enum UserRole {
@@ -14,17 +15,27 @@ enum UserRole {
   Client = "client",
 }
 
-interface Milestone {
-  milestoneId: string;
-  status: string;
-  title: string;
-  description: string;
-  // Add other properties of Milestone if needed
+enum MilestoneStatus {
+  Pending = "pending",
+  Working = "working",
+  ReadyForReview = "ready_for_review",
+  ChangeRequested = "change_requested",
+  Approved = "approved",
+  PaymentReleased = "payment_released",
+  Disputed = "disputed",
+  DisputedInProcess = "disputed_in_process",
+  DisputedResolved = "disputed_resolved",
 }
 
-// Update the milestone status safely
+interface Milestone {
+  milestoneId: string;
+  status: MilestoneStatus;
+  title: string;
+  description: string;
+}
+
 interface UpdatedMilestone extends Milestone {
-  status: string;
+  status: MilestoneStatus;
 }
 
 interface RequestBody {
@@ -60,9 +71,18 @@ export async function POST(req: Request) {
         {
           success: false,
           message:
-            "Invalid action. Must be 'vendor_submitted' or 'client_requested_changes'.",
+            "Invalid action. Must be 'vendor_submitted', 'client_requested_changes', or 'client_approved'.",
         },
         { status: 400 }
+      );
+    }
+
+    // Find the contract and milestone
+    const contract = await Contract.findById(contractId);
+    if (!contract) {
+      return NextResponse.json(
+        { success: false, message: "Contract not found." },
+        { status: 404 }
       );
     }
 
@@ -101,12 +121,16 @@ export async function POST(req: Request) {
       );
     }
 
-    // Find the contract and milestone
-    const contract = await Contract.findById(contractId);
-    if (!contract) {
+    if (
+      action === MilestoneAction.ClientApproved &&
+      customer.userType !== UserRole.Client
+    ) {
       return NextResponse.json(
-        { success: false, message: "Contract not found." },
-        { status: 404 }
+        {
+          success: false,
+          message: "Only a client can approve a milestone.",
+        },
+        { status: 403 }
       );
     }
 
@@ -135,7 +159,50 @@ export async function POST(req: Request) {
       );
     }
 
-    // Update milestone status
+    // Validate milestone status before updating
+    if (action === MilestoneAction.VendorSubmitted) {
+      if (
+        ![MilestoneStatus.Working, MilestoneStatus.ChangeRequested].includes(
+          milestone.status
+        )
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "Milestone must be in 'working' or 'change_requested' to submit work.",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (action === MilestoneAction.ClientRequestedChanges) {
+      if (milestone.status !== MilestoneStatus.ReadyForReview) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "Milestone must be in 'ready_for_review' to request changes.",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (action === MilestoneAction.ClientApproved) {
+      if (milestone.status !== MilestoneStatus.ReadyForReview) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Milestone must be in 'ready_for_review' to approve.",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Update milestone status based on action
     contract.milestones = contract.milestones.map(
       (ms: Milestone): Milestone | UpdatedMilestone =>
         ms.milestoneId === milestoneId
@@ -143,8 +210,12 @@ export async function POST(req: Request) {
               ...ms,
               status:
                 action === MilestoneAction.VendorSubmitted
-                  ? "ready_for_review"
-                  : "change_requested",
+                  ? MilestoneStatus.ReadyForReview
+                  : action === MilestoneAction.ClientRequestedChanges
+                  ? MilestoneStatus.ChangeRequested
+                  : action === MilestoneAction.ClientApproved
+                  ? MilestoneStatus.Approved
+                  : ms.status,
             }
           : ms
     );
@@ -171,7 +242,11 @@ export async function POST(req: Request) {
         message: `${
           action === MilestoneAction.VendorSubmitted
             ? "Vendor submitted"
-            : "Client requested changes"
+            : action === MilestoneAction.ClientRequestedChanges
+            ? "Client requested changes"
+            : action === MilestoneAction.ClientApproved
+            ? "Client approved"
+            : ""
         } for the milestone.`,
       },
       { status: 200 }

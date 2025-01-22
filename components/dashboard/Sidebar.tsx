@@ -26,15 +26,18 @@ import ChatIcon from "@/components/icons/ChatIcon";
 import SettingIcon from "@/components/icons/SettingIcon";
 import LogoutIcon from "@/components/icons/LogoutIcon";
 import { signOut } from "next-auth/react";
+import { useUser } from "@/contexts/UserContext";
+import LogoutConfirmationModal from "@/components/modals/LogoutConfirmationModal";
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const pathname = usePathname();
+  const { user } = useUser();
 
-  const handleLogout = () => {
-    localStorage.removeItem("TpAuthToken");
-    signOut({callbackUrl: "/user-register"});
-  }
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -48,6 +51,13 @@ const Sidebar = () => {
           <Menu className="w-6 h-6 text-sidebar-icon text-sidebar-foreground dark:text-dark-icon" />
         )}
       </button>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmationModal 
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+      />
+
       <aside
         onClick={() => setIsOpen(!isOpen)}
         className={`z-40 pt-16 md:pt-2
@@ -96,7 +106,7 @@ const Sidebar = () => {
                   className="p-3 hover:bg-sidebar-accent dark:hover:bg-white/10 rounded-lg transition-colors"
                 >
                   <ContactDetailIcon className={`w-7 h-7 ${
-                    pathname === "/projects" || pathname.includes("/contact-details") ||
+                    pathname.includes("/projects") || pathname.includes("/contact-details") || pathname.includes("/make-payment") ||
                     pathname === "/transection-details" ||
                     pathname === "/make-payment"
                       ? "text-primary"
@@ -107,7 +117,7 @@ const Sidebar = () => {
               <TooltipContent>Projects</TooltipContent>
             </Tooltip>
 
-            <Tooltip>
+            {user?.userType === "client" && <Tooltip>
               <TooltipTrigger asChild>
                 <Link
                   href="/create-contract"
@@ -125,7 +135,7 @@ const Sidebar = () => {
                 </Link>
               </TooltipTrigger>
               <TooltipContent>Create Contract</TooltipContent>
-            </Tooltip>
+            </Tooltip>}
 
             <Tooltip>
               <TooltipTrigger asChild>
@@ -258,7 +268,10 @@ const Sidebar = () => {
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="cursor-pointer p-3 hover:bg-sidebar-accent dark:hover:bg-white/10 rounded-lg transition-colors" onClick={handleLogout}>
+                <div 
+                  className="cursor-pointer p-3 hover:bg-sidebar-accent dark:hover:bg-white/10 rounded-lg transition-colors" 
+                  onClick={handleLogoutClick}
+                >
                   <LogoutIcon className="w-7 h-7 text-sidebar-icon text-sidebar-foreground dark:text-dark-icon" />
                 </div>
               </TooltipTrigger>

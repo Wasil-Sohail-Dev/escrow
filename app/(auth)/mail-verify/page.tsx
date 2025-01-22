@@ -13,7 +13,6 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { signIn } from "next-auth/react";
 
 type VerifyCodeFormValues = {
   otp: string;

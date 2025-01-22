@@ -14,15 +14,13 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { getSession } from "next-auth/react";
+import { Eye, EyeOff } from "lucide-react";
 
 // Validation Schema
 const signUpSchema = z
@@ -34,17 +32,14 @@ const signUpSchema = z
       .regex(/[a-z]/, "Password must contain at least one lowercase letter")
       .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
       .regex(/\d/, "Password must contain at least one number")
-      .regex(
-        /[@$!%*?&]/,
-        "Password must contain at least one special character"
-      ),
+      .regex(/[@$!%*?&]/, "Password must contain at least one special character"),
     cnfPassword: z
       .string()
-      .min(8, "Confirm password must be at least 8 characters long"),
-    userType: z.string().nonempty("Please select a role (Client or Vendor)"),
-    acceptPolicy: z.literal(true, {
-      errorMap: () => ({ message: "You must accept the policy to continue." }),
-    }),
+      .min(8, "Passwords don't match"),
+    acceptPolicy: z.boolean()
+      .refine((val) => val === true, {
+        message: "Please accept the Terms and Conditions to proceed."
+      }),
   })
   .refine((data) => data.password === data.cnfPassword, {
     message: "Passwords don't match",
@@ -57,8 +52,9 @@ const Page = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [facebookLoading, setFacebookLoading] = useState(false);
-  // localStorage.removeItem("TpAuthToken");
-
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const router = useRouter();
   const { toast } = useToast();
 
   const form = useForm<SignUpFormValues>({
@@ -67,76 +63,38 @@ const Page = () => {
       email: "",
       password: "",
       cnfPassword: "",
-      userType: "vendor",
-      acceptPolicy: true,
+      acceptPolicy: false,
     },
     mode: "onBlur",
   });
 
-  const router = useRouter();
-
   const handleSignUp = async (data: SignUpFormValues) => {
-    console.log(data);
-    
     if (!data.acceptPolicy) {
       toast({
         title: "Warning",
         description: "Please check the policy to proceed.",
         variant: "warning",
       });
-      return; // Prevent submission if the policy is not accepted
+      return;
     }
 
     setLoading(true);
 
     try {
-      const response = await axios.post("/api/register", data);
-      if (response.status === 201) {
-        toast({
-          title: "Success",
-          description:
-            response.data.message ||
-            "Registration successful! Please check your email.",
-          variant: "default",
-        });
-
-        localStorage.setItem("TpAuthToken", JSON.stringify(response.data.data));
-        form.reset();
-
-        // // Redirect to /mail-verify with email as query parameter
-        setTimeout(() => {
-          router.push("/mail-verify");
-        }, 300); // 300ms delay before redirecting
-
-        // Redirect to /mail-verify with email as query parameter
-      } else {
-        toast({
-          title: "Warning",
-          description:
-            response.data.message ||
-            "Unexpected response. Please contact support.",
-          variant: "warning",
-        });
-      }
+      // Store form data in localStorage temporarily
+      localStorage.setItem("tempRegisterData", JSON.stringify({
+        email: data.email,
+        password: data.password
+      }));
+      
+      // Redirect to user type selection
+      router.push("/select-usertype");
     } catch (err: any) {
-      const errorCode = err.response?.status;
-      const errorMessage =
-        err.response?.data?.error || "Something went wrong. Please try again.";
-
-      if (errorCode === 409) {
-        // Handle uniqueness conflicts
-        toast({
-          title: "Conflict",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -145,17 +103,10 @@ const Page = () => {
   const handleGoogleSignIn = async () => {
     try {
       setGoogleLoading(true);
-      // Get the current userType from form
-      const selectedUserType = form.getValues("userType");
-      console.log(selectedUserType,"selectedUserType");
-      
       const result = await signIn("google", {
         redirect: false,
-        userType: selectedUserType // Pass userType to the signIn function
+        callbackUrl: "/select-usertype"
       });
-
-      console.log(result);
-      
       
       if (result?.error) {
         toast({
@@ -165,18 +116,8 @@ const Page = () => {
         });
       }
       
-      if (result?.ok) {
-        // Store user data in localStorage
-        console.log("result", result);
-        const userData = {
-          userType: selectedUserType,
-          userStatus: "verified"
-        };
-        localStorage.setItem("TpAuthToken", JSON.stringify(userData));
-        
-        if (result.url) {
-          router.push(result.url);
-        }
+      if (result?.ok && result.url) {
+        router.push(result.url);
       }
     } catch (error) {
       toast({
@@ -192,17 +133,10 @@ const Page = () => {
   const handleFacebookSignIn = async () => {
     try {
       setFacebookLoading(true);
-      // Get the current userType from form
-      const selectedUserType = form.getValues("userType");
-      console.log(selectedUserType,"selectedUserType");
-      
       const result = await signIn("facebook", {
         redirect: false,
-        userType: selectedUserType // Pass userType to the signIn function
+        callbackUrl: "/select-usertype"
       });
-
-      console.log(result);
-      
       
       if (result?.error) {
         toast({
@@ -212,23 +146,13 @@ const Page = () => {
         });
       }
       
-      if (result?.ok) {
-        // Store user data in localStorage
-        console.log("result", result);
-        const userData = {
-          userType: selectedUserType,
-          userStatus: "verified"
-        };
-        localStorage.setItem("TpAuthToken", JSON.stringify(userData));
-        
-        if (result.url) {
-          router.push(result.url);
-        }
+      if (result?.ok && result.url) {
+        router.push(result.url);
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Something went wrong with Google sign in",
+        description: "Something went wrong with Facebook sign in",
         variant: "destructive",
       });
     } finally {
@@ -239,37 +163,17 @@ const Page = () => {
   return (
     <div className="flex flex-col gap-6 w-full max-w-[500px] bg-white dark:bg-dark-input-bg p-12 my-12 border border-[#E8EAEE] dark:border-dark-border">
       <div className="text-center space-y-1">
-        <h1 className="text-3xl font-semibold text-paragraph dark:text-dark-text">Sign up</h1>
+        <h1 className="text-3xl font-semibold text-paragraph dark:text-dark-text">Create Account</h1>
         <p className="text-sm text-paragraph/60 dark:text-dark-text/60">
-          Sign up now to get started with an account
+          Fill in your details to get started
         </p>
       </div>
+      
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSignUp)}
           className="flex flex-col gap-4"
         >
-          {/* User Type Switch */}
-          <FormField
-            control={form.control}
-            name="userType"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex justify-center items-center gap-3">
-                  <span className="text-sm text-paragraph dark:text-dark-text">Client</span>
-                  <Switch
-                    checked={field.value === "vendor"}
-                    onCheckedChange={(checked) =>
-                      field.onChange(checked ? "vendor" : "client")
-                    }
-                    className="data-[state=checked]:bg-primary"
-                  />
-                  <span className="text-sm text-paragraph dark:text-dark-text">Vendor</span>
-                </div>
-              </FormItem>
-            )}
-          />
-
           {/* Email Field */}
           <FormField
             control={form.control}
@@ -300,13 +204,22 @@ const Page = () => {
                 <FormLabel className="text-sm text-paragraph dark:text-dark-text">
                   Password
                 </FormLabel>
-                <Input
-                  {...field}
-                  type="password"
-                  placeholder="••••••••"
-                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
-                  disabled={loading}
-                />
+                <div className="relative">
+                  <Input
+                    {...field}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    className="h-11 pr-10 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -321,13 +234,22 @@ const Page = () => {
                 <FormLabel className="text-sm text-paragraph dark:text-dark-text">
                   Confirm Password
                 </FormLabel>
-                <Input
-                  {...field}
-                  type="password"
-                  placeholder="••••••••"
-                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
-                  disabled={loading}
-                />
+                <div className="relative">
+                  <Input
+                    {...field}
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    className="h-11 pr-10 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  >
+                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -361,9 +283,12 @@ const Page = () => {
             disabled={loading}
           >
             {loading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Next Step...</span>
+              </div>
             ) : (
-              "Sign Up"
+              "Continue"
             )}
           </Button>
         </form>
@@ -384,7 +309,10 @@ const Page = () => {
           disabled={googleLoading}
         >
           {googleLoading ? (
-            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <span>Connecting to Google...</span>
+            </div>
           ) : (
             <>
               <Image src="/assets/google.svg" alt="Google" width={20} height={20} />
@@ -400,7 +328,10 @@ const Page = () => {
           disabled={facebookLoading}
         >
           {facebookLoading ? (
-            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <span>Connecting to Facebook...</span>
+            </div>
           ) : (
             <>
               <Image src="/assets/facebook.svg" alt="Facebook" width={20} height={20} />

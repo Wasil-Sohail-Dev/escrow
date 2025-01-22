@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth"; // Assuming you're using next-aut
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import { Customer } from "@/models/CustomerSchema";
-import { authOptions } from "../auth/[...nextauth]/options";
+import { authOptions } from "../../auth/[...nextauth]/options";
 
 export async function GET(req: Request) {
   // Establish a connection to the database

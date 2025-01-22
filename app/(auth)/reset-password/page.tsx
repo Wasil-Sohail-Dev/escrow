@@ -10,11 +10,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 // Validation Schema
 const newPasswordSchema = z.object({
@@ -36,7 +38,24 @@ type NewPasswordFormValues = z.infer<typeof newPasswordSchema>;
 const NewPassword = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token');
+  const { toast } = useToast();
+
+  // Redirect if no token is present
+  useEffect(() => {
+    if (!token) {
+      toast({
+        title: "Error",
+        description: "Reset token is missing. Please request a new password reset.",
+        variant: "destructive",
+      });
+      router.push('/login');
+    }
+  }, [token, router, toast]);
 
   const form = useForm<NewPasswordFormValues>({
     resolver: zodResolver(newPasswordSchema),
@@ -44,28 +63,62 @@ const NewPassword = () => {
       password: "",
       confirmPassword: "",
     },
+    mode: "onBlur",
   });
 
   const handleNewPassword = async (data: NewPasswordFormValues) => {
+    console.log(data,"datadatadatadatadatadata");
+    
+    if (!token) {
+      toast({
+        title: "Error",
+        description: "Reset token is missing",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setError("");
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/reset-password', {
+      const response = await fetch('/api/reset-password-link', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ password: data.password }),
+        body: JSON.stringify({ 
+          token: token,
+          newPassword: data.password 
+        }),
       });
 
+      const responseData = await response.json();
+
       if (response.ok) {
-        router.push("/login");
+        toast({
+          title: "Success",
+          description: "Password has been reset successfully",
+          variant: "default",
+        });
+        
+        setTimeout(() => {
+          router.push("/login");
+        }, 300);
       } else {
-        const data = await response.json();
-        setError(data.error || 'Something went wrong');
+        toast({
+          title: "Error",
+          description: responseData.error || 'Failed to reset password',
+          variant: "destructive",
+        });
+        setError(responseData.error || 'Failed to reset password');
       }
     } catch (err) {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
       setError('Failed to reset password. Please try again.');
     }
 
@@ -96,14 +149,29 @@ const NewPassword = () => {
                 <FormLabel className="text-sm text-paragraph dark:text-dark-text">
                   New Password
                 </FormLabel>
-                <Input
-                  {...field}
-                  type="password"
-                  placeholder="••••••••"
-                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
-                  required
-                  disabled={loading}
-                />
+                <div className="relative">
+                  <Input
+                    {...field}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40 pr-10"
+                    required
+                    disabled={loading}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-11 px-3 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </Button>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -117,14 +185,29 @@ const NewPassword = () => {
                 <FormLabel className="text-sm text-paragraph dark:text-dark-text">
                   Confirm New Password
                 </FormLabel>
-                <Input
-                  {...field}
-                  type="password"
-                  placeholder="••••••••"
-                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
-                  required
-                  disabled={loading}
-                />
+                <div className="relative">
+                  <Input
+                    {...field}
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40 pr-10"
+                    required
+                    disabled={loading}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-11 px-3 hover:bg-transparent"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </Button>
+                </div>
                 <FormMessage />
               </FormItem>
             )}

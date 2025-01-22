@@ -17,6 +17,8 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
+import { Eye, EyeOff } from "lucide-react";
+import { useUser } from "@/contexts/UserContext";
 
 // Validation Schema
 const signInSchema = z.object({
@@ -31,8 +33,9 @@ const Page = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [facebookLoading, setFacebookLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-
+  const { refreshUser } = useUser();
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -52,8 +55,9 @@ const Page = () => {
     });
 console.log(result,"result");
     if (result?.error) {
-      setError(result.error);
+      setError(result.error==="CredentialsSignin"?"Credentials are not valid":result.error);
     } else if (result?.ok) {
+      await refreshUser();
       router.push("/home");
     } else {
       setError("An unexpected error occurred.");
@@ -141,14 +145,23 @@ console.log(result,"result");
                 <FormLabel className="text-sm text-paragraph dark:text-dark-text">
                   Password
                 </FormLabel>
-                <Input
-                  {...field}
-                  type="password"
-                  placeholder="••••••••"
-                  className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
-                  required
-                  disabled={loading}
-                />
+                <div className="relative">
+                  <Input
+                    {...field}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    className="h-11 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40 pr-10"
+                    required
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
                 <FormMessage />
               </FormItem>
             )}

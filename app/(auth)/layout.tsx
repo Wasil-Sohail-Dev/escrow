@@ -1,4 +1,5 @@
 import ThemeToggle from "@/components/ThemeToggle";
+import Loader from "@/components/ui/loader";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -28,9 +29,15 @@ export default function Layout({
       </Link>
 
       <ThemeToggle />
-      
+
       {/* Content */}
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense
+        fallback={
+          <div className="flex justify-center items-center h-screen">
+            <Loader size="lg" text="Loading..." />
+          </div>
+        }
+      >
         {children}
       </Suspense>
     </section>

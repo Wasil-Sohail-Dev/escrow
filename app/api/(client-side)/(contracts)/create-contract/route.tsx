@@ -38,6 +38,15 @@ export async function POST(req: Request) {
       );
     }
 
+    // Ensure the contractId is unique
+    const existingContract = await Contract.findOne({ contractId });
+    if (existingContract) {
+      return NextResponse.json(
+        { error: `A contract with contractId ${contractId} already exists.` },
+        { status: 422 }
+      );
+    }
+
     // Ensure startDate is before endDate
     if (new Date(startDate) >= new Date(endDate)) {
       return NextResponse.json(
@@ -99,10 +108,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // Update the existing contract
-    // Create a new contract record based on the existing contract
+    // Create a new contract record
     const newContract = new Contract({
-      contractId, // Ensure a new unique contractId
+      contractId,
       title,
       description,
       clientId: client._id,
@@ -134,7 +142,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       {
-        message: "Contract updated successfully and invitation sent.",
+        message: "Contract created successfully.",
         data: savedContract,
       },
       { status: 200 }
@@ -147,7 +155,7 @@ export async function POST(req: Request) {
       );
     }
 
-    console.error("Error updating contract:", error);
+    console.error("Error creating contract:", error);
     return NextResponse.json(
       { error: error.message || "Internal server error." },
       { status: 500 }

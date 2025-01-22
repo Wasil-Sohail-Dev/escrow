@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     );
 
     // Send verification email with token (or a code)
-    // await sendMailCode(email); // Adjust to send token/code in the email
+    await sendMailCode(email); // Adjust to send token/code in the email
 
     // Respond with token
     return NextResponse.json(

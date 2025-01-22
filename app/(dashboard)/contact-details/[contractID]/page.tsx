@@ -2,8 +2,6 @@
 import React, { useEffect, useState } from "react";
 import Topbar from "@/components/dashboard/Topbar";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
-import Image from "next/image";
 import WorkSubmissionModal from "@/components/modals/WorkSubmissionModal";
 import RevisionRequestModal from "@/components/modals/RevisionRequestModal";
 import Link from "next/link";
@@ -12,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import { useUser } from "@/contexts/UserContext";
 import { getDuration } from "@/lib/helpers/getDuration";
+import { useContractAction } from "@/contexts/ContractActionContext";
+import { useContract } from "@/contexts/ContractContext";
+import Loader from "@/components/ui/loader";
 
 interface MilestoneFile {
   name: string;
@@ -58,116 +59,30 @@ interface Contract {
   endDate: string;
 }
 
-const milestones: Milestone[] = [
-  {
-    title: "Logo Concepts",
-    payment: "$200",
-    deliveryDate: "12/20/2024",
-    status: "completed",
-    description: [
-      "Manage accounts worth $4.7 million in annual sales",
-      "Selected to train 3 new account managers on the basis of my stellar track record",
-      "Increased business revenue by 150% by implementing new customer service initiative",
-      "Recovered 15 dormant accounts worth a total of $500,000",
-    ],
-    files: [
-      { name: "New file.pdf", size: "1.2 MB", type: "pdf" },
-      { name: "Folder.xls", size: "8 MB", type: "xls" },
-    ],
-  },
-  {
-    title: "Finalized Logo and Guidelines",
-    payment: "$200",
-    deliveryDate: "12/21/2024",
-    status: "pending",
-    description: [
-      "Networked effectively with clients, increasing revenue by 47% in just 5 months",
-      "Selected as Employee of the Month as well as Top Salesperson 3 times for exceeding sales objectives",
-    ],
-    files: [],
-  },
-  {
-    title: "Marketing Material Templates",
-    payment: "$200",
-    deliveryDate: "12/21/2024",
-    status: "pending",
-    description: [
-      "Monitored client accounts, analyzed incomings and outgoings, and performed daily, weekly, and annual forecasts",
-      "Exceeded 2014 sales target by 47%",
-      "Strategized with team to win market share from competitors",
-    ],
-    files: [
-      { name: "New file.pdf", size: "8 MB", type: "pdf" },
-      { name: "Folder.xls", size: "8 MB", type: "xls" },
-    ],
-  },
-];
-
 const ContactDetails = () => {
   const router = useRouter();
   const [isWorkModalOpen, setIsWorkModalOpen] = useState(false);
   const [isRevisionModalOpen, setIsRevisionModalOpen] = useState(false);
-
   const { contractID } = useParams<{ contractID: string }>();
-  const [loading, setLoading] = useState<boolean>(false);
-  const [contract, setContract] = useState<Contract | null>(null);
+  const { user } = useUser();
+  const { contract, loading, fetchContract } = useContract();
+  const { handleContractAction } = useContractAction();
   const { toast } = useToast();
-  const {user} = useUser();
-  const fetchContract = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`/api/get-contract?contractId=${contractID}`);
-      if (response.data.message === "Contract details retrieved successfully.") {
-        setContract(response.data.data);
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to retrieve contract details.",
-          variant: "warning",
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching contract:", error);
-      toast({
-        title: "Error",
-        description: "An error occurred while fetching contract details.",
-        variant: "warning",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+
   useEffect(() => {
-    if (contractID) fetchContract();
-  }, [contractID, toast]);
-
-  const handleAction = async (action: string) => {
-    try {
-      await axios.patch("/api/handle-invite", {
-        contractId: contractID,
-        action,
-      });
-      toast({
-        title: "Success",
-        description: "Contract action successful.",
-        variant: "default",
-      });
-      fetchContract()
-    } catch (error) {
-      console.error("Error handling contract action:", error);
-      toast({
-        title: "Error",
-        description: "An error occurred. Please try again.",
-        variant: "warning",
-      });
+    if (contractID) {
+      fetchContract(contractID);
     }
+  }, [contractID]);
+
+  const handleAction = async (action: "accept" | "reject") => {
+    await handleContractAction(contractID, action);
+    fetchContract(contractID);
   };
 
-  if (loading) return (
-    <div className="flex justify-center items-center mt-[100px]">
-      <p className="text-base-regular text-[#0D1829B2] dark:text-dark-text/60">Loading...</p>
-    </div>
-  )
+  if (loading) {
+    return <Loader size="lg" text="Loading contract details..." />;
+  }
 
   return (
     <>
@@ -182,10 +97,36 @@ const ContactDetails = () => {
               <h2 className="text-paragraph dark:text-white text-heading3-bold">
                 {contract?.title || "Graphic Designing"}
               </h2>
-              {contract?.status === "onboarding" && <div className="flex gap-2 flex-wrap">
-                <Button variant="secondary" className="text-base-medium text-white rounded-[12px]" onClick={() => handleAction("reject")}>Reject</Button>
-                <Button className="text-base-medium text-white rounded-[12px]" onClick={() => handleAction("accept")}>Accept</Button>
-              </div>}
+              {(contract?.status === "onboarding" && user?.userType === "vendor") && (
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    variant="secondary"
+                    className="text-base-medium text-white rounded-[12px]"
+                    onClick={() => handleAction("reject")}
+                  >
+                    Reject
+                  </Button>
+                  <Button
+                    className="text-base-medium text-white rounded-[12px]"
+                    onClick={() => handleAction("accept")}
+                  >
+                    Accept
+                  </Button>
+                </div>
+              )}
+              {user?.userType === "client" &&
+                (contract?.status === "funding_pending" ||
+                  contract?.status === "funding_processing") && (
+                  <Button
+                    variant="default"
+                    onClick={() =>
+                      router.push(`/make-payment/${contract?.contractId}`)
+                    }
+                    className="bg-secondary hover:bg-secondary/90 text-white rounded-[9px] px-4 py-2 hover:underline transition-colors duration-200"
+                  >
+                    Make Payment
+                  </Button>
+                )}
             </div>
             <div className="border-b border-[#D0D0D04D] dark:border-dark-border pb-6">
               <p className="text-sm text-paragraph dark:text-dark-2 text-small-medium font-[400]">
@@ -199,7 +140,9 @@ const ContactDetails = () => {
               <div className="flex flex-col gap-1 text-paragraph dark:text-dark-text text-base-regular">
                 <div className="flex items-center gap-2">
                   <p className="">Duration:</p>
-                  <p className="">{getDuration(contract?.startDate, contract?.endDate)}</p>
+                  <p className="">
+                    {getDuration(contract?.startDate, contract?.endDate)}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <p>Project Cost:</p>
@@ -207,18 +150,24 @@ const ContactDetails = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <p>Start Date:</p>
-                  <p className="">{new Date(contract?.startDate || "").toLocaleDateString()}</p>
+                  <p className="">
+                    {new Date(contract?.startDate || "").toLocaleDateString()}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <p>End Date:</p>
-                  <p className="">{new Date(contract?.endDate || "").toLocaleDateString()}</p>
+                  <p className="">
+                    {new Date(contract?.endDate || "").toLocaleDateString()}
+                  </p>
                 </div>
               </div>
 
               <Link href="/transection-details">
-                {contract?.status !== "onboarding" && <Button className="text-[14px] font-[700] leading-[20px] bg-primary text-white dark:bg-primary dark:text-dark-text px-2 md:px-6 rounded-lg hover:bg-primary-500 dark:hover:bg-primary-500 transition-colors md:h-[46px] h-[36px]">
-                  Payment History
-                </Button>}
+                {contract?.status !== "onboarding" && (
+                  <Button className="text-[14px] font-[700] leading-[20px] bg-primary text-white dark:bg-primary dark:text-dark-text px-2 md:px-6 rounded-lg hover:bg-primary-500 dark:hover:bg-primary-500 transition-colors md:h-[46px] h-[36px]">
+                    Payment History
+                  </Button>
+                )}
               </Link>
             </div>
           </div>
@@ -321,22 +270,26 @@ const ContactDetails = () => {
                 </div>
               </div>
               <div className=" mt-4 md:mt-0 flex justify-end">
-                {contract?.status !== "onboarding" && <Button
-                  onClick={() => {
-                    if (user?.userType === "client") {
-                      setIsRevisionModalOpen(true);
-                    } else {
-                      router.push("/milestone-submission");
-                    }
-                  }}
-                  className={`text-[14px] font-[700] leading-[20px] ${
-                    (milestone.status === "completed" || true)
-                      ? "bg-primary hover:bg-primary-500 dark:bg-primary dark:hover:bg-primary-500 dark:text-dark-text"
-                      : "bg-[#CACED8] hover:bg-[#CACED8]/90 dark:bg-[#CACED8] dark:hover:bg-[#CACED8]/90 dark:text-white"
-                  } text-white px-6 md:px-10 rounded-lg transition-colors md:h-[46px] h-[36px]`}
-                >
-                  {user?.userType === "client" ? "Request Revision" : "Submit Work"}
-                </Button>}
+                {contract?.status !== "onboarding" && (
+                  <Button
+                    onClick={() => {
+                      if (user?.userType === "client") {
+                        setIsRevisionModalOpen(true);
+                      } else {
+                        router.push("/milestone-submission");
+                      }
+                    }}
+                    className={`text-[14px] font-[700] leading-[20px] ${
+                      milestone.status === "completed" || true
+                        ? "bg-primary hover:bg-primary-500 dark:bg-primary dark:hover:bg-primary-500 dark:text-dark-text"
+                        : "bg-[#CACED8] hover:bg-[#CACED8]/90 dark:bg-[#CACED8] dark:hover:bg-[#CACED8]/90 dark:text-white"
+                    } text-white px-6 md:px-10 rounded-lg transition-colors md:h-[46px] h-[36px]`}
+                  >
+                    {user?.userType === "client"
+                      ? "Request Revision"
+                      : "Submit Work"}
+                  </Button>
+                )}
               </div>
             </div>
           ))}

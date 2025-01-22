@@ -12,6 +12,8 @@ export async function GET(req: Request) {
     const customerId = searchParams.get("customerId");
     const role = searchParams.get("role"); // "client" or "vendor"
     const status = searchParams.get("status"); // Contract status or "all"
+    const limit = parseInt(searchParams.get("limit") || "0", 10); // Number of contracts to return
+    const sort = searchParams.get("sort") || "desc"; // "asc" or "desc"
 
     // Validate query parameters
     if (!customerId) {
@@ -54,8 +56,10 @@ export async function GET(req: Request) {
       query.status = status;
     }
 
-    // Fetch contracts
-    const contracts = await Contract.find(query);
+    // Fetch contracts with sorting and limiting
+    const contracts = await Contract.find(query)
+      .sort({ createdAt: sort === "asc" ? 1 : -1 }) // Sort by createdAt
+      .limit(limit > 0 ? limit : 0); // Apply limit if provided
 
     if (contracts.length === 0) {
       return NextResponse.json(

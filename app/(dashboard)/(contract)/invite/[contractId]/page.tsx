@@ -2,20 +2,22 @@
 
 import Topbar from "@/components/dashboard/Topbar";
 import { Button } from "@/components/ui/button";
-import { useParams, useRouter } from "next/navigation";
-import axios from "axios";
+import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useContractAction } from "@/contexts/ContractActionContext";
+import { useContract } from "@/contexts/ContractContext";
+import Loader from "@/components/ui/loader";
+import { useUser } from "@/contexts/UserContext";
 
-type Milestone = {
+interface Milestone {
   milestoneId: string;
   title: string;
   description: string;
   amount: number;
   status: string;
-};
+}
 
-type Contract = {
+interface Contract {
   _id: string;
   contractId: string;
   title: string;
@@ -39,67 +41,29 @@ type Contract = {
   endDate: string;
   createdAt: string;
   updatedAt: string;
-};
+}
 
 const Page = () => {
   const { contractId } = useParams<{ contractId: string }>();
-  const router = useRouter();
-  const [loading, setLoading] = useState<boolean>(false);
-  const [contract, setContract] = useState<Contract | null>(null);
-  const { toast } = useToast();
+  const [actionLoading, setActionLoading] = useState<{
+    accept: boolean;
+    reject: boolean;
+  }>({ accept: false, reject: false });
+  
+  const { contract, loading, fetchContract } = useContract();
+  const { handleContractAction } = useContractAction();
+  const {user} = useUser();
 
   useEffect(() => {
-    const fetchContract = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(`/api/get-contract?contractId=${contractId}`);
-        if (response.data.message === "Contract details retrieved successfully.") {
-          setContract(response.data.data);
-        } else {
-          toast({
-            title: "Error",
-            description: "Failed to retrieve contract details.",
-            variant: "warning",
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching contract:", error);
-        toast({
-          title: "Error",
-          description: "An error occurred while fetching contract details.",
-          variant: "warning",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (contractId) fetchContract();
-  }, [contractId, toast]);
-
-  const handleAction = async (action: string) => {
-    setLoading(true);
-    try {
-      await axios.patch("/api/handle-invite", {
-        contractId,
-        action,
-      });
-      toast({
-        title: "Success",
-        description: "Contract action successful.",
-        variant: "default",
-      });
-      router.push("/home");
-    } catch (error) {
-      console.error("Error handling contract action:", error);
-      toast({
-        title: "Error",
-        description: "An error occurred. Please try again.",
-        variant: "warning",
-      });
-    } finally {
-      setLoading(false);
+    if (contractId) {
+      fetchContract(contractId);
     }
+  }, [contractId]);
+
+  const handleAction = async (action: "accept" | "reject") => {
+    setActionLoading(prev => ({ ...prev, [action]: true }));
+    await handleContractAction(contractId, action, true);
+    setActionLoading(prev => ({ ...prev, [action]: false }));
   };
 
   return (
@@ -109,15 +73,10 @@ const Page = () => {
         description="Review the contract and make your decision."
       />
 
-      <div className="mt-[85px] max-w-4xl mx-auto">
-        {loading && (
-          <div className="text-center text-lg">
-            <p>Loading...</p>
-            <div className="loader"></div>
-          </div>
-        )}
-
-        {!loading && contract && (
+      <main className="mt-[85px] max-w-4xl mx-auto">
+        {loading ? (
+          <Loader size="lg" text="Loading contract details..." />
+        ) : contract ? (
           <>
             <h1 className="text-3xl font-bold text-main-heading dark:text-white mb-4">
               Contract: {contract.title}
@@ -146,11 +105,15 @@ const Page = () => {
               </div>
               <div>
                 <p className="font-medium text-muted-foreground dark:text-dark-2">Start Date:</p>
-                <p className="text-paragraph dark:text-dark-text">{new Date(contract.startDate).toLocaleDateString()}</p>
+                <p className="text-paragraph dark:text-dark-text">
+                  {new Date(contract.startDate).toLocaleDateString()}
+                </p>
               </div>
               <div>
                 <p className="font-medium text-muted-foreground dark:text-dark-2">End Date:</p>
-                <p className="text-paragraph dark:text-dark-text">{new Date(contract.endDate).toLocaleDateString()}</p>
+                <p className="text-paragraph dark:text-dark-text">
+                  {new Date(contract.endDate).toLocaleDateString()}
+                </p>
               </div>
             </div>
 
@@ -177,30 +140,42 @@ const Page = () => {
               ))}
             </ul>
 
-            <div className="flex justify-end space-x-4 mt-8">
+            {user?.userType === "vendor" && <div className="flex justify-end space-x-4 mt-8">
               <Button
                 variant="default"
-                className="bg-primary hover:bg-primary-hover text-white font-medium py-2 px-6 rounded-lg transition duration-200"
+                className="bg-primary hover:bg-primary-hover text-white font-medium py-2 px-6 rounded-lg transition duration-200 min-w-[120px]"
                 onClick={() => handleAction("accept")}
-                disabled={loading}
+                disabled={actionLoading.accept || actionLoading.reject}
               >
-                {loading ? "Processing..." : "Accept"}
+                {actionLoading.accept ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Processing...
+                  </div>
+                ) : (
+                  "Accept"
+                )}
               </Button>
               <Button
-                className="bg-error-btn hover:bg-error-btn-hover text-white font-medium py-2 px-6 rounded-lg transition duration-200"
+                className="bg-error-btn hover:bg-error-btn-hover text-white font-medium py-2 px-6 rounded-lg transition duration-200 min-w-[120px]"
                 onClick={() => handleAction("reject")}
-                disabled={loading}
+                disabled={actionLoading.accept || actionLoading.reject}
               >
-                {loading ? "Processing..." : "Reject"}
+                {actionLoading.reject ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Processing...
+                  </div>
+                ) : (
+                  "Reject"
+                )}
               </Button>
-            </div>
+            </div>}
           </>
-        )}
-
-        {(!loading && !contract) && (
+        ) : (
           <p className="text-center text-lg text-error">No contract details found.</p>
         )}
-      </div>
+      </main>
     </>
   );
 };

@@ -19,17 +19,18 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { JwtPayload } from "jsonwebtoken";
+import { useUser } from "@/contexts/UserContext";
 
 const vendorSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  userName: z.string().min(1, "Username is required"),
-  phone: z.string().min(1, "Phone number is required"),
-  companyName: z.string().min(1, "Company name is required"),
-  companyId: z.string().min(1, "Company ID is required"),
-  companyAddress: z.string().min(1, "Company address is required"),
-  acceptTerms: z.boolean().refine((data) => data === true, {
-    message: "You must accept the terms and conditions",
+  firstName: z.string().min(1, { message: "First name is required" }),
+  lastName: z.string().min(1, { message: "Last name is required" }),
+  userName: z.string().min(1, { message: "Username is required" }),
+  phone: z.string().min(1, { message: "Phone number is required" }),
+  companyName: z.string().min(1, { message: "Company name is required" }),
+  companyId: z.string().min(1, { message: "Company ID is required" }),
+  companyAddress: z.string().min(1, { message: "Company address is required" }),
+  acceptTerms: z.boolean().refine((val) => val === true, {
+    message: "You must accept the terms and conditions"
   }),
 });
 
@@ -50,6 +51,7 @@ const Page = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const { refreshUser } = useUser();
   const [jwt, setJwt] = useState<JwtPayload | null>(null);
 
   useEffect(() => {
@@ -83,6 +85,7 @@ const Page = () => {
     }
 
   }, []);
+console.log(jwt,"jwt");
 
   const form = useForm<VendorFormValues | ClientFormValues>({
     resolver: zodResolver(jwt?.userType === "vendor" ? vendorSchema : clientSchema),
@@ -98,6 +101,7 @@ const Page = () => {
       }),
       acceptTerms: false,
     },
+    mode: "onBlur",
   });
   const handleOnboarding = async (data: VendorFormValues | ClientFormValues) => {
     setLoading(true);
@@ -115,6 +119,7 @@ const Page = () => {
       const response = await axios.post("/api/save-onboarding", {...apiData,email:jwt?.email,userType:jwt?.userType});
 
       if (response.status === 200) {
+        await refreshUser();
         toast({
           title: "Success",
           description: response.data.message || "Onboarding completed!",
@@ -181,9 +186,9 @@ const Page = () => {
               control={form.control}
               name="firstName"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="space-y-2">
                   <FormLabel className="text-sm text-paragraph dark:text-dark-text">
-                    First Name
+                    First Name *
                   </FormLabel>
                   <Input
                     {...field}
@@ -199,9 +204,9 @@ const Page = () => {
               control={form.control}
               name="lastName"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="space-y-2">
                   <FormLabel className="text-sm text-paragraph dark:text-dark-text">
-                    Last Name
+                    Last Name *
                   </FormLabel>
                   <Input
                     {...field}
@@ -218,9 +223,9 @@ const Page = () => {
             control={form.control}
             name="userName"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="space-y-2">
                 <FormLabel className="text-sm text-paragraph dark:text-dark-text">
-                  Username
+                  Username *
                 </FormLabel>
                 <Input
                   {...field}
@@ -236,9 +241,9 @@ const Page = () => {
             control={form.control}
             name="phone"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="space-y-2">
                 <FormLabel className="text-sm text-paragraph dark:text-dark-text">
-                  Phone Number
+                  Phone Number *
                 </FormLabel>
                 <Input
                   {...field}
@@ -256,9 +261,9 @@ const Page = () => {
                 control={form.control}
                 name="companyName"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="space-y-2">
                     <FormLabel className="text-sm text-paragraph dark:text-dark-text">
-                      Company Name
+                      Company Name *
                     </FormLabel>
                     <Input
                       {...field}
@@ -274,9 +279,9 @@ const Page = () => {
                 control={form.control}
                 name="companyId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="space-y-2">
                     <FormLabel className="text-sm text-paragraph dark:text-dark-text">
-                      Company ID
+                      Company ID *
                     </FormLabel>
                     <Input
                       {...field}
@@ -292,9 +297,9 @@ const Page = () => {
                 control={form.control}
                 name="companyAddress"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="space-y-2">
                     <FormLabel className="text-sm text-paragraph dark:text-dark-text">
-                      Company Address
+                      Company Address *
                     </FormLabel>
                     <Input
                       {...field}
@@ -312,18 +317,18 @@ const Page = () => {
             control={form.control}
             name="acceptTerms"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                />
-                <div className="space-y-1 leading-none">
-                  <FormLabel className="text-sm text-paragraph dark:text-dark-text">
+              <FormItem>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    className="border-[#D1D5DB] dark:border-dark-border data-[state=checked]:bg-primary"
+                  />
+                  <label className="text-sm text-paragraph dark:text-dark-text">
                     I agree to the terms and conditions
-                  </FormLabel>
-                  <FormMessage />
+                  </label>
                 </div>
+                <FormMessage className="mt-1" />
               </FormItem>
             )}
           />

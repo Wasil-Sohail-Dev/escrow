@@ -19,32 +19,54 @@ interface User {
 interface UserContextType {
   user: User | null;
   loading: boolean;
+  refreshUser: () => Promise<void>;
 }
 
-const UserContext = createContext<UserContextType>({ user: null, loading: true });
+const UserContext = createContext<UserContextType>({ 
+  user: null, 
+  loading: true,
+  refreshUser: async () => {} 
+});
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch("/api/get-user-profile");
-        const data = await response.json();
+  const fetchUser = async () => {
+    try {
+      const response = await fetch("/api/get-user-profile", {
+        // Add cache: no-store to prevent caching
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
+      const data = await response.json();
+      
+      if (data.user) {
         setUser(data.user);
-      } catch (error) {
-        console.error('Error fetching user:', error);
-      } finally {
-        setLoading(false);
+      } else {
+        setUser(null);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const refreshUser = async () => {
+    setLoading(true);
+    await fetchUser();
+  };
+
+  useEffect(() => {
     fetchUser();
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, loading }}>
+    <UserContext.Provider value={{ user, loading, refreshUser }}>
       {children}
     </UserContext.Provider>
   );

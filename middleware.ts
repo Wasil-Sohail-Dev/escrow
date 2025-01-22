@@ -4,11 +4,9 @@ import { NextRequest, NextResponse } from "next/server";
 export async function middleware(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     const { pathname } = req.nextUrl;
-console.log(token,"token");
 
-    console.log("Token:", token);
-    console.log("Request Path:", pathname);
-    console.log("Request Method:", req.method);
+    console.log(token?.userType==="vendor","token");
+    
 
     // Skip middleware for the Stripe webhook route
     if (pathname === "/api/escrow-stripe-webhook") {
@@ -19,10 +17,11 @@ console.log(token,"token");
     const isAuthPage =
         pathname === "/sign-in" ||
         pathname === "/user-register" ||
+        pathname === "/select-usertype" ||
         pathname === "/mail-verify" ||
         pathname === "/on-boarding" ||
-        pathname === "/forgot-password" ||
         pathname === "/reset-password" ||
+        pathname === "/forgot-password" ||
         pathname === "/verification-mail";
 
     const isOnboardingPage = pathname === "/on-boarding";
@@ -66,7 +65,7 @@ console.log(token,"token");
         //     return NextResponse.redirect(url);
         // }
 
-        if(token.userStatus === "active" && pathname === "/on-boarding"){
+        if (token.userStatus === "active" && pathname === "/on-boarding") {
             const url = req.nextUrl.clone();
             url.pathname = "/home";
             return NextResponse.redirect(url);
@@ -74,15 +73,15 @@ console.log(token,"token");
         if (needsOnboarding && !isOnboardingPage) {
             const url = req.nextUrl.clone();
             url.pathname = "/on-boarding";
-            
+
             const tokenData = {
                 email: token.email,
                 userType: token.userType,
                 userStatus: token.userStatus,
             };
-            
+
             const response = NextResponse.redirect(url);
-            
+
             // Set token data in a cookie that can be read by the client
             response.cookies.set('TpAuthToken', JSON.stringify(tokenData), {
                 httpOnly: false, // Allow client-side access
@@ -90,10 +89,10 @@ console.log(token,"token");
                 sameSite: 'lax',
                 maxAge: 60 * 60 // 1 hour
             });
-        
+
             return response;
         }
-        
+
 
         // If user is verified and trying to access auth pages or onboarding
         if (!needsOnboarding && (isAuthPage || isOnboardingPage)) {
@@ -109,6 +108,13 @@ console.log(token,"token");
         return NextResponse.redirect(url);
     }
 
+    if (token?.userType==="vendor") {
+    if (pathname === "/create-contract") {
+        const url = req.nextUrl.clone();
+        url.pathname = "/";
+        return NextResponse.redirect(url);
+    }
+}
     // Add CORS headers globally
     const response = NextResponse.next();
     response.headers.set("Access-Control-Allow-Credentials", "true");

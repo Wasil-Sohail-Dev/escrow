@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Sidebar from "../../components/dashboard/Sidebar";
+import Loader from "@/components/ui/loader";
 
 export const metadata: Metadata = {
   title: "Auth Page",
@@ -26,7 +27,9 @@ export default function Layout({
         >
           <Suspense
             fallback={
-              <div className="text-center dark:text-dark-text">Loading...</div>
+              <div className="flex justify-center items-center h-screen">
+                <Loader size="lg" text="Loading..." />
+              </div>
             }
           >
             {children}

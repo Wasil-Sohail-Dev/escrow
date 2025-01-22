@@ -26,7 +26,6 @@ const ForgotPassword = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-
   const form = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
@@ -39,7 +38,7 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/forgot-password', {
+      const response = await fetch('/api/forget-password-link', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,12 +47,16 @@ const ForgotPassword = () => {
       });
 
       if (response.ok) {
+
+
         setSuccess(true);
       } else {
         const data = await response.json();
+
         setError(data.error || 'Something went wrong');
       }
     } catch (err) {
+
       setError('Failed to send reset instructions. Please try again.');
     }
 
@@ -92,7 +95,7 @@ const ForgotPassword = () => {
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel className="text-sm text-paragraph dark:text-dark-text">
-                    Enter registered email or phone number
+                    Enter registered email
                   </FormLabel>
                   <Input
                     {...field}
@@ -117,7 +120,10 @@ const ForgotPassword = () => {
               disabled={loading}
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Sending...</span>
+                </div>
               ) : (
                 "Send"
               )}

@@ -28,7 +28,8 @@ const milestoneHistorySchema = new mongoose.Schema(
             enum: [
                 "vendor_submitted", // Vendor submits the milestone
                 "client_requested_changes", // Client requests changes
-                "approved", // Milestone approved
+                "client_approved", // Milestone approved
+                "payment_released", // payment_release to vendor
                 "disputed", // Milestone disputed
             ],
             required: true,

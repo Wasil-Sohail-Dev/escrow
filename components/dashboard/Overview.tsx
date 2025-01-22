@@ -33,8 +33,8 @@ const Overview = ({ dispute }: { dispute?: boolean }) => {
   const [activeTab, setActiveTab] = useState<TabOption>("active");
   const [contracts, setContracts] = useState<ContractStatusCount>({
     draft: 0,
-    onboarding: 1,
-    funding_pending: 2,
+    onboarding: 0,
+    funding_pending: 0,
     funding_processing: 0,
     funding_onhold: 0,
     active: 0,
@@ -44,7 +44,7 @@ const Overview = ({ dispute }: { dispute?: boolean }) => {
     disputed: 0,
     disputed_in_process: 0,
     disputed_resolved: 0,
-    totalContracts: 3
+    totalContracts: 0
   });
   const router = useRouter();
   const { user } = useUser();
@@ -76,8 +76,7 @@ const Overview = ({ dispute }: { dispute?: boolean }) => {
         return 0;
     }
   };
-
-  
+console.log(user, "user type");
   return (
     <>
       {true ? (
