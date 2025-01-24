@@ -294,13 +294,13 @@ const Page = () => {
         </form>
       </Form>
 
-      <div className="flex items-center gap-2">
+      {/* <div className="flex items-center gap-2">
         <div className="h-[1px] flex-1 bg-[#E8EAEE] dark:bg-dark-border" />
         <span className="text-sm text-paragraph dark:text-dark-text">or</span>
         <div className="h-[1px] flex-1 bg-[#E8EAEE] dark:bg-dark-border" />
-      </div>
+      </div> */}
 
-      <div className="flex flex-col gap-3">
+      {/* <div className="flex flex-col gap-3">
         <Button 
           type="button"
           variant="outline"
@@ -339,7 +339,7 @@ const Page = () => {
             </>
           )}
         </Button>
-      </div>
+      </div> */}
 
       <p className="text-sm text-paragraph dark:text-dark-text text-center">
         Already have an account?{" "}
