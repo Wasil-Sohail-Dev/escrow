@@ -14,12 +14,12 @@ interface TableHeader {
   className?: string;
 }
 
-interface Transaction {
+export interface Transaction {
   id: string;
   milestoneName: string;
   date: string;
   vendorName: string;
-  status: "pending" | "cancelled" | "delivered" | "in-progress";
+  status: "pending" | "cancelled" | "delivered" | "in-progress" | "funded";
   amount: string;
 }
 
@@ -64,6 +64,8 @@ export default function PaymentHistory({
         return "bg-[#4CE13F]";
       case "in-progress":
         return "bg-[#4CE13F]";
+      case "funded":
+        return "bg-[#00BA88]";
       default:
         return "bg-black";
     }

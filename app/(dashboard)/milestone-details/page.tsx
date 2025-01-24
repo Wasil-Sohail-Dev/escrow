@@ -145,7 +145,7 @@ const MileStoneDetails = () => {
             </div>
           </div>
           <div className="flex mt-10 flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
-            <div className="flex items-center gap-2 md:gap-4 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+            {/* <div className="flex items-center gap-2 md:gap-4 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
               <FilterButton
                 icon={<Clock3 className="h-[14px] w-[14px] text-[#4B5563] dark:text-dark-text" />}
                 label="Date range"
@@ -166,7 +166,7 @@ const MileStoneDetails = () => {
                 label="Project"
                 options={FILTER_OPTIONS.project}
               />
-            </div>
+            </div> */}
 
             <div className="flex items-center gap-2 border dark:border-dark-border rounded-lg bg-[#FBFBFB] dark:bg-dark-input-bg w-full md:w-[411px] px-4 focus-within:border-primary dark:focus-within:border-primary transition-colors">
               <Search className="text-[#959BA4] dark:text-dark-text" style={{ height: '20px', width: '20px' }} />

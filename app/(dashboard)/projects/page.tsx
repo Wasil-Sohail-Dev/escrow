@@ -61,7 +61,7 @@ const Projects = () => {
     <>
       <Topbar title="Projects" description="Detailed information about your Contracts" />
       <div className="flex flex-col gap-2 lg:px-10 mt-[85px]">
-        <h1 className="text-2xl font-bold">All Projects</h1>
+        {/* <h1 className="text-2xl font-bold dark:text-dark-text">All Projects</h1> */}
         {loading ? (
           <Loader size="lg" text="Loading contracts..." />
         ) : contracts && contracts.length > 0 ? (

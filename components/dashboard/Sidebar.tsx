@@ -40,7 +40,7 @@ const Sidebar = () => {
   };
 
   return (
-    <TooltipProvider delayDuration={0}>
+    <TooltipProvider>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-sidebar-accent dark:bg-dark-bg ml-2"
@@ -59,7 +59,6 @@ const Sidebar = () => {
       />
 
       <aside
-        onClick={() => setIsOpen(!isOpen)}
         className={`z-40 pt-16 md:pt-2
           fixed md:relative h-screen overflow-y-auto scrollbar-hide
           w-[118px] bg-sidebar dark:bg-dark-bg border-r border-sidebar-border dark:border-dark-border
@@ -68,7 +67,7 @@ const Sidebar = () => {
           transition-transform duration-300
         `}
       >
-        <div className="flex flex-col min-h-full">
+        <div className="flex flex-col min-h-full" onClick={(e) => e.stopPropagation()}>
           <div className="flex-shrink-0">
             <Link href={"/home"} className="flex items-center">
               <Image
@@ -96,9 +95,10 @@ const Sidebar = () => {
                   }`} />
                 </Link>
               </TooltipTrigger>
-              <TooltipContent>Dashboard</TooltipContent>
+              <TooltipContent>
+                <span>Dashboard</span>
+              </TooltipContent>
             </Tooltip>
-
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -108,7 +108,8 @@ const Sidebar = () => {
                   <ContactDetailIcon className={`w-7 h-7 ${
                     pathname.includes("/projects") || pathname.includes("/contact-details") || pathname.includes("/make-payment") ||
                     pathname === "/transection-details" ||
-                    pathname === "/make-payment"
+                    pathname === "/make-payment" ||
+                    pathname.includes("/transection-details")
                       ? "text-primary"
                       : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
                   }`} />
@@ -116,7 +117,6 @@ const Sidebar = () => {
               </TooltipTrigger>
               <TooltipContent>Projects</TooltipContent>
             </Tooltip>
-
             {user?.userType === "client" && <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -136,7 +136,6 @@ const Sidebar = () => {
               </TooltipTrigger>
               <TooltipContent>Create Contract</TooltipContent>
             </Tooltip>}
-
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -154,7 +153,6 @@ const Sidebar = () => {
               </TooltipTrigger>
               <TooltipContent>Payment History</TooltipContent>
             </Tooltip>
-
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -172,7 +170,6 @@ const Sidebar = () => {
               </TooltipTrigger>
               <TooltipContent>Notifications</TooltipContent>
             </Tooltip>
-
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -191,7 +188,6 @@ const Sidebar = () => {
               </TooltipTrigger>
               <TooltipContent>Dispute Management</TooltipContent>
             </Tooltip>
-
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -209,7 +205,6 @@ const Sidebar = () => {
               </TooltipTrigger>
               <TooltipContent>Dispute Chat</TooltipContent>
             </Tooltip>
-
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -227,7 +222,6 @@ const Sidebar = () => {
               </TooltipTrigger>
               <TooltipContent>Contact Us</TooltipContent>
             </Tooltip>
-
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -246,7 +240,6 @@ const Sidebar = () => {
               <TooltipContent>Terms & Conditions</TooltipContent>
             </Tooltip>
           </div>
-
           <div className="flex-shrink-0 flex flex-col items-center gap-7 pb-7">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -265,7 +258,6 @@ const Sidebar = () => {
               </TooltipTrigger>
               <TooltipContent>Settings</TooltipContent>
             </Tooltip>
-
             <Tooltip>
               <TooltipTrigger asChild>
                 <div 

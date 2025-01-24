@@ -216,6 +216,43 @@ function PaymentPage() {
             </p>
 
             <form className="space-y-4 w-full">
+            <div className="flex w-full flex-col sm:flex-row gap-4 sm:gap-8">
+                <div className="flex-1 space-y-2">
+                  <label className="text-[15px] lg:text-[17px] text-[#292929] dark:text-dark-text font-semibold">
+                    Project ID
+                  </label>
+                  <Input
+                    type="text"
+                    value={contractID}
+                    disabled
+                    className="h-[48px] lg:h-[58px] bg-[#EEEEEE] dark:bg-dark-input-bg border border-[#E8EAEE] dark:border-dark-border rounded-lg text-[16px] lg:text-[19.94px] font-[400] leading-[24.13px] text-[#292929] dark:text-dark-text/80"
+                  />
+                </div>
+
+                <div className="flex-1 space-y-2">
+                  <label className="text-[15px] lg:text-[17px] text-[#292929] dark:text-dark-text font-semibold">
+                    Vendor Name
+                  </label>
+                  <Input
+                    type="text"
+                    value={user?.userName}
+                    disabled
+                    className="h-[48px] lg:h-[58px] bg-[#EEEEEE] dark:bg-dark-input-bg border border-[#E8EAEE] dark:border-dark-border rounded-lg text-[16px] lg:text-[19.94px] font-[400] leading-[24.13px] text-[#292929] dark:text-dark-text/80"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[15px] lg:text-[17px] text-[#292929] dark:text-dark-text font-semibold">
+                  Project Title
+                </label>
+                <Input
+                  type="text"
+                  value={contract?.title}
+                  disabled
+                  className="h-[48px] lg:h-[58px] bg-[#EEEEEE] dark:bg-dark-input-bg border border-[#E8EAEE] dark:border-dark-border rounded-lg text-[16px] lg:text-[19.94px] font-[400] leading-[24.13px] text-[#292929] dark:text-dark-text/80"
+                />
+              </div>
               <div className="space-y-4">
                 <div>
                   <label className="text-[14px] text-[#292929] dark:text-dark-text font-semibold mb-2 block">
@@ -287,43 +324,7 @@ function PaymentPage() {
                 </div>
               </div>
 
-              <div className="flex w-full flex-col sm:flex-row gap-4 sm:gap-8">
-                <div className="flex-1 space-y-2">
-                  <label className="text-[15px] lg:text-[17px] text-[#292929] dark:text-dark-text font-semibold">
-                    Project ID
-                  </label>
-                  <Input
-                    type="text"
-                    value={contractID}
-                    disabled
-                    className="h-[48px] lg:h-[58px] bg-[#EEEEEE] dark:bg-dark-input-bg border border-[#E8EAEE] dark:border-dark-border rounded-lg text-[16px] lg:text-[19.94px] font-[400] leading-[24.13px] text-[#292929] dark:text-dark-text/80"
-                  />
-                </div>
 
-                <div className="flex-1 space-y-2">
-                  <label className="text-[15px] lg:text-[17px] text-[#292929] dark:text-dark-text font-semibold">
-                    Vendor Name
-                  </label>
-                  <Input
-                    type="text"
-                    value={user?.userName}
-                    disabled
-                    className="h-[48px] lg:h-[58px] bg-[#EEEEEE] dark:bg-dark-input-bg border border-[#E8EAEE] dark:border-dark-border rounded-lg text-[16px] lg:text-[19.94px] font-[400] leading-[24.13px] text-[#292929] dark:text-dark-text/80"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[15px] lg:text-[17px] text-[#292929] dark:text-dark-text font-semibold">
-                  Project Title
-                </label>
-                <Input
-                  type="text"
-                  value={contract?.title}
-                  disabled
-                  className="h-[48px] lg:h-[58px] bg-[#EEEEEE] dark:bg-dark-input-bg border border-[#E8EAEE] dark:border-dark-border rounded-lg text-[16px] lg:text-[19.94px] font-[400] leading-[24.13px] text-[#292929] dark:text-dark-text/80"
-                />
-              </div>
               <div className="space-y-4">
                 <label className="text-[15px] lg:text-[17px] text-[#292929] dark:text-dark-text font-semibold">
                   Card Details

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
-import { Plus } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 import axios from "axios";
@@ -23,9 +23,9 @@ interface FormErrors {
   totalPayment?: string;
   startDate?: string;
   endDate?: string;
-  milestones?: { 
-    name?: string; 
-    description?: string; 
+  milestones?: {
+    name?: string;
+    description?: string;
     amount?: string;
     startDate?: string;
     endDate?: string;
@@ -141,52 +141,58 @@ const CreateContract = () => {
 
   const validateField = (field: string, value: string) => {
     switch (field) {
-      case 'title':
-        if (!value.trim()) return 'Contract title is required';
-        if (value.length < 3) return 'Title must be at least 3 characters';
-        if (value.length > 100) return 'Title must be less than 100 characters';
-        return '';
-      case 'description':
-        if (!value.trim()) return 'Contract description is required';
-        if (value.length < 10) return 'Description must be at least 10 characters';
-        if (value.length > 500) return 'Description must be less than 500 characters';
-        return '';
-      case 'vendorEmail':
-        if (!value.trim()) return 'Vendor email is required';
-        if (!value.includes('@') || !value.includes('.')) return 'Invalid email format';
-        return '';
-      case 'totalPayment':
-        if (!value.trim()) return 'Total payment is required';
-        if (isNaN(parseFloat(value)) || parseFloat(value) <= 0) return 'Invalid payment amount';
-        return '';
-      case 'milestone_name':
-        if (!value.trim()) return 'Milestone name is required';
-        if (value.length < 3) return 'Milestone name must be at least 3 characters';
-        if (value.length > 100) return 'Milestone name must be less than 100 characters';
-        return '';
-      case 'milestone_amount':
-        if (!value.trim()) return 'Milestone amount is required';
-        if (isNaN(parseFloat(value)) || parseFloat(value) <= 0) return 'Invalid milestone amount';
-        return '';
-      case 'milestone_description':
-        if (!value.trim()) return 'Milestone description is required';
-        if (value.length < 10) return 'Milestone description must be at least 10 characters';
-        if (value.length > 500) return 'Milestone description must be less than 500 characters';
-        return '';
+      case "title":
+        if (!value.trim()) return "Contract title is required";
+        if (value.length < 3) return "Title must be at least 3 characters";
+        return "";
+      case "description":
+        if (!value.trim()) return "Contract description is required";
+        if (value.length < 10)
+          return "Description must be at least 10 characters";
+        return "";
+      case "vendorEmail":
+        if (!value.trim()) return "Vendor email is required";
+        if (!value.includes("@") || !value.includes("."))
+          return "Invalid email format";
+        return "";
+      case "totalPayment":
+        if (!value.trim()) return "Total payment is required";
+        if (isNaN(parseFloat(value)) || parseFloat(value) <= 0)
+          return "Invalid payment amount";
+        if (!Number.isInteger(parseFloat(value)))
+          return "Payment amount must be a whole number";
+        return "";
+      case "milestone_name":
+        if (!value.trim()) return "Milestone name is required";
+        if (value.length < 3)
+          return "Milestone name must be at least 3 characters";
+        return "";
+      case "milestone_amount":
+        if (!value.trim()) return "Milestone amount is required";
+        if (isNaN(parseFloat(value)) || parseFloat(value) <= 0)
+          return "Invalid milestone amount";
+        if (!Number.isInteger(parseFloat(value)))
+          return "Milestone amount must be a whole number";
+        return "";
+      case "milestone_description":
+        if (!value.trim()) return "Milestone description is required";
+        if (value.length < 10)
+          return "Milestone description must be at least 10 characters";
+        return "";
       default:
-        return '';
+        return "";
     }
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     const error = validateField(field, value);
-    setErrors(prev => ({ ...prev, [field]: error }));
+    setErrors((prev) => ({ ...prev, [field]: error }));
 
     if (field === "startDate" || field === "endDate") {
       const start = field === "startDate" ? value : formData.startDate;
       const end = field === "endDate" ? value : formData.endDate;
-      
+
       if (start && end && !validateDates(start, end)) {
         setContractDateError("Start date must be before end date");
       } else {
@@ -195,23 +201,29 @@ const CreateContract = () => {
     }
   };
 
-  const handleMilestoneChange = (index: number, field: string, value: string) => {
+  const handleMilestoneChange = (
+    index: number,
+    field: string,
+    value: string
+  ) => {
     const newMilestones = [...formData.milestones];
     newMilestones[index] = { ...newMilestones[index], [field]: value };
-    setFormData(prev => ({ ...prev, milestones: newMilestones }));
+    setFormData((prev) => ({ ...prev, milestones: newMilestones }));
 
     const error = validateField(`milestone_${field}`, value);
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
-      milestones: prev.milestones?.map((milestone, i) => 
-        i === index ? { ...milestone, [field]: error } : milestone
-      ) || []
+      milestones:
+        prev.milestones?.map((milestone, i) =>
+          i === index ? { ...milestone, [field]: error } : milestone
+        ) || [],
     }));
 
     if (field === "startDate" || field === "endDate") {
-      const start = field === "startDate" ? value : newMilestones[index].startDate;
+      const start =
+        field === "startDate" ? value : newMilestones[index].startDate;
       const end = field === "endDate" ? value : newMilestones[index].endDate;
-      
+
       setMilestoneDateErrors((prev) => {
         const newErrors = [...prev];
         if (start && end && !validateDates(start, end)) {
@@ -275,32 +287,35 @@ const CreateContract = () => {
 
   const validateForm = () => {
     const newErrors: FormErrors = {
-      title: validateField('title', formData.title),
-      description: validateField('description', formData.description),
-      vendorEmail: validateField('vendorEmail', formData.vendorEmail),
-      totalPayment: validateField('totalPayment', formData.totalPayment),
-      startDate: formData.startDate ? '' : 'Start date is required',
-      endDate: formData.endDate ? '' : 'End date is required',
-      milestones: formData.milestones.map(milestone => ({
-        name: validateField('milestone_name', milestone.name),
-        description: validateField('milestone_description', milestone.description),
-        amount: validateField('milestone_amount', milestone.amount),
-        startDate: milestone.startDate ? '' : 'Start date is required',
-        endDate: milestone.endDate ? '' : 'End date is required'
-      }))
+      title: validateField("title", formData.title),
+      description: validateField("description", formData.description),
+      vendorEmail: validateField("vendorEmail", formData.vendorEmail),
+      totalPayment: validateField("totalPayment", formData.totalPayment),
+      startDate: formData.startDate ? "" : "Start date is required",
+      endDate: formData.endDate ? "" : "End date is required",
+      milestones: formData.milestones.map((milestone) => ({
+        name: validateField("milestone_name", milestone.name),
+        description: validateField(
+          "milestone_description",
+          milestone.description
+        ),
+        amount: validateField("milestone_amount", milestone.amount),
+        startDate: milestone.startDate ? "" : "Start date is required",
+        endDate: milestone.endDate ? "" : "End date is required",
+      })),
     };
 
     setErrors(newErrors);
 
     // Check if there are any errors
-    const hasErrors = Object.values(newErrors).some(error => {
-      if (typeof error === 'string') return error !== '';
+    const hasErrors = Object.values(newErrors).some((error) => {
+      if (typeof error === "string") return error !== "";
       if (Array.isArray(error)) {
-        return error.some(milestoneError => 
-          Object.values(milestoneError).some(e => e !== '')
+        return error.some((milestoneError) =>
+          Object.values(milestoneError).some((e) => e !== "")
         );
       }
-      return Object.values(error).some(e => e !== '');
+      return Object.values(error).some((e) => e !== "");
     });
 
     return !hasErrors;
@@ -372,8 +387,9 @@ const CreateContract = () => {
       return;
     }
 
-    const invalidMilestones = formData.milestones.some((milestone, index) => 
-      !validateDates(milestone.startDate, milestone.endDate)
+    const invalidMilestones = formData.milestones.some(
+      (milestone, index) =>
+        !validateDates(milestone.startDate, milestone.endDate)
     );
 
     if (invalidMilestones) {
@@ -408,12 +424,12 @@ const CreateContract = () => {
       });
 
       if (response.ok) {
-        sessionStorage.removeItem('contractFormData');
+        sessionStorage.removeItem("contractFormData");
         resetForm();
         setIsSuccessModalOpen(true);
         const { data } = await axios.get("/api/initiate-contract");
         if (data) {
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
             contractId: data.contractId,
           }));
@@ -443,23 +459,23 @@ const CreateContract = () => {
 
   // Add useEffect to load saved form data
   useEffect(() => {
-    const savedFormData = sessionStorage.getItem('contractFormData');
+    const savedFormData = sessionStorage.getItem("contractFormData");
     if (savedFormData) {
       try {
-      const parsedData = JSON.parse(savedFormData);
-      setFormData(parsedData);
-      // Clear the saved data after loading
-      sessionStorage.removeItem('contractFormData');
+        const parsedData = JSON.parse(savedFormData);
+        setFormData(parsedData);
+        // Clear the saved data after loading
+        sessionStorage.removeItem("contractFormData");
       } catch (error) {
-        console.error('Error parsing saved form data:', error);
+        console.error("Error parsing saved form data:", error);
       }
     }
   }, []);
 
   const showPreview = () => {
     // Store form data in sessionStorage before navigating
-    sessionStorage.setItem('contractFormData', JSON.stringify(formData));
-    router.push('/pre-build-details');
+    sessionStorage.setItem("contractFormData", JSON.stringify(formData));
+    router.push("/pre-build-details");
   };
 
   return (
@@ -549,21 +565,28 @@ const CreateContract = () => {
                 <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
                   Vendor Email
                 </label>
-                <Input
-                  type="email"
-                  value={formData.vendorEmail}
-                  onChange={(e) =>
-                    handleInputChange("vendorEmail", e.target.value)
-                  }
-                  placeholder="Enter vendor email"
-                  className={`h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
-                    vendorEmailError
-                      ? "border-red-500 focus-visible:ring-red-500"
-                      : isVendorValid
-                      ? "border-green-500 focus-visible:ring-green-500"
-                      : "border-[#D1D5DB] dark:border-dark-border"
-                  } rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40`}
-                />
+                <div className="relative">
+                  <Input
+                    type="email"
+                    value={formData.vendorEmail}
+                    onChange={(e) =>
+                      handleInputChange("vendorEmail", e.target.value)
+                    }
+                    placeholder="Enter vendor email"
+                    className={`h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
+                      vendorEmailError
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : isVendorValid
+                        ? "border-green-500 focus-visible:ring-green-500"
+                        : "border-[#D1D5DB] dark:border-dark-border"
+                    } rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40`}
+                  />
+                  {isVendorValid && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Check className="text-[#00BA88]" />
+                    </div>
+                  )}
+                </div>
                 {vendorEmailError && (
                   <p className="text-sm text-red-500 mt-1">
                     {vendorEmailError}
@@ -582,7 +605,9 @@ const CreateContract = () => {
                 onChange={(e) => handleInputChange("title", e.target.value)}
                 placeholder="eg. Graphic Design"
                 className={`h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
-                  errors.title ? "border-red-500 focus-visible:ring-red-500" : "border-[#D1D5DB]"
+                  errors.title
+                    ? "border-red-500 focus-visible:ring-red-500"
+                    : "border-[#D1D5DB]"
                 } dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40`}
               />
               {errors.title && (
@@ -596,13 +621,29 @@ const CreateContract = () => {
                   Start Date
                 </label>
                 <DatePicker
-                  selected={formData.startDate ? new Date(formData.startDate) : null}
-                  onChange={(date: Date | null) => handleInputChange("startDate", date ? date.toISOString().split('T')[0] : '')}
+                  selected={
+                    formData.startDate
+                      ? new Date(formData.startDate + "T00:00:00")
+                      : null
+                  }
+                  onChange={(date: Date | null) => {
+                    if (date) {
+                      const year = date.getFullYear();
+                      const month = String(date.getMonth() + 1).padStart(
+                        2,
+                        "0"
+                      );
+                      const day = String(date.getDate()).padStart(2, "0");
+                      handleInputChange("startDate", `${year}-${month}-${day}`);
+                    } else {
+                      handleInputChange("startDate", "");
+                    }
+                  }}
                   dateFormat="MM/dd/yyyy"
                   placeholderText="Select start date"
                   className={`w-full h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
                     contractDateError ? "border-red-500" : "border-[#D1D5DB]"
-                  } dark:border-dark-border rounded-lg px-3`}
+                  } dark:border-dark-border rounded-lg px-3 dark:placeholder:text-dark-text/40 dark:text-dark-text`}
                   minDate={new Date()}
                 />
               </div>
@@ -612,14 +653,34 @@ const CreateContract = () => {
                   End Date
                 </label>
                 <DatePicker
-                  selected={formData.endDate ? new Date(formData.endDate) : null}
-                  onChange={(date: Date | null) => handleInputChange("endDate", date ? date.toISOString().split('T')[0] : '')}
+                  selected={
+                    formData.endDate
+                      ? new Date(formData.endDate + "T00:00:00")
+                      : null
+                  }
+                  onChange={(date: Date | null) => {
+                    if (date) {
+                      const year = date.getFullYear();
+                      const month = String(date.getMonth() + 1).padStart(
+                        2,
+                        "0"
+                      );
+                      const day = String(date.getDate()).padStart(2, "0");
+                      handleInputChange("endDate", `${year}-${month}-${day}`);
+                    } else {
+                      handleInputChange("endDate", "");
+                    }
+                  }}
                   dateFormat="MM/dd/yyyy"
                   placeholderText="Select end date"
                   className={`w-full h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
                     contractDateError ? "border-red-500" : "border-[#D1D5DB]"
-                  } dark:border-dark-border rounded-lg px-3`}
-                  minDate={formData.startDate ? new Date(formData.startDate) : new Date()}
+                  } dark:border-dark-border rounded-lg px-3 dark:placeholder:text-dark-text/40 dark:text-dark-text`}
+                  minDate={
+                    formData.startDate
+                      ? new Date(formData.startDate + "T00:00:00")
+                      : new Date()
+                  }
                 />
                 {contractDateError && (
                   <div className="col-span-full">
@@ -642,7 +703,9 @@ const CreateContract = () => {
                 className="min-h-[120px] dark:bg-dark-input-bg border border-[#E8EAEE] dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
               />
               {errors.description && (
-                <p className="text-sm text-red-500 mt-1">{errors.description}</p>
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.description}
+                </p>
               )}
             </div>
 
@@ -677,7 +740,7 @@ const CreateContract = () => {
                   Total Project Payment
                 </label>
                 <Input
-                  type="number"
+                  type="text"
                   value={formData.totalPayment}
                   onChange={(e) =>
                     handleInputChange("totalPayment", e.target.value)
@@ -685,7 +748,6 @@ const CreateContract = () => {
                   placeholder="$2500"
                   className="h-[48px] lg:h-[52px] dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
                 />
-                
               </div>
               <div className="md:block hidden flex-1"></div>
             </div>
@@ -718,11 +780,15 @@ const CreateContract = () => {
                         }
                         placeholder="eg. Floor Planning"
                         className={`h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
-                          errors.milestones?.[index]?.name ? "border-red-500 focus-visible:ring-red-500" : "border-[#D1D5DB]"
+                          errors.milestones?.[index]?.name
+                            ? "border-red-500 focus-visible:ring-red-500"
+                            : "border-[#D1D5DB]"
                         } dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40`}
                       />
                       {errors.milestones?.[index]?.name && (
-                        <p className="text-sm text-red-500 mt-1">{errors.milestones?.[index]?.name}</p>
+                        <p className="text-sm text-red-500 mt-1">
+                          {errors.milestones?.[index]?.name}
+                        </p>
                       )}
                     </div>
 
@@ -731,19 +797,23 @@ const CreateContract = () => {
                         Milestone Amount
                       </label>
                       <Input
-                        type="number"
+                        type="text"
                         value={milestone.amount}
                         onChange={(e) =>
                           handleMilestoneChange(index, "amount", e.target.value)
                         }
                         placeholder="$500"
                         className={`h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
-                          errors.milestones?.[index]?.amount ? "border-red-500 focus-visible:ring-red-500" : "border-[#D1D5DB]"
+                          errors.milestones?.[index]?.amount
+                            ? "border-red-500 focus-visible:ring-red-500"
+                            : "border-[#D1D5DB]"
                         } dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40`}
                       />
                       {paymentError && (
-                  <p className="text-sm text-red-500 mt-1">{paymentError}</p>
-                )}
+                        <p className="text-sm text-red-500 mt-1">
+                          {paymentError}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -762,11 +832,15 @@ const CreateContract = () => {
                       }
                       placeholder="eg. The Graphic Design process..."
                       className={`min-h-[120px] dark:bg-dark-input-bg border ${
-                        errors.milestones?.[index]?.description ? "border-red-500 focus-visible:ring-red-500" : "border-[#D1D5DB]"
+                        errors.milestones?.[index]?.description
+                          ? "border-red-500 focus-visible:ring-red-500"
+                          : "border-[#D1D5DB]"
                       } dark:border-dark-border rounded-lg text-[16px] lg:text-[16px] font-[400] leading-[19.5px] text-[#292929] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40`}
                     />
                     {errors.milestones?.[index]?.description && (
-                      <p className="text-sm text-red-500 mt-1">{errors.milestones?.[index]?.description}</p>
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.milestones?.[index]?.description}
+                      </p>
                     )}
                   </div>
 
@@ -776,13 +850,35 @@ const CreateContract = () => {
                         Start Date
                       </label>
                       <DatePicker
-                        selected={milestone.startDate ? new Date(milestone.startDate) : null}
-                        onChange={(date: Date | null) => handleMilestoneChange(index, "startDate", date ? date.toISOString().split('T')[0] : '')}
+                        selected={
+                          milestone.startDate
+                            ? new Date(milestone.startDate + "T00:00:00")
+                            : null
+                        }
+                        onChange={(date: Date | null) => {
+                          if (date) {
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(
+                              2,
+                              "0"
+                            );
+                            const day = String(date.getDate()).padStart(2, "0");
+                            handleMilestoneChange(
+                              index,
+                              "startDate",
+                              `${year}-${month}-${day}`
+                            );
+                          } else {
+                            handleMilestoneChange(index, "startDate", "");
+                          }
+                        }}
                         dateFormat="MM/dd/yyyy"
                         placeholderText="Select start date"
                         className={`w-full h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
-                          milestoneDateErrors[index] ? "border-red-500" : "border-[#D1D5DB]"
-                        } dark:border-dark-border rounded-lg px-3`}
+                          milestoneDateErrors[index]
+                            ? "border-red-500"
+                            : "border-[#D1D5DB]"
+                        } dark:border-dark-border rounded-lg px-3 dark:placeholder:text-dark-text/40 dark:text-dark-text`}
                         minDate={new Date(formData.startDate)}
                         maxDate={new Date(formData.endDate)}
                       />
@@ -793,19 +889,47 @@ const CreateContract = () => {
                         End Date
                       </label>
                       <DatePicker
-                        selected={milestone.endDate ? new Date(milestone.endDate) : null}
-                        onChange={(date: Date | null) => handleMilestoneChange(index, "endDate", date ? date.toISOString().split('T')[0] : '')}
+                        selected={
+                          milestone.endDate
+                            ? new Date(milestone.endDate + "T00:00:00")
+                            : null
+                        }
+                        onChange={(date: Date | null) => {
+                          if (date) {
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(
+                              2,
+                              "0"
+                            );
+                            const day = String(date.getDate()).padStart(2, "0");
+                            handleMilestoneChange(
+                              index,
+                              "endDate",
+                              `${year}-${month}-${day}`
+                            );
+                          } else {
+                            handleMilestoneChange(index, "endDate", "");
+                          }
+                        }}
                         dateFormat="MM/dd/yyyy"
                         placeholderText="Select end date"
                         className={`w-full h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
-                          milestoneDateErrors[index] ? "border-red-500" : "border-[#D1D5DB]"
-                        } dark:border-dark-border rounded-lg px-3`}
-                        minDate={milestone.startDate ? new Date(milestone.startDate) : new Date(formData.startDate)}
+                          milestoneDateErrors[index]
+                            ? "border-red-500"
+                            : "border-[#D1D5DB]"
+                        } dark:border-dark-border rounded-lg px-3 dark:placeholder:text-dark-text/40 dark:text-dark-text`}
+                        minDate={
+                          milestone.startDate
+                            ? new Date(milestone.startDate + "T00:00:00")
+                            : new Date(formData.startDate)
+                        }
                         maxDate={new Date(formData.endDate)}
                       />
                       {milestoneDateErrors[index] && (
                         <div className="col-span-full">
-                          <p className="text-sm text-red-500">{milestoneDateErrors[index]}</p>
+                          <p className="text-sm text-red-500">
+                            {milestoneDateErrors[index]}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -851,17 +975,48 @@ const CreateContract = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row justify-end items-center gap-4 pt-6">
-          <Button 
-            onClick={showPreview} 
+          <Button
+            onClick={showPreview}
             className="w-full sm:w-auto h-[42px] px-6 md:px-10 border bg-transparent text-[#292929] border-primary hover:text-primary hover:bg-transparent rounded-lg transition-colors dark:text-dark-text dark:hover:text-primary dark:bg-dark-input-bg"
-            disabled={!formData.title || !formData.startDate || !formData.endDate || !formData.description || !formData.paymentType || !formData.totalPayment || !formData.milestones.every(milestone => milestone.name && milestone.amount && milestone.description && milestone.startDate && milestone.endDate)}
+            disabled={
+              !formData.title ||
+              !formData.startDate ||
+              !formData.endDate ||
+              !formData.description ||
+              !formData.paymentType ||
+              !formData.totalPayment ||
+              !formData.milestones.every(
+                (milestone) =>
+                  milestone.name &&
+                  milestone.amount &&
+                  milestone.description &&
+                  milestone.startDate &&
+                  milestone.endDate
+              )
+            }
           >
             Preview
           </Button>
           <Button
             onClick={onSubmit}
             className="w-full sm:w-auto h-[42px] px-6 md:px-10 bg-primary hover:bg-primary/90 text-[16px] font-[700] leading-[19.6px] text-white dark:text-dark-text rounded-lg transition-colors"
-            disabled={isLoading || !formData.title || !formData.startDate || !formData.endDate || !formData.description || !formData.paymentType || !formData.totalPayment || !formData.milestones.every(milestone => milestone.name && milestone.amount && milestone.description && milestone.startDate && milestone.endDate)}
+            disabled={
+              isLoading ||
+              !formData.title ||
+              !formData.startDate ||
+              !formData.endDate ||
+              !formData.description ||
+              !formData.paymentType ||
+              !formData.totalPayment ||
+              !formData.milestones.every(
+                (milestone) =>
+                  milestone.name &&
+                  milestone.amount &&
+                  milestone.description &&
+                  milestone.startDate &&
+                  milestone.endDate
+              )
+            }
           >
             {isLoading ? (
               <div className="flex items-center gap-2">
@@ -869,13 +1024,13 @@ const CreateContract = () => {
                 Saving...
               </div>
             ) : (
-              'Save'
+              "Save"
             )}
           </Button>
         </div>
       </div>
 
-      <ContractSuccessModal 
+      <ContractSuccessModal
         isOpen={isSuccessModalOpen}
         onClose={() => setIsSuccessModalOpen(false)}
         contractId={formData.contractId}

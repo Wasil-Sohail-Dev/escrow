@@ -82,7 +82,7 @@ export default function DisputeManagementScreenDetails({
         <HeadBar title={title} buttonName="Export" />
         <div className="px-4 md:px-10 lg:px-20">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6">
-            <div className="flex items-center gap-2 md:gap-4 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+            {/* <div className="flex items-center gap-2 md:gap-4 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
               <FilterButton
                 icon={
                   <Clock3 className="h-[14px] w-[14px] text-[#4B5563] dark:text-dark-text" />
@@ -104,7 +104,7 @@ export default function DisputeManagementScreenDetails({
                 label="Project"
                 options={FILTER_OPTIONS.project}
               />
-            </div>
+            </div> */}
           </div>
           <PaymentHistory
             showFilter={true}
