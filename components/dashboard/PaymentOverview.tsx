@@ -6,36 +6,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
-
-const PAYMENT_CARDS = [
-  {
-    title: "Total Amount",
-    amount: "$20.4K",
-    description: "Total Amount summitted for project",
-    progressColor: "#68E05E"
-  },
-  {
-    title: "Amount Withheld", 
-    amount: "$1.8K",
-    description: "In Escrow",
-    progressColor: "#EB2E2E"
-  },
-  {
-    title: "Amount Released",
-    amount: "$18.2K", 
-    description: "Available for Payout",
-    progressColor: "#F29A2E"
-  }
-];
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { useState, useEffect } from "react";
 
 const DATE_OPTIONS = [
-  "Last week",
-  "Last 90 days", 
-  "Last 120 days",
+  "Last 7 days",
+  "Last 30 days",
+  "Last 3 months",
+  "Last 6 months",
   "Last Year"
 ];
 
-const PaymentCard = ({ title, amount, description, progressColor }:any) => (
+const PaymentCard = ({ title, amount, description, progressColor, percentage }:any) => (
   <div className="bg-[#DADADA33] p-4 rounded-lg flex flex-row justify-between items-center
     lg:p-4 md:p-3 max-md:p-3 dark:border dark:border-dark-border">
     <div>
@@ -53,22 +36,163 @@ const PaymentCard = ({ title, amount, description, progressColor }:any) => (
       </p>
     </div>
     <div style={{ width: 60, height: 60 }}>
-      <CircularProgressbar
-        value={75}
-        strokeWidth={20}
-        styles={buildStyles({
-          rotation: 0,
-          pathTransitionDuration: 0.5,
-          pathColor: progressColor,
-          textColor: progressColor,
-          trailColor: '#E4E8EF',
-        })}
-      />
+        <CircularProgressbar
+          value={percentage}
+          strokeWidth={20}
+          styles={buildStyles({
+            rotation: 0,
+            strokeLinecap: 'round',
+            pathTransitionDuration: 0.5,
+            pathColor: progressColor,
+            textColor: progressColor,
+            trailColor: '#E4E8EF',
+          })}
+        />
+      </div>
     </div>
-  </div>
 );
 
-export default function PaymentOverview({ show }: { show: boolean }) {
+export default function PaymentOverview({ show, payments: initialPayments }: { show: boolean, payments?: any[] }) {
+  const [selectedDateOption, setSelectedDateOption] = useState("Last 30 days");
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
+  const [startDate, endDate] = dateRange;
+  const [payments, setPayments] = useState(initialPayments || []);
+
+  useEffect(() => {
+    if (initialPayments) {
+      filterPayments();
+    }
+  }, [selectedDateOption, dateRange, initialPayments]);
+
+  const filterPayments = () => {
+    if (!initialPayments) return;
+
+    let filteredPayments = [...initialPayments];
+
+    // Apply date range filter
+    if (startDate && endDate) {
+      filteredPayments = filteredPayments.filter(payment => {
+        const paymentDate = new Date(payment.createdAt);
+        return paymentDate >= startDate && paymentDate <= endDate;
+      });
+    } else {
+      // Apply predefined date filters
+      const today = new Date();
+      let filterDate = new Date();
+
+      switch (selectedDateOption) {
+        case "Last 7 days":
+          filterDate.setDate(today.getDate() - 7);
+          break;
+        case "Last 30 days":
+          filterDate.setDate(today.getDate() - 30);
+          break;
+        case "Last 3 months":
+          filterDate.setMonth(today.getMonth() - 3);
+          break;
+        case "Last 6 months":
+          filterDate.setMonth(today.getMonth() - 6);
+          break;
+        case "Last Year":
+          filterDate.setFullYear(today.getFullYear() - 1);
+          break;
+        default:
+          filterDate.setDate(today.getDate() - 30); // Default to last 30 days
+      }
+
+      filteredPayments = filteredPayments.filter(payment => {
+        const paymentDate = new Date(payment.createdAt);
+        return paymentDate >= filterDate && paymentDate <= today;
+      });
+    }
+
+    setPayments(filteredPayments);
+  };
+
+  const calculateTotalAmount = () => {
+    if (!payments?.length) return 0;
+    return payments.reduce((total, payment) => total + payment.amount, 0);
+  };
+
+  const calculateEscrowAmount = () => {
+    if (!payments?.length) return 0;
+    return payments.reduce((total, payment) => total + payment.escrowAmount, 0);
+  };
+
+  const calculateReleasedAmount = () => {
+    const total = calculateTotalAmount();
+    const escrow = calculateEscrowAmount();
+    return total - escrow;
+  };
+
+  const calculatePercentages = () => {
+    if (!payments?.length) return { total: 0, escrow: 0, released: 0 };
+
+    const calculateStateProgress = (payment: any) => {
+      const stateWeights: { [key: string]: number } = {
+        'pending': 20,      
+        'process': 40,      
+        'on_hold': 60,      
+        'funded': 80,       
+        'released': 100,    
+        'failed': 0,        
+        'refunded': 0,      
+        'disputed': 30      
+      };
+
+      return stateWeights[payment.status] || 0;
+    };
+
+    const progressValues = payments.map(calculateStateProgress);
+    
+    const totalProgress = Math.round(
+      progressValues.reduce((sum, value) => sum + value, 0) / payments.length
+    );
+
+    const escrowPayments = payments.filter(p => 
+      ['process', 'on_hold', 'funded'].includes(p.status)
+    );
+    const escrowProgress = escrowPayments.length ? Math.round(
+      escrowPayments.map(calculateStateProgress)
+        .reduce((sum, value) => sum + value, 0) / escrowPayments.length
+    ) : 0;
+
+    const releasedPayments = payments.filter(p => p.status === 'released');
+    const releasedProgress = releasedPayments.length ? 100 : 0;
+
+    return {
+      total: totalProgress,
+      escrow: escrowProgress,
+      released: releasedProgress
+    };
+  };
+
+  const percentages = calculatePercentages();
+
+  const PAYMENT_CARDS = [
+    {
+      title: "Total Amount",
+      amount: `$${calculateTotalAmount().toFixed(2)}`,
+      description: "Total Amount submitted for project",
+      progressColor: "#68E05E",
+      percentage: percentages.total
+    },
+    {
+      title: "Amount Withheld", 
+      amount: `$${calculateEscrowAmount().toFixed(2)}`,
+      description: "In Escrow",
+      progressColor: "#EB2E2E",
+      percentage: percentages.escrow
+    },
+    {
+      title: "Amount Released",
+      amount: `$${calculateReleasedAmount().toFixed(2)}`, 
+      description: "Available for Payout",
+      progressColor: "#F29A2E",
+      percentage: percentages.released
+    }
+  ];
+
   return (
     <div className="mt-8">
       {show && <div className="flex items-center md:justify-between flex-col md:flex-row mb-4">
@@ -82,32 +206,40 @@ export default function PaymentOverview({ show }: { show: boolean }) {
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-2 text-small-medium px-3 py-1.5 rounded-md 
               dark:bg-dark-bg dark:text-dark-text">
-              Last: 30 days
+              {selectedDateOption}
               <ChevronDown size={16} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="dark:bg-dark-bg dark:border-dark-border">
               {DATE_OPTIONS.map((option) => (
-                <DropdownMenuItem key={option} className="text-small-medium dark:text-dark-text dark:hover:bg-white/5">
+                <DropdownMenuItem 
+                  key={option} 
+                  onClick={() => {
+                    setSelectedDateOption(option);
+                    setDateRange([null, null]); // Reset custom date range
+                  }}
+                  className="text-small-medium dark:text-dark-text dark:hover:bg-white/5"
+                >
                   {option}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-2 text-small-medium px-3 py-1.5 rounded-md
-              dark:bg-dark-bg dark:text-dark-text">
-              28 jan, 2021 - 28 Dec, 2021
-              <ChevronDown size={16} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="dark:bg-dark-bg dark:border-dark-border">
-              {[...Array(5)].map((_, i) => (
-                <DropdownMenuItem key={i} className="text-small-medium dark:text-dark-text dark:hover:bg-white/5">
-                  28 jan, 2021 - 28 Dec, 2021
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DatePicker
+            selectsRange={true}
+            startDate={startDate}
+            endDate={endDate}
+            onChange={(update) => {
+              setDateRange(update);
+              if (update[0] && update[1]) {
+                setSelectedDateOption("Custom Range");
+              }
+            }}
+            isClearable={true}
+            placeholderText="Select date range"
+            className="flex items-center gap-2 text-small-medium px-3 py-1.5 rounded-md 
+              dark:bg-dark-bg dark:text-dark-text border border-input mt-1"
+          />
         </div>
       </div>}
 

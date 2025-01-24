@@ -10,8 +10,9 @@ import Link from "next/link";
 import BlockedAlert from "./BlockedAlert";
 import ProjectCard from "./ProjectCard";
 import { useUser } from "@/contexts/UserContext";
+import Loader from "../ui/loader";
 
-type TabOption = "active" | "disputed" | "completed" | "all";
+export type TabOption = "active" | "disputed" | "completed" | "all";
 
 interface ContractStatusCount {
   draft: number;
@@ -29,9 +30,17 @@ interface ContractStatusCount {
   totalContracts: number;
 }
 
-const Overview = ({ dispute }: { dispute?: boolean }) => {
-  const [activeTab, setActiveTab] = useState<TabOption>("active");
-  const [contracts, setContracts] = useState<ContractStatusCount>({
+interface OverviewProps {
+  dispute?: boolean;
+  activeTab?: TabOption;
+  setActiveTab?: (tab: TabOption) => void;
+  onDataFetched?: (data: any) => void;
+}
+
+const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewProps) => {
+  const [loading, setLoading] = useState(false);
+  const [contractData, setContractData] = useState<any>(null);
+  const [counts, setCounts] = useState<ContractStatusCount>({
     draft: 0,
     onboarding: 0,
     funding_pending: 0,
@@ -50,10 +59,34 @@ const Overview = ({ dispute }: { dispute?: boolean }) => {
   const { user } = useUser();
 
   const fetchSortedContracts = async () => {
-    const customerId = user?._id;
-    const response = await fetch(`/api/get-sorted-contracts?customerId=${customerId}&role=${user?.userType}`);
+    if (!user?._id) return;
+    const response = await fetch(`/api/get-sorted-contracts?customerId=${user._id}&role=${user?.userType}`);
     const {data} = await response.json();
-    setContracts(data);
+    setCounts(data);
+  };
+
+  const fetchContractDetails = async (taba: TabOption) => {
+    if (!user?._id) return;
+    
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/get-contract-details?customerId=${user._id}&status=${taba}&limit=5&userType=${user.userType}`);
+      const data = await response.json();
+      console.log(data, "responseresponse");
+      if (data.success) {
+        setContractData(data.data);
+        onDataFetched?.(data.data);
+      } else {
+        setContractData(null);
+        onDataFetched?.(null);
+      }
+    } catch (error) {
+      console.error('Error fetching contract details:', error);
+      setContractData(null);
+      onDataFetched?.(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -62,21 +95,31 @@ const Overview = ({ dispute }: { dispute?: boolean }) => {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (user && activeTab) {
+      setContractData(null);
+      onDataFetched?.(null);
+      fetchContractDetails(activeTab);
+    }
+  }, [user, activeTab]);
+
   const getFilteredCount = (tab: TabOption) => {
     switch (tab) {
       case "active":
-        return contracts.active;
+        return counts.active;
       case "completed":
-        return contracts.completed;
+        return counts.completed;
       case "all":
-        return contracts.totalContracts;
+        return counts.totalContracts;
       case "disputed":
-        return contracts.disputed + contracts.disputed_in_process + contracts.disputed_resolved;
+        return counts.disputed + counts.disputed_in_process + counts.disputed_resolved;
       default:
         return 0;
     }
   };
-console.log(user, "user type");
+
+  const latestContract = contractData?.latestContract;
+
   return (
     <>
       {true ? (
@@ -182,7 +225,7 @@ console.log(user, "user type");
             return (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tabValue)}
+                onClick={() => setActiveTab?.(tabValue)}
                 className={`pb-2 px-1 relative whitespace-nowrap
                 lg:text-body-normal md:text-base-regular max-md:text-small-regular ${
                   activeTab === tabValue
@@ -200,95 +243,63 @@ console.log(user, "user type");
         </div>
       )}
 
-      <div className=" rounded-lg mt-14">
+      <div className="rounded-lg mt-14">
         <div className="flex items-center justify-between">
           <div className="flex items-center justify-center gap-2 max-md:gap-2">
-            <h2
-              className="lg:text-[22px] md:text-[20px] max-md:text-heading4-medium 
-              leading-[27.5px] font-bold dark:text-dark-text"
-            >
-              {dispute ? "In Progress Dispute" : "Active Projects"}
+            <h2 className="lg:text-[22px] md:text-[20px] max-md:text-heading4-medium leading-[27.5px] font-bold dark:text-dark-text">
+              {dispute ? "In Progress Dispute" : `${activeTab?.charAt(0).toUpperCase() + activeTab?.slice(1)!} Projects`}
             </h2>
-            <span
-              className="text-white rounded-full 
-              lg:w-6 lg:h-6 md:w-5 md:h-5 max-md:w-5 max-md:h-5
-              lg:text-subtle-semibold md:text-small-semibold max-md:text-tiny-medium
-              flex items-center justify-center mt-1 bg-[#EC1A1A]"
-            >
-              {getFilteredCount(activeTab)}
+            <span className="text-white rounded-full lg:w-6 lg:h-6 md:w-5 md:h-5 max-md:w-5 max-md:h-5 lg:text-subtle-semibold md:text-small-semibold max-md:text-tiny-medium flex items-center justify-center mt-1 bg-[#EC1A1A]">
+              {getFilteredCount(activeTab as TabOption)}
             </span>
           </div>
-          <Link
-            href="/milestone-details"
-            className="lg:text-base1-semibold md:text-base-semibold max-md:text-small-semibold 
-            underline flex items-center gap-2 dark:text-dark-text"
-          >
+          <Link href={`/projects/${activeTab}`} className="lg:text-base1-semibold md:text-base-semibold max-md:text-small-semibold underline flex items-center gap-2 dark:text-dark-text">
             See Details <ChevronDown size={20} />
           </Link>
         </div>
 
-        <div
-          className={`mt-10 flex justify-between ${
-            dispute ? "items-center" : ""
-          }`}
-        >
-          <div className="flex lg:gap-6 md:gap-5 max-md:gap-4 text-start">
-            <Image
-              src="/assets/Icon.svg"
-              alt="project"
-              width={85}
-              height={85}
-              className="lg:w-[85px] md:w-[75px] max-md:w-[65px]
-                lg:h-[85px] md:h-[75px] max-md:h-[65px]
-                dark:invert"
-            />
-            <div className="flex flex-col lg:gap-2 md:gap-1.5 max-md:gap-1">
-              <h2
-                className="lg:text-heading3-reg md:text-heading4-medium max-md:text-base-medium
-                dark:text-dark-text"
-              >
-                ID: ESC 3345
-              </h2>
-              <p
-                className="lg:text-heading4-light md:text-body-normal max-md:text-base-regular 
-                text-secondary-heading dark:text-dark-text/60"
-              >
-                Munazza Arshad
-              </p>
+        {loading ? (
+          <div className="flex justify-center items-center min-h-[130px]">
+            <Loader fullHeight={false} />
             </div>
-          </div>
+        ) : latestContract ? (
+          <div className="mt-10 flex justify-between">
+            <div className="flex lg:gap-6 md:gap-5 max-md:gap-4 text-start">
+              <Image
+                src="/assets/Icon.svg"
+                alt="project"
+                width={85}
+                height={85}
+                className="lg:w-[85px] md:w-[75px] max-md:w-[65px] lg:h-[85px] md:h-[75px] max-md:h-[65px] dark:invert"
+              />
+              <div className="flex flex-col lg:gap-2 md:gap-1.5 max-md:gap-1">
+                <h2 className="lg:text-heading3-reg md:text-heading4-medium max-md:text-base-medium dark:text-dark-text">
+                  ID: {latestContract.contractId}
+                </h2>
+                <p className="lg:text-heading4-light md:text-body-normal max-md:text-base-regular text-secondary-heading dark:text-dark-text/60">
+                  {user?.userType === 'client' ? latestContract.vendorId.userName : latestContract.clientId.userName}
+                </p>
+              </div>
+            </div>
 
-          {!dispute ? (
-            <div className="flex flex-col lg:gap-2 md:gap-1.5 max-md:gap-1 items-end">
-              <h2
-                className="lg:text-body-bold md:text-body-semibold max-md:text-base-semibold
-              dark:text-dark-text"
-              >
-                $1,234.00
-              </h2>
-              <p
-                className="lg:text-small-regular md:text-small-regular max-md:text-tiny-medium 
-              text-secondary-heading dark:text-dark-text/60"
-              >
-                {/* user vendor: Add deadline */}
-                Deadline: Aug 8,2024
+            {!dispute ? (
+              <div className="flex flex-col lg:gap-2 md:gap-1.5 max-md:gap-1 items-end">
+                <h2 className="lg:text-body-bold md:text-body-semibold max-md:text-base-semibold dark:text-dark-text">
+                  ${latestContract.budget.toFixed(2)}
+                </h2>
+                <p className="lg:text-small-regular md:text-small-regular max-md:text-tiny-medium text-secondary-heading dark:text-dark-text/60">
+                  Deadline: {new Date(latestContract.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </p>
+              </div>
+            ) : (
+              <p className="text-base-regular text-[#7B878C] dark:text-dark-text items-end justify-end">
+                Date Created: {new Date(latestContract.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </p>
-              {/* <Button
-                className="lg:text-small-regular md:text-small-regular max-md:text-tiny-medium
-                  px-4 py-1.5 mt-2 rounded-lg
-                  bg-primary hover:bg-primary/90 
-                  dark:bg-dark-primary dark:hover:bg-dark-primary/90
-                  text-white transition-colors"
-              >
-                Submit Task
-              </Button> */}
-            </div>
-          ) : (
-            <p className="text-base-regular text-[#7B878C] dark:text-dark-text items-end justify-end ">
-              Date Created: Aug 8,2024
-            </p>
-          )}
-        </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex justify-center items-center min-h-[130px]">No contracts found</div>
+        )}
       </div>
     </>
   );

@@ -85,8 +85,6 @@ const Page = () => {
     }
 
   }, []);
-console.log(jwt,"jwt");
-
   const form = useForm<VendorFormValues | ClientFormValues>({
     resolver: zodResolver(jwt?.userType === "vendor" ? vendorSchema : clientSchema),
     defaultValues: {
@@ -105,7 +103,6 @@ console.log(jwt,"jwt");
   });
   const handleOnboarding = async (data: VendorFormValues | ClientFormValues) => {
     setLoading(true);
-
     try {
       const apiData = jwt?.userType === "vendor" ? data : {
         firstName: data.firstName,
@@ -113,11 +110,8 @@ console.log(jwt,"jwt");
         userName: data.userName,
         phone: data.phone,
         acceptTerms: data.acceptTerms,
-        
       };
-
       const response = await axios.post("/api/save-onboarding", {...apiData,email:jwt?.email,userType:jwt?.userType});
-
       if (response.status === 200) {
         await refreshUser();
         toast({
@@ -125,17 +119,14 @@ console.log(jwt,"jwt");
           description: response.data.message || "Onboarding completed!",
           variant: "default",
         });
-
         const { email, onboardingToken, userStatus } = response.data.user;
         localStorage.removeItem("TpAuthToken");
-
         const result = await signIn("credentials", {
           redirect: false,
           email,
           onboardingToken,
           userStatus,
         });
-
         if (result?.ok) {
           router.push("/home");
         } else {
@@ -162,8 +153,6 @@ console.log(jwt,"jwt");
       setLoading(false);
     }
   };
-
-  console.log(jwt,"jwt");
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-[500px] bg-white dark:bg-dark-input-bg p-12 py-10 my-12 border border-[#E8EAEE] dark:border-dark-border shadow-sm rounded-sm">

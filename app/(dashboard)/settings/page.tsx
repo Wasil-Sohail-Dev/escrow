@@ -25,7 +25,7 @@ interface FormData {
 }
 
 const Settings = () => {
-  const { user, loading: userLoading } = useUser();
+  const { user, loading: userLoading,refreshUser } = useUser();
   const { toast } = useToast();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -100,6 +100,7 @@ const Settings = () => {
       });
 
       if (response.data) {
+        await refreshUser();
         toast({
           title: "Success",
           description: "Profile updated successfully",

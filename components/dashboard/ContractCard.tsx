@@ -144,8 +144,8 @@ const ContractCard = ({
       </div>
       <div style={{ width: 80, height: 80, marginRight: "30px" }}>
         <CircularProgressbar
-          value={calculateProgress(contract.milestones)}
-          text={`${calculateProgress(contract.milestones)}%`}
+          value={calculateProgress(contract.status)}
+          text={`${calculateProgress(contract.status)}%`}
           strokeWidth={12}
           styles={buildStyles({
             rotation: 0,

@@ -9,14 +9,25 @@ export async function GET(req: Request) {
 
   try {
     const { searchParams } = new URL(req.url);
-    const contractId = searchParams.get("contractId");
+    const customerId = searchParams.get("customerId");
     const status = searchParams.get("status");
+    const userType = searchParams.get("userType"); // "client" or "vendor"
     const limit = parseInt(searchParams.get("limit") || "1", 10);
 
     // Validate query parameters
-    if (!contractId) {
+    if (!customerId) {
       return NextResponse.json(
-        { success: false, message: "Contract ID is required." },
+        { success: false, message: "Customer ID is required." },
+        { status: 400 }
+      );
+    }
+
+    if (!userType || (userType !== "client" && userType !== "vendor")) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Valid userType is required ('client' or 'vendor').",
+        },
         { status: 400 }
       );
     }
@@ -35,58 +46,150 @@ export async function GET(req: Request) {
       );
     }
 
-    // Fetch the total number of contracts
-    const totalContracts = await Contract.countDocuments({ _id: contractId });
+    // Determine the correct field to search in the Contract schema
+    const field = userType === "client" ? "clientId" : "vendorId";
 
-    // Fetch the total number of contracts with the given status
-    const totalContractsWithStatus = await Contract.countDocuments({ status });
-
-    // Fetch contracts matching the criteria and populate vendorId
-    const contracts = await Contract.find({
-      _id: contractId,
-      status,
-    })
-      .populate({
-        path: "vendorId",
-        select: "email userName firstName lastName userType", // Populate only email and userName
-        model: Customer,
-      })
-      .limit(limit)
-      .lean();
-
-    if (contracts.length === 0) {
-      return NextResponse.json({
-        success: false,
-        message: "No contracts found.",
-      });
+    // Validate that the customer exists and matches the given userType
+    const customer = await Customer.findOne({ _id: customerId, userType });
+    if (!customer) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No customer found with the provided ID and userType.",
+        },
+        { status: 404 }
+      );
     }
 
-    // Fetch payment data related to the contractId
-    const payments = await Payment.find({ contractId })
-      .populate({
-        path: "payerId",
-        select: "email userName firstName lastName userType", // Populate only email and userName
-        model: Customer,
+    let contracts;
+    if (status === 'all') {
+      // For 'all' status, fetch just the latest contract from any status
+      contracts = await Contract.find({
+        [field]: customerId,
       })
-      .populate({
-        path: "payeeId",
-        select: "email userName firstName lastName userType", // Populate only email and userName
-        model: Customer,
-      })
-      .lean();
+        .populate({
+          path: "vendorId",
+          select: "email userName firstName lastName userType",
+          model: Customer,
+        })
+        .populate({
+          path: "clientId",
+          select: "email userName firstName lastName userType",
+          model: Customer,
+        })
+        .sort({ createdAt: -1 })
+        .limit(1)
+        .lean();
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: {
-          totalContracts,
-          totalContractsWithStatus,
-          contracts,
-          payments,
+      // Fetch all payments for this user regardless of contract status
+      const allContracts = await Contract.find({
+        [field]: customerId,
+      }).lean();
+
+      const payments = await Payment.find({
+        contractId: { $in: allContracts.map(c => c._id) }
+      })
+        .populate({
+          path: "payerId",
+          select: "email userName firstName lastName userType",
+          model: Customer,
+        })
+        .populate({
+          path: "payeeId",
+          select: "email userName firstName lastName userType",
+          model: Customer,
+        })
+        .populate({
+          path: "contractId",
+          select: "title contractId",
+          model: Contract,
+        })
+        .lean();
+
+      // Add contract title to payments
+      const paymentsWithTitle = payments.map(payment => ({
+        ...payment,
+        contractTitle: payment.contractId.title
+      }));
+
+      return NextResponse.json(
+        {
+          success: true,
+          data: {
+            totalContracts: allContracts.length,
+            contracts,
+            latestContract: contracts[0],
+            payments: paymentsWithTitle,
+          },
         },
-      },
-      { status: 200 }
-    );
+        { status: 200 }
+      );
+    } else {
+      // For specific status, fetch all contracts with that status
+      contracts = await Contract.find({
+        [field]: customerId,
+        status,
+      })
+        .populate({
+          path: "vendorId",
+          select: "email userName firstName lastName userType",
+          model: Customer,
+        })
+        .populate({
+          path: "clientId",
+          select: "email userName firstName lastName userType",
+          model: Customer,
+        })
+        .sort({ createdAt: -1 })
+        .lean();
+
+      if (!contracts.length) {
+        return NextResponse.json({
+          success: false,
+          message: "No contracts found for the given customer and status.",
+        });
+      }
+
+      // Fetch payments for contracts with specific status
+      const payments = await Payment.find({
+        contractId: { $in: contracts.map(c => c._id) }
+      })
+        .populate({
+          path: "payerId",
+          select: "email userName firstName lastName userType",
+          model: Customer,
+        })
+        .populate({
+          path: "payeeId",
+          select: "email userName firstName lastName userType",
+          model: Customer,
+        })
+        .populate({
+          path: "contractId",
+          select: "title contractId",
+          model: Contract,
+        })
+        .lean();
+
+      // Add contract title to payments
+      const paymentsWithTitle = payments.map(payment => ({
+        ...payment,
+        contractTitle: payment.contractId.title
+      }));
+
+      return NextResponse.json(
+        {
+          success: true,
+          data: {
+            totalContracts: contracts.length,
+            contracts,
+            latestContract: contracts[0],
+            payments: paymentsWithTitle,
+          },
+        },
+        { status: 200 }
+      );
+    }
   } catch (error: any) {
     console.error(error);
     return NextResponse.json(

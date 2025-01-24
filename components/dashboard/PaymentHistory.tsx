@@ -7,6 +7,10 @@ import {
 import { ChevronDown, MoreHorizontal, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/contexts/UserContext";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { useState, useEffect } from "react";
 
 interface TableHeader {
   key: string;
@@ -29,31 +33,54 @@ interface PaymentHistoryProps {
   dispute?: boolean;
 }
 
-const PAYMENT_HEADERS: TableHeader[] = [
-  { key: "projectName", label: "Project Name" },
-  { key: "orderId", label: "Order ID" },
-  { key: "date", label: "Date" },
-  { key: "vendorName", label: "Vendor name" },
-  { key: "status", label: "Status" },
-  { key: "amount", label: "Amount" },
-  { key: "action", label: "Action" },
-];
-
-const DISPUTE_HEADERS: TableHeader[] = [
-  { key: "projectName", label: "Project Name" },
-  { key: "disputeId", label: "Dispute ID" },
-  { key: "date", label: "Date Created" },
-  { key: "vendorName", label: "Vendor name" },
-  { key: "status", label: "Status" },
-  { key: "subject", label: "Subject" },
-  { key: "action", label: "Action" },
-];
-
 export default function PaymentHistory({
   showFilter,
-  transactions,
+  transactions: initialTransactions,
   dispute,
 }: PaymentHistoryProps) {
+  const { user } = useUser();
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
+  const [startDate, endDate] = dateRange;
+  const [filteredTransactions, setFilteredTransactions] = useState(initialTransactions);
+
+  useEffect(() => {
+    filterTransactions();
+  }, [dateRange, initialTransactions]);
+
+  const filterTransactions = () => {
+    if (!initialTransactions?.length) return;
+
+    let filtered = [...initialTransactions];
+
+    if (startDate && endDate) {
+      filtered = filtered.filter(transaction => {
+        const transactionDate = new Date(transaction.date);
+        return transactionDate >= startDate && transactionDate <= endDate;
+      });
+    } 
+
+    setFilteredTransactions(filtered);
+  };
+
+  const PAYMENT_HEADERS: TableHeader[] = [
+    { key: "projectName", label: "Project Name" },
+    { key: "orderId", label: "Order ID" },
+    { key: "date", label: "Date" },
+    { key: "vendorName", label: user?.userType === 'vendor' ? "Client name" : "Vendor name" },
+    { key: "status", label: "Status" },
+    { key: "amount", label: "Amount" },
+    { key: "action", label: "Action" },
+  ];
+  
+  const DISPUTE_HEADERS: TableHeader[] = [
+    { key: "projectName", label: "Project Name" },
+    { key: "disputeId", label: "Dispute ID" },
+    { key: "date", label: "Date Created" },
+    { key: "vendorName", label: user?.userType === 'vendor' ? "Client name" : "Vendor name" },
+    { key: "status", label: "Status" },
+    { key: "subject", label: "Subject" },
+    { key: "action", label: "Action" },
+  ];
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
@@ -67,7 +94,7 @@ export default function PaymentHistory({
       case "funded":
         return "bg-[#00BA88]";
       default:
-        return "bg-black";
+        return "bg-[#F29A2E]";
     }
   };
 
@@ -81,32 +108,19 @@ export default function PaymentHistory({
             </h2>
           </div>
           {!dispute && (
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-2 text-small-medium px-3 py-1.5 rounded-md dark:bg-dark-bg dark:text-dark-text">
-                28 jan, 2021 - 28 Dec, 2021
-                <ChevronDown size={16} />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="dark:bg-dark-bg dark:border-dark-border"
-              >
-                <DropdownMenuItem className="text-small-medium dark:text-dark-text dark:hover:bg-white/5">
-                  28 jan, 2021 - 28 Dec, 2021
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-small-medium dark:text-dark-text dark:hover:bg-white/5">
-                  28 jan, 2021 - 28 Dec, 2021
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-small-medium dark:text-dark-text dark:hover:bg-white/5">
-                  28 jan, 2021 - 28 Dec, 2021
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-small-medium dark:text-dark-text dark:hover:bg-white/5">
-                  28 jan, 2021 - 28 Dec, 2021
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-small-medium dark:text-dark-text dark:hover:bg-white/5">
-                  28 jan, 2021 - 28 Dec, 2021
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex gap-4">
+              <DatePicker
+                selectsRange={true}
+                startDate={startDate}
+                endDate={endDate}
+                onChange={(update) => {
+                  setDateRange(update);
+                }}
+                isClearable={true}
+                placeholderText="Select date range"
+                className="flex items-center gap-2 text-small-medium px-3 py-1.5 rounded-md dark:bg-dark-bg dark:text-dark-text border border-input"
+              />
+            </div>
           )}
         </div>
       )}
@@ -129,7 +143,7 @@ export default function PaymentHistory({
             </tr>
           </thead>
           <tbody className="w-full">
-            {transactions.map((transaction, index) => (
+            {filteredTransactions?.length > 0 ? filteredTransactions.map((transaction, index) => (
               <tr
                 key={index}
                 className="lg:text-base-regular md:text-base-regular max-md:text-small-regular border-t dark:border-dark-border text-[#292929] dark:text-dark-text/60"
@@ -173,7 +187,7 @@ export default function PaymentHistory({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="end"
-                      className=" p-2 bg-white dark:bg-dark-bg border dark:border-dark-border"
+                      className="p-2 bg-white dark:bg-dark-bg border dark:border-dark-border"
                     >
                       <DropdownMenuItem className="flex items-center justify-center gap-2 px-3 py-2 text-[14px] font-[500] text-black dark:text-dark-text hover:bg-[#F9FAFB] dark:hover:bg-dark-2/20 cursor-pointer rounded-lg">
                         {dispute ? "Resolve" : "Track Payment"}
@@ -182,7 +196,11 @@ export default function PaymentHistory({
                   </DropdownMenu>
                 </td>
               </tr>
-            ))}
+            )) : (
+              <tr>
+                <td colSpan={7} className="text-center py-4">No transactions found</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
