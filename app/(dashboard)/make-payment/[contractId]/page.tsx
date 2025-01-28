@@ -183,12 +183,13 @@ function PaymentPage() {
           variant: "destructive",
         });
       } else if (paymentIntent?.status === "requires_capture") {
-        router.push(`/contact-details/${contractID}`);
         toast({
           title: "Payment succeeded!",
           description: "Payment succeeded!",
           variant: "default",
         });
+        router.push(`/contact-details/${contractID}`);
+        router.refresh();
       }
     } catch (error) {
       console.error("Error during payment:", error);

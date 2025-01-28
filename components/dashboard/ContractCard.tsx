@@ -28,8 +28,7 @@ const ContractCard = ({
   const handleReject = async () => {
     await handleContractAction(contract.contractId, "reject", false, () => {
       fetchContractStatus();
-      // This will be called after successful rejection
-      router.refresh(); // Force a refresh of the current route
+      router.refresh(); 
     });
   };
 
@@ -74,30 +73,11 @@ const ContractCard = ({
       className="bg-[#D1D5DB30] rounded-[15px] p-4 flex items-center justify-between shadow-sm relative border dark:border-dark-border"
     >
       <div className="absolute top-5 left-0 h-[30px] w-[5px] bg-primary rounded-tr-[10.11px] rounded-br-[10.11px]" />
-      <div className="space-y-1">
+      <div className="space-y-1 flex-grow">
         <div className="flex justify-between items-center gap-4">
           <h3 className="font-[600] leading-[24px] text-[20px] dark:text-dark-text">
             {contract.title}
           </h3>
-          {user?.userType === "vendor" && contract?.status === "onboarding" && (
-            <div className="flex gap-2 flex-wrap">
-              <Button
-                variant="secondary"
-                className="text-base-medium text-white rounded-[12px]"
-                onClick={handleReject}
-              >
-                Reject
-              </Button>
-              <Button
-                className="text-base-medium text-white rounded-[12px]"
-                onClick={() =>
-                  handleContractAction(contract.contractId, "accept")
-                }
-              >
-                Accept
-              </Button>
-            </div>
-          )}
         </div>
         <p className="text-base-regular text-[#0D1829B2] dark:text-dark-text/60">
           {contract.description}
@@ -109,12 +89,11 @@ const ContractCard = ({
           <CalendarDays size={15} className="dark:text-dark-text/60" />
           {formatDate(contract.endDate)}
         </p>
-        <div className="flex space-x-2">
+        
+        <div className="flex flex-wrap items-center gap-2 mt-4">
           <Button
             variant="default"
-            onClick={() =>
-              router.push(`/contact-details/${contract.contractId}`)
-            }
+            onClick={() => router.push(`/contact-details/${contract.contractId}`)}
             className="bg-primary hover:bg-primary/90 text-subtle-medium text-white rounded-[9px] px-4 py-2 hover:underline transition-colors duration-200"
           >
             View Details
@@ -131,17 +110,38 @@ const ContractCard = ({
                 Make Payment
               </Button>
             )}
-          {user?.userType === "vendor" && contract?.status === "funding_onhold" && (
-            <Button
-              variant="default"
-              className="bg-primary hover:bg-primary/90 text-white rounded-[9px] px-4 py-2 hover:underline transition-colors duration-200"
-              onClick={handleStartWorking}
-            >
-              Start Working
-            </Button>
-          )}
+
+            {user?.userType === "vendor" && contract?.status === "funding_onhold" && (
+              <Button
+                variant="default"
+                className="bg-primary hover:bg-primary/90 text-white rounded-[9px] px-4 py-2 hover:underline transition-colors duration-200"
+                onClick={handleStartWorking}
+              >
+                Start Working
+              </Button>
+            )}
+
+            {user?.userType === "vendor" && contract?.status === "onboarding" && (
+              <>
+                <Button
+                  variant="secondary"
+                  className="text-base-medium text-white rounded-[9px] px-4 py-2 hover:bg-secondary/90 transition-colors duration-200"
+                  onClick={handleReject}
+                >
+                  Reject
+                </Button>
+                <Button
+                  variant="default"
+                  className="text-base-medium text-white rounded-[9px] px-4 py-2 hover:bg-primary/90 transition-colors duration-200"
+                  onClick={() => handleContractAction(contract.contractId, "accept")}
+                >
+                  Accept
+                </Button>
+              </>
+            )}
         </div>
       </div>
+
       <div style={{ width: 80, height: 80, marginRight: "30px" }}>
         <CircularProgressbar
           value={calculateProgress(contract.status)}

@@ -44,21 +44,19 @@ export default function PaymentHistory({
   const [filteredTransactions, setFilteredTransactions] = useState(initialTransactions);
 
   useEffect(() => {
-    filterTransactions();
+    if (initialTransactions||dateRange) {
+      filterTransactions();
+    }
   }, [dateRange, initialTransactions]);
-
   const filterTransactions = () => {
     if (!initialTransactions?.length) return;
-
     let filtered = [...initialTransactions];
-
     if (startDate && endDate) {
       filtered = filtered.filter(transaction => {
         const transactionDate = new Date(transaction.date);
         return transactionDate >= startDate && transactionDate <= endDate;
       });
     } 
-
     setFilteredTransactions(filtered);
   };
 
@@ -101,7 +99,7 @@ export default function PaymentHistory({
   return (
     <div className="mt-8">
       {showFilter && (
-        <div className="flex md:justify-between md:flex-row flex-col items-center mb-4">
+        <div className="flex md:justify-between md:flex-row flex-col items-center mb-4 md:gap-0 gap-2">
           <div className="flex items-center gap-2">
             <h2 className="text-[22px] font-bold leading-[28.5px] dark:text-dark-text lg:text-[22px] md:text-[20px] max-md:text-[18px]">
               {dispute ? "Dispute Details" : "Payment History"}

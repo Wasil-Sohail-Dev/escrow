@@ -463,6 +463,9 @@ const CreateContract = () => {
     if (savedFormData) {
       try {
         const parsedData = JSON.parse(savedFormData);
+        console.log(parsedData,"parsedDataparsedData");
+        
+        setSelectedTemplate(parsedData.id);
         setFormData(parsedData);
         // Clear the saved data after loading
         sessionStorage.removeItem("contractFormData");

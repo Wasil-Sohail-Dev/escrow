@@ -58,3 +58,60 @@ export const sendContractInvite = async (contractId: string, vendorEmail: string
         throw error; // Propagate the error to the calling function
     }
 };
+
+export const sendContactUsMail = async (
+    name: string,
+    email: string,
+    message: string,
+    phone?: string
+): Promise<void> => {
+    console.log("Sending contact us email from:", email);
+
+    try {
+        // Email content
+        const subject = "New Contact Us Message";
+        const adminEmail = process.env.ADMIN_EMAIL; // Replace this with your admin email
+        const contactDetails = `
+            Hello,
+
+            You have received a new message from the Contact Us form:
+
+            Name: ${name}
+            Email: ${email}
+            Phone: ${phone || "N/A"}
+
+            Message:
+            ${message}
+
+            Best regards,
+            Your App Team
+            `;
+
+        const htmlContent = `
+            <p>Hello,</p>
+            <p>You have received a new message from the <strong>Contact Us</strong> form:</p>
+            <ul>
+            <li><strong>Name:</strong> ${name}</li>
+            <li><strong>Email:</strong> ${email}</li>
+            <li><strong>Phone:</strong> ${phone || "N/A"}</li>
+            </ul>
+            <p><strong>Message:</strong></p>
+            <p>${message}</p>
+            <p>Best regards,<br>Your App Team</p>
+            `;
+
+        // Send the email using nodemailer
+        await transporter.sendMail({
+            from: `"Your App" <${process.env.SMTP_USER}>`, // Replace with your email
+            to: adminEmail, // Admin email where the contact messages will be sent
+            subject: subject,
+            text: contactDetails,
+            html: htmlContent,
+        });
+
+        console.log("Contact us email sent successfully from:", email);
+    } catch (error) {
+        console.error("Error sending contact us email:", error);
+        throw error; // Propagate the error to the calling function
+    }
+};

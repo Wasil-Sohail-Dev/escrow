@@ -1,30 +1,12 @@
 "use client";
 
 import React, { use, useState } from "react";
-import { Clock3, Flag, CreditCard } from "lucide-react";
-import { disputeData, transactions } from "@/lib/data/transactions";
+import { disputeData } from "@/lib/data/transactions";
 import Topbar from "../../../../components/dashboard/Topbar";
 import HeadBar from "../../../../components/dashboard/HeadBar";
-import FilterButton from "../../../../components/dashboard/FilterButton";
 import PaymentHistory from "../../../../components/dashboard/PaymentHistory";
 import Pagination from "../../../../components/dashboard/Pagination";
-
-const FILTER_OPTIONS = {
-  dateRange: [
-    "Last 7 days",
-    "Last 30 days",
-    "Last 3 months",
-    "Last 6 months",
-    "Last year",
-  ],
-  status: [
-    { label: "Pending", color: "#FFB800" },
-    { label: "Cancelled", color: "#FF0000" },
-    { label: "Delivered", color: "#00BA88" },
-  ],
-  paymentMethod: ["Credit Card", "Bank Transfer", "PayPal"],
-  project: ["All Projects", "Active Projects", "Completed Projects"],
-};
+import { TabOption } from "@/components/dashboard/Overview";
 
 export default function DisputeManagementScreenDetails({
   params,

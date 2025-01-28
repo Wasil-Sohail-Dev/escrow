@@ -361,7 +361,7 @@ const ContactDetails = () => {
                       )}
                     </div>
                   )}
-                {(user?.userType === "vendor" && milestone?.status === "pending" && contract?.milestones[index - 1]?.status === "approved" || (index === 0 && milestone?.status === "pending")) && (
+                {(user?.userType === "vendor" && milestone?.status === "pending" && contract?.milestones[index - 1]?.status === "approved") && (
                   <div className="mt-4 md:mt-0 flex justify-end">
                     <Button
                       onClick={() => handleStartMilestoneWorking(milestone)}

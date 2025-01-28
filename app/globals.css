@@ -8,7 +8,27 @@
   margin: 0;
   scroll-behavior: smooth;
   outline: none;
-  overflow: hidden;
+}
+
+/* Add specific exceptions for components that shouldn't have overflow hidden */
+.react-datepicker,
+.react-datepicker__month-container,
+.react-datepicker__header,
+.react-datepicker__days-container,
+[role="dialog"],
+[role="listbox"],
+[role="menu"],
+.dropdown,
+.modal,
+.popover {
+  overflow: visible !important;
+}
+
+/* Control overflow at the main layout level instead */
+main,
+section,
+.page-container {
+  overflow-x: hidden;
 }
 
 html,

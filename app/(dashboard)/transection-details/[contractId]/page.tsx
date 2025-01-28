@@ -16,47 +16,11 @@ import { useParams } from "next/navigation";
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
 import Loader from "@/components/ui/loader";
-
-interface PaymentData {
-  _id: string;
-  contractId: string;
-  contractTitle?: string;
-  payerId: {
-    _id: string;
-    email: string;
-    userName: string;
-  };
-  payeeId: {
-    _id: string;
-    email: string;
-    userName: string;
-  };
-  amount: number;
-  platformFee: number;
-  escrowAmount: number;
-  stripePaymentIntentId: string;
-  status: string;
-  paymentMethod: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-const FILTER_OPTIONS = {
-  dateRange: [
-    "Last 7 days",
-    "Last 30 days",
-    "Last 3 months",
-    "Last 6 months",
-    "Last year",
-  ],
-  status: [
-    "Funded",
-    "Pending", 
-    "Cancelled"
-  ]
-};
+import { useUser } from "@/contexts/UserContext";
+import { FILTER_OPTION, PaymentData } from "@/lib/helpers/constants";
 
 export default function TransactionDetails() {
+  const { user } = useUser();
   const { contractId } = useParams();
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -69,11 +33,11 @@ export default function TransactionDetails() {
   const itemsPerPage = 5;
 
   const fetchPaymentHistory = async () => {
-    if (!contractId) return;
+    if (!contractId || !user) return;
 
     try {
       setLoading(true);
-      const { data } = await axios.get(`/api/get-payment-history?contractId=${contractId}`);
+      const { data } = await axios.get(`/api/get-payment-history?contractId=${contractId}&customerId=${user._id}&userType=${user.userType}`);
       
       if (data.success) {
         setPayments(data.data);
@@ -98,10 +62,10 @@ export default function TransactionDetails() {
   };
 
   useEffect(() => {
-    if (contractId) {
+    if (contractId && user) {
       fetchPaymentHistory();
     }
-  }, [contractId]);
+  }, [contractId, user]);
 
   // Filter and search logic
   const filteredPayments = payments.filter(payment => {
@@ -204,14 +168,14 @@ export default function TransactionDetails() {
               <FilterButton
                 icon={<Clock3 className="h-[14px] w-[14px] text-[#4B5563] dark:text-dark-text" />}
                 label="Date range"
-                options={FILTER_OPTIONS.dateRange}
+                options={FILTER_OPTION.dateRange}
                 selectedOption={dateFilter}
                 onSelect={(value: string) => setDateFilter(value)}
               />
               <FilterButton
                 icon={<Flag className="h-[14px] w-[14px] text-[#4B5563] dark:text-dark-text" />}
                 label="Status"
-                options={FILTER_OPTIONS.status}
+                options={FILTER_OPTION.status}
                 selectedOption={statusFilter}
                 onSelect={(value: string) => setStatusFilter(value)}
               />

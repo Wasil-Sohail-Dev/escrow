@@ -7,6 +7,14 @@ import EditContractModal from "@/components/modals/EditContractModal";
 import EnterDetailsModal from "@/components/modals/EnterDetailsModal";
 import { useRouter } from "next/navigation";
 
+interface Milestone {
+  name: string;
+  amount: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+}
+
 const PreBuildDetails = () => {
   const router = useRouter();
   const [formData, setFormData] = useState<any>(null);
@@ -33,7 +41,11 @@ const PreBuildDetails = () => {
     if (formData) {
       sessionStorage.setItem('contractFormData', JSON.stringify(formData));
     }
-    router.push('/create-contract');
+    if (formData?.isSelected) {
+      router.push('/pre-build-contracts');
+    }else{
+      router.push('/create-contract');
+    }
   };
 
 console.log(formData,"formDataformData");
@@ -47,13 +59,6 @@ console.log(formData,"formDataformData");
       <div className="mt-[85px]">
         <div className="flex mb-4 sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
           <div className="flex flex-col gap-4 items-start">
-            <Button
-              onClick={handleBack}
-              variant="outline"
-              className="h-10 px-4 py-2 text-[14px] font-[500] border-primary text-primary hover:bg-primary/10"
-            >
-              ← Back
-            </Button>
             <h1 className="text-[32px] sm:text-[40px] lg:text-[53.42px] font-[700] leading-[42px] sm:leading-[48px] lg:leading-[83.33px] text-[#292929] dark:text-dark-text">
               {formData?.title || 'Loading...'}
             </h1>
@@ -226,6 +231,38 @@ console.log(formData,"formDataformData");
           <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-[400] leading-[28px] sm:leading-[32px] lg:leading-[35.2px] text-[#292929] dark:text-dark-text/60">
             Vendor Email: {formData?.vendorEmail || 'Loading...'}
           </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row justify-end items-center gap-4 pt-6">
+          <Button
+            onClick={handleBack}
+            variant="outline"
+            className="w-full sm:w-auto h-[42px] px-6 md:px-10 border-primary text-primary hover:bg-primary/10"
+          >
+            Back
+          </Button>
+          {formData?.isSelected && <Button
+            onClick={() => {
+              // Store the current form data but remove contractId and reset dates/vendor email
+              const templateData = {
+                ...formData,
+                contractId: "", // This will be generated on create contract
+                vendorEmail: "", // Reset vendor email
+                startDate: "", // Reset dates
+                endDate: "", // Reset dates
+                milestones: formData.milestones.map((milestone: Milestone) => ({
+                  ...milestone,
+                  startDate: "", // Reset milestone dates
+                  endDate: "" // Reset milestone dates
+                }))
+              };
+              sessionStorage.setItem('contractFormData', JSON.stringify(templateData));
+              router.push('/create-contract');
+            }}
+            className="w-full sm:w-auto h-[42px] px-6 md:px-10 bg-primary hover:bg-primary/90 text-white dark:text-dark-text"
+          >
+            Use Template
+          </Button>}
         </div>
       </div>
       <EditContractModal

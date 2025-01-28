@@ -118,6 +118,21 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
     }
   };
 
+  const getDisputeCount = (tab: any) => {
+    switch (tab) {
+      case "disputes":
+        return counts.disputed;
+      case "pending":
+        return counts.disputed_in_process;
+      case "progress":
+        return counts.disputed_in_process;
+      case "resolved":
+        return counts.disputed_resolved;
+      default:
+        return 0;
+    }
+  };
+
   const latestContract = contractData?.latestContract;
 
   return (
@@ -126,11 +141,11 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
         <div
           className={`mb-4 flex justify-end ${
             dispute
-              ? "sm:justify-between  sm:flex-row flex-col sm:gap-0 gap-6 items-center"
+              ? "justify-end"
               : "justify-end"
           }`}
         >
-          {dispute && (
+          {/* {dispute && (
             <div className="flex items-center text-[20px] font-[800] leading-[24px] text-[#3A3A3A] gap-6 dark:text-dark-text">
               Sort by:{" "}
               <span className="text-[14px] font-[500] leading-[16.8px] underline">
@@ -141,8 +156,8 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
                 Date
               </span>
             </div>
-          )}
-          {user?.userType === "client" && <Button
+          )} */}
+          {(dispute || user?.userType === 'client') && <Button
             className={`bg-primary hover:bg-primary/90 px-6 py-6 rounded-md flex items-center gap-2 text-small-medium text-white ${
               dispute
                 ? "bg-[#E71D1D] hover:bg-[#E71D1D]/90"
@@ -157,20 +172,19 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
             }}
           >
             <Plus />
-            Create New Contract
+            {dispute ? "Create New Dispute" : "Create New Contract"}
           </Button>}
         </div>
       ) : (
         <BlockedAlert />
       )}
-
       <div
         className="grid lg:grid-cols-4 md:grid-cols-2 max-md:grid-cols-1 
         lg:gap-4 md:gap-4 max-md:gap-3 mb-4"
       >
         <ProjectCard
           title={dispute ? "Total Disputes Raised" : "Active Projects"}
-          count={getFilteredCount("active")}
+          count={dispute? getDisputeCount("disputes") :getFilteredCount("active")}
           status="active"
           viewDetailsLink={
             dispute
@@ -181,7 +195,7 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
         />
         <ProjectCard
           title={dispute ? "Pending Disputes" : "Completed Projects"}
-          count={getFilteredCount("completed")}
+          count={dispute? getDisputeCount("pending") : getFilteredCount("completed") }
           status="completed"
           viewDetailsLink={
             dispute
@@ -192,7 +206,7 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
         />
         <ProjectCard
           title={dispute ? "In Progress Disputes" : "All Projects"}
-          count={getFilteredCount("all")}
+          count={dispute? getDisputeCount("progress") : getFilteredCount("all")}
           status="all"
           viewDetailsLink={
             dispute
@@ -203,7 +217,7 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
         />
         <ProjectCard
           title={dispute ? "Resolved Disputes" : "Dispute Alerts"}
-          count={getFilteredCount("disputed")}
+          count={dispute? getDisputeCount("resolved") : getFilteredCount("disputed")}
           status="dispute"
           viewDetailsLink={
             dispute
@@ -213,14 +227,13 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
           dispute={dispute}
         />
       </div>
-
-      {!dispute && (
+      {!dispute ? (
         <div
           className="flex lg:gap-8 md:gap-6 max-md:gap-4 border-b dark:border-dark-border
         lg:overflow-visible md:overflow-visible max-md:overflow-x-auto 
         max-md:pb-2 max-md:scrollbar-hide"
         >
-          {["Active", "Dispute", "Completed", "All"].map((tab) => {
+          {["Active", "Disputed", "Completed", "All"].map((tab) => {
             const tabValue = tab.toLowerCase() as TabOption;
             return (
               <button
@@ -241,16 +254,43 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
             );
           })}
         </div>
-      )}
+      ):
+      <div
+          className="flex lg:gap-8 md:gap-6 max-md:gap-4 border-b dark:border-dark-border
+        lg:overflow-visible md:overflow-visible max-md:overflow-x-auto 
+        max-md:pb-2 max-md:scrollbar-hide"
+        >
+          {["disputes", "pending", "progress", "resolved"].map((tab) => {
+            const tabValue = tab.toLowerCase() as any;
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab?.(tabValue)}
+                className={`pb-2 px-1 relative whitespace-nowrap
+                lg:text-body-normal md:text-base-regular max-md:text-small-regular ${
+                  activeTab === tabValue
+                    ? "text-primary dark:text-primary"
+                    : "text-[#D7DAE1] dark:text-dark-text/60"
+                }`}
+              >
+                {tab}
+                {activeTab === tabValue && (
+                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      }
 
       <div className="rounded-lg mt-14">
         <div className="flex items-center justify-between">
           <div className="flex items-center justify-center gap-2 max-md:gap-2">
             <h2 className="lg:text-[22px] md:text-[20px] max-md:text-heading4-medium leading-[27.5px] font-bold dark:text-dark-text">
-              {dispute ? "In Progress Dispute" : `${activeTab?.charAt(0).toUpperCase() + activeTab?.slice(1)!} Projects`}
+              {`${activeTab?.charAt(0).toUpperCase() + activeTab?.slice(1)!} Projects`}
             </h2>
             <span className="text-white rounded-full lg:w-6 lg:h-6 md:w-5 md:h-5 max-md:w-5 max-md:h-5 lg:text-subtle-semibold md:text-small-semibold max-md:text-tiny-medium flex items-center justify-center mt-1 bg-[#EC1A1A]">
-              {getFilteredCount(activeTab as TabOption)}
+              {dispute ? getDisputeCount(activeTab) : getFilteredCount(activeTab as TabOption)}
             </span>
           </div>
           <Link href={`/projects/${activeTab}`} className="lg:text-base1-semibold md:text-base-semibold max-md:text-small-semibold underline flex items-center gap-2 dark:text-dark-text">
@@ -298,7 +338,7 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
             )}
           </div>
         ) : (
-          <div className="flex justify-center items-center min-h-[130px]">No contracts found</div>
+          <div className="flex justify-center items-center min-h-[130px] text-base-regular text-[#0D1829B2] dark:text-dark-text/60">No contracts found</div>
         )}
       </div>
     </>

@@ -43,7 +43,7 @@ export default function Topbar({
             </p>
           </div>
           <div className="flex items-center lg:gap-8 md:gap-6 max-md:gap-4">
-            {(title === "Overview" ||
+            {/* {(title === "Overview" ||
               title === "Dispute Management screen") && (
               <div
                 className="flex items-center gap-2 border dark:border-dark-text px-2 rounded
@@ -57,12 +57,14 @@ export default function Topbar({
                 lg:h-[52px] md:h-[45px]"
                 />
               </div>
-            )}
+            )} */}
             <div className="relative">
-              <Bell
-                className="lg:w-6 lg:h-6 md:w-5 md:h-5 max-md:w-5 max-md:h-5 
-              text-muted-foreground dark:text-dark-text cursor-pointer"
+              <Link href="/notifications">
+                <Bell
+                  className="lg:w-6 lg:h-6 md:w-5 md:h-5 max-md:w-5 max-md:h-5 
+                text-muted-foreground dark:text-dark-text cursor-pointer"
               />
+              </Link>
               <div
                 className="absolute top-0 right-0 
               lg:w-2 lg:h-2 md:w-1.5 md:h-1.5 max-md:w-1.5 max-md:h-1.5 
