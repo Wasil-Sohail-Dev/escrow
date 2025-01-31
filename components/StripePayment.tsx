@@ -10,7 +10,7 @@ import { Button } from "./ui/button";
 
 // Load Stripe
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
+  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUBLISHABLE_KEY || ""
 );
 
 interface PaymentPageProps {

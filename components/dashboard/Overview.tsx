@@ -12,7 +12,7 @@ import ProjectCard from "./ProjectCard";
 import { useUser } from "@/contexts/UserContext";
 import Loader from "../ui/loader";
 
-export type TabOption = "active" | "disputed" | "completed" | "all";
+export type TabOption = "active" | "completed" | "all" | "disputes" | "pending" | "progress" | "resolved" | "cancelled";
 
 interface ContractStatusCount {
   draft: number;
@@ -67,12 +67,10 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
 
   const fetchContractDetails = async (taba: TabOption) => {
     if (!user?._id) return;
-    
     try {
       setLoading(true);
       const response = await fetch(`/api/get-contract-details?customerId=${user._id}&status=${taba}&limit=5&userType=${user.userType}`);
       const data = await response.json();
-      console.log(data, "responseresponse");
       if (data.success) {
         setContractData(data.data);
         onDataFetched?.(data.data);
@@ -111,8 +109,8 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
         return counts.completed;
       case "all":
         return counts.totalContracts;
-      case "disputed":
-        return counts.disputed + counts.disputed_in_process + counts.disputed_resolved;
+      case "cancelled":
+        return counts.cancelled;
       default:
         return 0;
     }
@@ -120,13 +118,13 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
 
   const getDisputeCount = (tab: any) => {
     switch (tab) {
-      case "disputes":
+      case "disputed":
         return counts.disputed;
-      case "pending":
+      case "disputed_in_process":
         return counts.disputed_in_process;
-      case "progress":
+      case "disputed_in_process":
         return counts.disputed_in_process;
-      case "resolved":
+      case "disputed_resolved":
         return counts.disputed_resolved;
       default:
         return 0;
@@ -184,44 +182,44 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
       >
         <ProjectCard
           title={dispute ? "Total Disputes Raised" : "Active Projects"}
-          count={dispute? getDisputeCount("disputes") :getFilteredCount("active")}
+          count={dispute? getDisputeCount("disputed") :getFilteredCount("active")}
           status="active"
           viewDetailsLink={
             dispute
-              ? "/dispute-management-screen/total-disputes"
+              ? "/dispute-management-screen/disputed"
               : "/projects/active"
           }
           dispute={dispute}
         />
         <ProjectCard
           title={dispute ? "Pending Disputes" : "Completed Projects"}
-          count={dispute? getDisputeCount("pending") : getFilteredCount("completed") }
+          count={dispute? getDisputeCount("disputed_in_process") : getFilteredCount("completed") }
           status="completed"
           viewDetailsLink={
             dispute
-              ? "/dispute-management-screen/pending-disputes"
+              ? "/dispute-management-screen/disputed_in_process"
               : "/projects/completed"
           }
           dispute={dispute}
         />
         <ProjectCard
           title={dispute ? "In Progress Disputes" : "All Projects"}
-          count={dispute? getDisputeCount("progress") : getFilteredCount("all")}
+          count={dispute? getDisputeCount("disputed_in_process") : getFilteredCount("all")}
           status="all"
           viewDetailsLink={
             dispute
-              ? "/dispute-management-screen/in-progress-disputes"
+              ? "/dispute-management-screen/disputed_in_process"
               : "/projects/all"
           }
           dispute={dispute}
         />
         <ProjectCard
-          title={dispute ? "Resolved Disputes" : "Dispute Alerts"}
-          count={dispute? getDisputeCount("resolved") : getFilteredCount("disputed")}
+          title={dispute ? "Resolved Disputes" : "Cancelled Projects"}
+          count={dispute? getDisputeCount("disputed_resolved") : getFilteredCount("cancelled")}
           status="dispute"
           viewDetailsLink={
             dispute
-              ? "/dispute-management-screen/resolved-disputes"
+              ? "/dispute-management-screen/disputed_resolved"
               : "/projects/disputed"
           }
           dispute={dispute}
@@ -233,7 +231,7 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
         lg:overflow-visible md:overflow-visible max-md:overflow-x-auto 
         max-md:pb-2 max-md:scrollbar-hide"
         >
-          {["Active", "Disputed", "Completed", "All"].map((tab) => {
+          {["Active", "Cancelled", "Completed", "All"].map((tab) => {
             const tabValue = tab.toLowerCase() as TabOption;
             return (
               <button
@@ -260,12 +258,28 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
         lg:overflow-visible md:overflow-visible max-md:overflow-x-auto 
         max-md:pb-2 max-md:scrollbar-hide"
         >
-          {["disputes", "pending", "progress", "resolved"].map((tab) => {
+          {["Disputes", "Progress", "Resolved"].map((tab) => {
+            let value:string;
+            switch(tab){
+              case "Disputes":
+                value="disputed"
+                break;
+              case "Pending":
+                value="disputed_in_process"
+                break;
+              case "Progress":
+                value="disputed_in_process"
+                break;
+              case "Resolved":
+                value="disputed_resolved"
+                break;
+            }
             const tabValue = tab.toLowerCase() as any;
+
             return (
               <button
                 key={tab}
-                onClick={() => setActiveTab?.(tabValue)}
+                onClick={() => setActiveTab?.(value as TabOption)}
                 className={`pb-2 px-1 relative whitespace-nowrap
                 lg:text-body-normal md:text-base-regular max-md:text-small-regular ${
                   activeTab === tabValue
@@ -274,7 +288,7 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
                 }`}
               >
                 {tab}
-                {activeTab === tabValue && (
+                {activeTab === (value!)  && (
                   <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />
                 )}
               </button>
@@ -282,12 +296,11 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
           })}
         </div>
       }
-
       <div className="rounded-lg mt-14">
         <div className="flex items-center justify-between">
           <div className="flex items-center justify-center gap-2 max-md:gap-2">
             <h2 className="lg:text-[22px] md:text-[20px] max-md:text-heading4-medium leading-[27.5px] font-bold dark:text-dark-text">
-              {`${activeTab?.charAt(0).toUpperCase() + activeTab?.slice(1)!} Projects`}
+              {`${((activeTab as any) === "disputed_in_process") ? "Disputed In Process" : ((activeTab as any) === "disputed_resolved") ? "Disputed Resolved" : activeTab?.charAt(0).toUpperCase() + activeTab?.slice(1)!} Projects`}
             </h2>
             <span className="text-white rounded-full lg:w-6 lg:h-6 md:w-5 md:h-5 max-md:w-5 max-md:h-5 lg:text-subtle-semibold md:text-small-semibold max-md:text-tiny-medium flex items-center justify-center mt-1 bg-[#EC1A1A]">
               {dispute ? getDisputeCount(activeTab) : getFilteredCount(activeTab as TabOption)}
@@ -297,7 +310,6 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
             See Details <ChevronDown size={20} />
           </Link>
         </div>
-
         {loading ? (
           <div className="flex justify-center items-center min-h-[130px]">
             <Loader fullHeight={false} />

@@ -501,7 +501,7 @@ const CreateContract = () => {
             </Button>
           </div>
 
-          <div className="mb-8 flex md:justify-between flex-col md:flex-row items-center border-y border-[#D0D0D0] dark:border-dark-border py-8">
+          {/* <div className="mb-8 flex md:justify-between flex-col md:flex-row items-center border-y border-[#D0D0D0] dark:border-dark-border py-8">
             <h1 className="text-[22px] lg:text-[22px] font-[500] leading-[30px] mb-2 text-[#292929] dark:text-dark-text">
               Contract Template
             </h1>
@@ -544,7 +544,7 @@ const CreateContract = () => {
                   ))}
               </div>
             </div>
-          </div>
+          </div> */}
 
           <form className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-20">

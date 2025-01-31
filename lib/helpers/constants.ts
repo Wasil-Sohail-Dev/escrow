@@ -31,9 +31,16 @@ export const FILTER_OPTION = {
     "Last year",
   ],
   status: [
-    "Funded",
-    "Pending", 
-    "Cancelled"
+    "All",
+    "On Hold",
+    "Process",
+    "Released",
+    "Failed",
+    "Refunded",
+    "Disputed",
+    // "Funded",
+    // "Pending", 
+    // "Cancelled"
   ]
 };
 
@@ -51,3 +58,5 @@ export const FILTER_OPTIONS = {
   paymentMethod: ["All", "Stripe", "Bank Transfer"],
   project: ["All Projects"]
 }; 
+
+

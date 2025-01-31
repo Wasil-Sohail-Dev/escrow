@@ -130,15 +130,15 @@ export async function POST(req: Request) {
     const savedContract = await newContract.save();
 
     // Optionally send an updated contract invite to the vendor
-    try {
-      await sendContractInvite(
-        savedContract.contractId,
-        vendorEmail,
-        clientEmail
-      );
-    } catch (emailError) {
-      console.error("Error sending contract update invite email:", emailError);
-    }
+    // try {
+    //   await sendContractInvite(
+    //     savedContract.contractId,
+    //     vendorEmail,
+    //     clientEmail
+    //   );
+    // } catch (emailError) {
+    //   console.error("Error sending contract update invite email:", emailError);
+    // }
 
     return NextResponse.json(
       {

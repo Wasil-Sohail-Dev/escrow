@@ -7,8 +7,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { usePathname} from "next/navigation";
 import {
   Tooltip,
   TooltipContent,
@@ -19,13 +18,12 @@ import DashboardIcon from "@/components/icons/DasboardIcon";
 import ContactDetailIcon from "@/components/icons/ContactDetailIcon";
 import CreateContractIcon from "@/components/icons/CreateContractIcon";
 import PaymentHistoryIcon from "@/components/icons/PaymentHistoryIcon";
-import NotificationsIcon from "@/components/icons/NotificationsIcon";
 import CreateDisputeIcon from "@/components/icons/CreateDisputeIcon";
 import TermConditionIcon from "@/components/icons/TermConditionIcon";
 import ChatIcon from "@/components/icons/ChatIcon";
+import HelpIcon from "@/components/icons/HelpIcon";
 import SettingIcon from "@/components/icons/SettingIcon";
 import LogoutIcon from "@/components/icons/LogoutIcon";
-import { signOut } from "next-auth/react";
 import { useUser } from "@/contexts/UserContext";
 import LogoutConfirmationModal from "@/components/modals/LogoutConfirmationModal";
 
@@ -156,29 +154,12 @@ const Sidebar = () => {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
-                  href="/notifications"
-                  className="p-3 hover:bg-sidebar-accent dark:hover:bg-white/10 rounded-lg transition-colors"
-                >
-                  <NotificationsIcon
-                    className={`w-6 h-6 ${
-                      pathname === "/notifications"
-                        ? "text-primary"
-                        : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
-                    }`}
-                  />
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent>Notifications</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link
                   href="/dispute-management-screen"
                   className="p-3 hover:bg-sidebar-accent dark:hover:bg-white/10 rounded-lg transition-colors"
                 >
                   <CreateDisputeIcon
                     className={`w-7 h-7 ${
-                      pathname.includes("/dispute-management-screen") ||
+                      pathname.includes("/dispute-management-screen") || 
                       pathname.includes("/create-dispute")
                         ? "text-primary"
                         : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
@@ -211,7 +192,7 @@ const Sidebar = () => {
                   href="/contact-us"
                   className="p-3 hover:bg-sidebar-accent dark:hover:bg-white/10 rounded-lg transition-colors"
                 >
-                  <ChatIcon
+                  <HelpIcon
                     className={`w-7 h-7 ${
                       pathname === "/contact-us"
                         ? "text-primary"

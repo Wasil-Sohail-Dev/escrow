@@ -8,10 +8,8 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <UserProvider>
       <ContractProvider>
-        <ContractActionProvider>
-          {children}
-        </ContractActionProvider>
+        <ContractActionProvider>{children}</ContractActionProvider>
       </ContractProvider>
     </UserProvider>
   );
-} 
+}

@@ -5,7 +5,7 @@ import { Payment } from "@/models/paymentSchema"; // Import Payment schema
 import Stripe from "stripe";
 
 // Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripe = new Stripe(process.env.PLATFORM_FEE_STRIPE_SECRET_KEY!);
 
 interface Milestone {
   milestoneId: string;

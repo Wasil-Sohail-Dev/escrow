@@ -26,7 +26,7 @@ import {
 import { useContract } from "@/contexts/ContractContext";
 
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
+  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUBLISHABLE_KEY || ""
 );
 
 const cardElementOptions = {
@@ -61,13 +61,13 @@ function PaymentPage() {
 
   // Add state for billing details
   const [billingDetails, setBillingDetails] = useState({
-    name: '',
+    name: "",
     address: {
-      line1: '',
-      city: '',
-      state: '',
-      postal_code: '',
-      country: 'IN', // Default to India
+      line1: "",
+      city: "",
+      state: "",
+      postal_code: "",
+      country: "IN", // Default to India
     },
   });
 
@@ -153,8 +153,13 @@ function PaymentPage() {
       }
 
       // Validate billing details
-      if (!billingDetails.name || !billingDetails.address.line1 || !billingDetails.address.city 
-          || !billingDetails.address.state || !billingDetails.address.postal_code) {
+      if (
+        !billingDetails.name ||
+        !billingDetails.address.line1 ||
+        !billingDetails.address.city ||
+        !billingDetails.address.state ||
+        !billingDetails.address.postal_code
+      ) {
         toast({
           title: "Missing billing details",
           description: "Please fill in all billing details",
@@ -327,6 +332,93 @@ function PaymentPage() {
 
 
               <div className="space-y-4">
+                <div>
+                  <label className="text-[14px] text-[#292929] dark:text-dark-text font-semibold mb-2 block">
+                    Full Name
+                  </label>
+                  <Input
+                    type="text"
+                    value={billingDetails.name}
+                    onChange={(e) =>
+                      setBillingDetails((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter your full name"
+                    className="h-[48px] lg:h-[58px] bg-[#EEEEEE] dark:bg-dark-input-bg"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[14px] text-[#292929] dark:text-dark-text font-semibold mb-2 block">
+                    Address
+                  </label>
+                  <Input
+                    type="text"
+                    value={billingDetails.address.line1}
+                    onChange={(e) =>
+                      setBillingDetails((prev) => ({
+                        ...prev,
+                        address: { ...prev.address, line1: e.target.value },
+                      }))
+                    }
+                    placeholder="Street address"
+                    className="h-[48px] lg:h-[58px] bg-[#EEEEEE] dark:bg-dark-input-bg mb-2"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Input
+                      type="text"
+                      value={billingDetails.address.city}
+                      onChange={(e) =>
+                        setBillingDetails((prev) => ({
+                          ...prev,
+                          address: { ...prev.address, city: e.target.value },
+                        }))
+                      }
+                      placeholder="City"
+                      className="h-[48px] lg:h-[58px] bg-[#EEEEEE] dark:bg-dark-input-bg"
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      type="text"
+                      value={billingDetails.address.state}
+                      onChange={(e) =>
+                        setBillingDetails((prev) => ({
+                          ...prev,
+                          address: { ...prev.address, state: e.target.value },
+                        }))
+                      }
+                      placeholder="State"
+                      className="h-[48px] lg:h-[58px] bg-[#EEEEEE] dark:bg-dark-input-bg"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Input
+                    type="text"
+                    value={billingDetails.address.postal_code}
+                    onChange={(e) =>
+                      setBillingDetails((prev) => ({
+                        ...prev,
+                        address: {
+                          ...prev.address,
+                          postal_code: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="PIN code"
+                    className="h-[48px] lg:h-[58px] bg-[#EEEEEE] dark:bg-dark-input-bg"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
                 <label className="text-[15px] lg:text-[17px] text-[#292929] dark:text-dark-text font-semibold">
                   Card Details
                 </label>
@@ -491,7 +583,10 @@ function PaymentPage() {
                         Total Amount:
                       </span>
                       <span className="text-[16px] font-semibold text-[#474747] dark:text-dark-text">
-                        $ {(contract?.budget ?? 0 + escrowTax + bankFee)?.toFixed(2)}
+                        ${" "}
+                        {(contract?.budget ?? 0 + escrowTax + bankFee)?.toFixed(
+                          2
+                        )}
                       </span>
                     </div>
                   </div>

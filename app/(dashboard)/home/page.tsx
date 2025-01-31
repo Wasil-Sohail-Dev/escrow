@@ -12,7 +12,19 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<TabOption>("active");
   const [contractData, setContractData] = useState<any>(null);
   const { user } = useUser();
-  console.log(contractData, "contractData");
+  
+  const transformPayments = (payments: any[] | undefined) => {
+    if (!payments || payments.length === 0) return [];
+    
+    return payments.map((payment: any) => ({
+      id: payment._id,
+      milestoneName: payment.contractTitle,
+      date: formatDate(payment.createdAt, false),
+      vendorName: user?.userType === 'vendor' ? payment.payerId.userName : payment.payeeId.userName,
+      status: payment.status.toLowerCase(),
+      amount: `$${payment.amount.toFixed(2)}`,
+    }));
+  };
   
   return (
     <>
@@ -34,18 +46,12 @@ export default function Home() {
         />
         <PaymentOverview 
           show={true} 
-          payments={contractData?.payments} 
+          payments={contractData?.payments || []} 
         />
         <ProjectTable 
           showFilter={true} 
-          transactions={contractData?.payments?.map((payment: any) => ({
-            id: payment._id,
-            milestoneName: payment.contractTitle,
-            date: formatDate(payment.createdAt, false),
-            vendorName: user?.userType === 'vendor' ? payment.payerId.userName : payment.payeeId.userName,
-            status: payment.status.toLowerCase(),
-            amount: `$${payment.amount.toFixed(2)}`,
-          })) || []}
+          transactions={contractData?.payments ? transformPayments(contractData?.payments) : []}
+          showOnlyOne={true}
         />
       </div>
     </>

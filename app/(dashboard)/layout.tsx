@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-import Sidebar from "../../components/dashboard/Sidebar";
-import Loader from "@/components/ui/loader";
+import DashboardLayoutContent from "@/components/dashboard/DashboardLayoutContent";
 
 export const metadata: Metadata = {
   title: "Auth Page",
@@ -13,29 +11,5 @@ export default function Layout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <section className="flex min-h-screen bg-white dark:bg-dark-bg">
-      <div className="fixed left-0 top-0 z-50">
-        <Sidebar />
-      </div>
-      <section className="flex-1 md:ml-[118px] ml-0 min-h-screen">
-        <main
-          className="px-20 py-10
-          lg:px-10 lg:py-10 
-          md:px-6 md:py-8 
-          max-md:px-4 max-md:py-4"
-        >
-          <Suspense
-            fallback={
-              <div className="flex justify-center items-center h-screen">
-                <Loader size="lg" text="Loading..." />
-              </div>
-            }
-          >
-            {children}
-          </Suspense>
-        </main>
-      </section>
-    </section>
-  );
+  return <DashboardLayoutContent>{children}</DashboardLayoutContent>;
 }

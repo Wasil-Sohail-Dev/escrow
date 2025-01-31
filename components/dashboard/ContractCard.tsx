@@ -73,13 +73,11 @@ const ContractCard = ({
       className="bg-[#D1D5DB30] rounded-[15px] p-4 flex items-center justify-between shadow-sm relative border dark:border-dark-border"
     >
       <div className="absolute top-5 left-0 h-[30px] w-[5px] bg-primary rounded-tr-[10.11px] rounded-br-[10.11px]" />
-      <div className="space-y-1 flex-grow">
-        <div className="flex justify-between items-center gap-4">
-          <h3 className="font-[600] leading-[24px] text-[20px] dark:text-dark-text">
+      <div className="space-y-1 w-[90%]">
+          <h3 className="font-[600] leading-[24px] text-[20px] dark:text-dark-text break-words">
             {contract.title}
           </h3>
-        </div>
-        <p className="text-base-regular text-[#0D1829B2] dark:text-dark-text/60">
+        <p className="text-base-regular text-[#0D1829B2] dark:text-dark-text/60 break-words">
           {contract.description}
         </p>
         <p className="text-subtle-medium font-[400] text-[#0D182999] dark:text-dark-text/40">

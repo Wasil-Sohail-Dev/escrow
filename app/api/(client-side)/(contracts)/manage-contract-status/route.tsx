@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import { Contract } from "@/models/ContractSchema";
+import { capturePayment } from "@/lib/actions/payment.action";
+import { Payment } from "@/models/paymentSchema";
 
 interface Milestone {
   milestoneId: string;
@@ -52,6 +54,22 @@ export async function PATCH(req: Request) {
         { error: "Contract status must be 'funding_onhold' to update." },
         { status: 400 }
       );
+    }
+
+    // for capture stripe payment
+    if (contractStatus === "active" && milestoneStatus === "working") {
+      const payment = await Payment.findOne({
+        contractId: contract._id,
+        status: "on_hold",
+      });
+
+      if (!payment) {
+        return NextResponse.json(
+          { error: `No payment found with ID: ${contractId}` },
+          { status: 404 }
+        );
+      }
+      await capturePayment(payment.stripePaymentIntentId);
     }
 
     // Update contract status

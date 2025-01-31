@@ -15,29 +15,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Image from "next/image";
-
-interface Contract {
-  _id: string;
-  contractId: string;
-  title: string;
-  vendorId: {
-    email: string;
-    userName: string;
-  };
-  clientId: {
-    email: string;
-    userName: string;
-  };
-  milestones: {
-    title: string;
-    milestoneId: string;
-    _id: string;
-  }[];
-}
+import { useRouter } from "next/navigation";
+import { Contract } from "@/contexts/ContractContext";
 
 const CreateDispute = () => {
   const { user } = useUser();
   const { toast } = useToast();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [touchedFields, setTouchedFields] = useState({
@@ -211,6 +195,7 @@ const CreateDispute = () => {
       if (!response.ok) {
         throw new Error("Failed to create dispute");
       }
+      router.push("/dispute-management-screen");
 
       toast({
         title: "Success",
@@ -289,7 +274,7 @@ const CreateDispute = () => {
                   }
                 >
                   <SelectTrigger
-                    className={`h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${"border-[#D1D5DB]"} dark:border-dark-border rounded-lg`}
+                    className={`h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${"border-[#D1D5DB]"} dark:border-dark-border rounded-lg dark:text-dark-text`}
                   >
                     <SelectValue placeholder="Select a contract" />
                   </SelectTrigger>
@@ -321,7 +306,7 @@ const CreateDispute = () => {
                   }
                 >
                   <SelectTrigger
-                    className={`h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${"border-[#D1D5DB]"} dark:border-dark-border rounded-lg`}
+                    className={`h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${"border-[#D1D5DB]"} dark:border-dark-border rounded-lg dark:text-dark-text`}
                   >
                     <SelectValue placeholder="Select a milestone" />
                   </SelectTrigger>

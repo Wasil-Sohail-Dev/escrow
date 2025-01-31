@@ -1,4 +1,5 @@
 "use client";
+import Chat from "@/components/chat";
 import Notifications from "@/components/Notification";
 import React from "react";
 
@@ -37,6 +38,12 @@ const Page = () => {
       <Notifications />
       <h1>Send Notification</h1>
       <button onClick={handleSendNotification}>Send Notification</button>
+
+      <h2>FOR TEST CHAT</h2>
+      <Chat
+        disputeId="679cdbfe2f341c830d8db667"
+        userId="6793b68111fd2aa4ec2de91e"
+      />
     </div>
   );
 };

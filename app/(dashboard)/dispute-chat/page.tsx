@@ -1,317 +1,548 @@
-"use client";
+"use client"
 
-import React, { useState, useRef, useEffect } from "react";
-import Topbar from "../../../components/dashboard/Topbar";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import { Paperclip, Send, Upload } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react"
+import Topbar from "@/components/dashboard/Topbar"
+import { Button } from "@/components/ui/button"
+import { ArrowLeft, Send } from "lucide-react"
+import { useSearchParams, useRouter } from "next/navigation"
+import { useUser } from "@/contexts/UserContext"
+import Loader from "@/components/ui/loader"
+
+interface Sender {
+  _id: string
+  email: string
+  userName: string
+}
 
 interface Message {
-  id: number;
-  sender: string;
-  content: string;
-  timestamp: string;
-  isCurrentUser: boolean;
+  _id: string
+  sender: Sender
+  content: string
+  type: string
+  isRead: boolean
+  createdAt: string
+}
+
+interface Participant {
+  _id: string
+  email: string
+}
+
+interface ChatData {
+  _id: string
+  disputeId: string
+  participants: Participant[]
+  messages: Message[]
+  lastMessage: string
+  lastMessageAt: string
+}
+
+interface ContractInfo {
+  _id: string;
+  contractId: string;
+  title: string;
+}
+
+interface UserInfo {
+  _id: string;
+  email: string;
+  userType: string;
+  firstName: string;
+  lastName: string;
+  userName: string;
+}
+
+interface Dispute {
+  _id: string;
+  contractId: ContractInfo;
+  milestoneId: string;
+  raisedBy: UserInfo;
+  raisedTo: UserInfo;
+  title: string;
+  reason: string;
+  status: string;
+  disputeId: string;
+  createdAt: string;
+  updatedAt: string;
+  chat: {
+    lastMessage: string | null;
+    lastMessageAt: string | null;
+    unreadCount: number;
+  };
+}
+
+interface DisputeResponse {
+  success: boolean;
+  data: {
+    totalDisputes: number;
+    disputes: Dispute[];
+    latestDispute: Dispute;
+  };
+}
+
+interface UnreadCount {
+  [key: string]: number;
 }
 
 const DisputeChat = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      sender: "Grace Miller", 
-      content: "Hi, I need help with my recent order",
-      timestamp: "9:15 AM",
-      isCurrentUser: true,
-    },
-    {
-      id: 2,
-      sender: "Jack Raymonds",
-      content: "Hello Grace, I'd be happy to help. Could you please provide more details about the issue you're experiencing?",
-      timestamp: "9:17 AM", 
-      isCurrentUser: false,
-    },
-    {
-      id: 3,
-      sender: "Grace Miller",
-      content: "The product I received doesn't match the description on the website",
-      timestamp: "9:20 AM",
-      isCurrentUser: true,
-    },
-    {
-      id: 4,
-      sender: "Jack Raymonds", 
-      content: "I apologize for the inconvenience. Could you please share some photos of the product you received?",
-      timestamp: "9:22 AM",
-      isCurrentUser: false,
-    },
-    {
-      id: 5,
-      sender: "Grace Miller",
-      content: "Yes, give me a moment to take some pictures",
-      timestamp: "9:25 AM",
-      isCurrentUser: true,
-    },
-    {
-      id: 6,
-      sender: "Grace Miller",
-      content: "Here are the photos showing the differences between what was advertised and what I received",
-      timestamp: "9:30 AM",
-      isCurrentUser: true,
-    },
-    {
-      id: 7,
-      sender: "Jack Raymonds",
-      content: "Thank you for providing the photos. I can see the discrepancy. Let me check with our product team about this.",
-      timestamp: "9:35 AM",
-      isCurrentUser: false,
-    },
-    {
-      id: 8,
-      sender: "Jack Raymonds",
-      content: "I've reviewed the case with our team. We can offer you a full refund or send you a replacement product that matches the original description. Which would you prefer?",
-      timestamp: "9:45 AM",
-      isCurrentUser: false,
-    },
-    {
-      id: 9,
-      sender: "Grace Miller",
-      content: "I would prefer a replacement if you can guarantee it will match the original description",
-      timestamp: "9:48 AM",
-      isCurrentUser: true,
-    },
-    {
-      id: 10,
-      sender: "Jack Raymonds",
-      content: "Absolutely, I can guarantee that. I'll personally ensure the replacement matches exactly what was advertised.",
-      timestamp: "9:50 AM",
-      isCurrentUser: false,
-    },
-    {
-      id: 11,
-      sender: "Grace Miller",
-      content: "Thank you, that would be great",
-      timestamp: "9:52 AM",
-      isCurrentUser: true,
-    },
-    {
-      id: 12,
-      sender: "Jack Raymonds",
-      content: "I've processed the replacement order. You'll receive a shipping confirmation email within 24 hours. Is there anything else you need help with?",
-      timestamp: "9:55 AM",
-      isCurrentUser: false,
-    },
-    {
-      id: 13,
-      sender: "Grace Miller",
-      content: "What should I do with the incorrect item?",
-      timestamp: "9:57 AM",
-      isCurrentUser: true,
-    },
-    {
-      id: 14,
-      sender: "Jack Raymonds",
-      content: "We'll send you a return shipping label by email. Once you receive it, just package the item and use the label to send it back to us.",
-      timestamp: "10:00 AM",
-      isCurrentUser: false,
-    },
-    {
-      id: 15,
-      sender: "Grace Miller",
-      content: "Perfect, thanks for your help",
-      timestamp: "10:02 AM",
-      isCurrentUser: true,
-    },
-    {
-      id: 16,
-      sender: "Jack Raymonds",
-      content: "You're welcome! The return label has been sent to your email. Let me know if you need anything else.",
-      timestamp: "10:05 AM",
-      isCurrentUser: false,
-    },
-    {
-      id: 17,
-      sender: "Grace Miller",
-      content: "Got the label, thanks!",
-      timestamp: "10:10 AM",
-      isCurrentUser: true,
-    },
-    {
-      id: 18,
-      sender: "Jack Raymonds",
-      content: "Great! You should receive the replacement within 5-7 business days. We appreciate your patience.",
-      timestamp: "10:12 AM",
-      isCurrentUser: false,
-    },
-    {
-      id: 19,
-      sender: "Grace Miller",
-      content: "That sounds good. I'll wait for the replacement",
-      timestamp: "10:15 AM",
-      isCurrentUser: true,
-    },
-    {
-      id: 20,
-      sender: "Jack Raymonds",
-      content: "Perfect. Don't hesitate to reach out if you need any further assistance. Have a great day!",
-      timestamp: "10:17 AM",
-      isCurrentUser: false,
-    },
-    {
-      id: 21,
-      sender: "Grace Miller",
-      content: "You too, thanks for all your help!",
-      timestamp: "10:20 AM",
-      isCurrentUser: true,
-    },
-    {
-      id: 22,
-      sender: "Jack Raymonds",
-      content: "It was my pleasure assisting you today. We value your business and thank you for your understanding.",
-      timestamp: "10:25 AM",
-      isCurrentUser: false,
-    },
-  ]);
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const disputeId = searchParams.get("disputeId")
+  const { user, loading: userLoading } = useUser()
+  const userId = user?._id
 
-  const [newMessage, setNewMessage] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [chatData, setChatData] = useState<ChatData | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [newMessage, setNewMessage] = useState("")
+  const [selectedDisputeTitle, setSelectedDisputeTitle] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [showMobileChat, setShowMobileChat] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [disputes, setDisputes] = useState<Dispute[]>([])
+  const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null)
+  const [unreadCounts, setUnreadCounts] = useState<UnreadCount>({})
+  const [disputesLoading, setDisputesLoading] = useState(true)
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const fetchChat = async () => {
+    if (!userId) return;
+    
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/chat/${disputeId}`)
+      const data: ChatData = await response.json()
+      setChatData(data)
+      const sortedMessages = [...(data.messages || [])].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      )
+      setMessages(sortedMessages)
+      markMessagesAsRead()
+    } catch (error) {
+      console.error("Error fetching chat:", error)
+      setMessages([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formatMessageDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    } else if (today.getTime() - date.getTime() < 7 * 24 * 60 * 60 * 1000) {
+      return date.toLocaleDateString([], { weekday: 'short' });
+    } else {
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+  };
+
+  const markMessagesAsRead = async () => {
+    if (!userId || !selectedDispute) return
+    try {
+      await fetch(`/api/chat/${disputeId}/read`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ participantId: userId }),
+      })
+      
+      // Update local state to remove unread count
+      setDisputes(prevDisputes => 
+        prevDisputes.map(dispute => 
+          dispute._id === selectedDispute._id 
+            ? { ...dispute, chat: { ...dispute.chat, unreadCount: 0 } }
+            : dispute
+        )
+      );
+    } catch (error) {
+      console.error("Error marking messages as read:", error)
+    }
+  }
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !userId) return
+
+    try {
+      const response = await fetch(`/api/chat/${disputeId}/message`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sender: userId,
+          content: newMessage,
+          type: "text",
+        }),
+      })
+
+      const savedMessage = await response.json()
+      
+      const newMessageObj: Message = {
+        _id: savedMessage._id,
+        content: savedMessage.content,
+        type: savedMessage.type,
+        isRead: savedMessage.isRead,
+        createdAt: savedMessage.createdAt,
+        sender: {
+          _id: user!._id,
+          email: user!.email,
+          userName: user!.userName
+        }
+      }
+      
+      setMessages(prev => [...prev, newMessageObj])
+      setNewMessage("")
+    } catch (error) {
+      console.error("Error sending message:", error)
+    }
+  }
+
+  // Add function to fetch unread counts
+  const fetchUnreadCounts = async (disputes: Dispute[]) => {
+    const counts: UnreadCount = {};
+    
+    for (const dispute of disputes) {
+      try {
+        const response = await fetch(`/api/chat/${dispute._id}`);
+        const chatData: ChatData = await response.json();
+        
+        // Count unread messages
+        const unreadCount = chatData.messages.filter(
+          msg => !msg.isRead && msg.sender._id !== userId
+        ).length;
+        
+        counts[dispute._id] = unreadCount;
+      } catch (error) {
+        console.error(`Error fetching chat for dispute ${dispute._id}:`, error);
+      }
+    }
+    
+    setUnreadCounts(counts);
+  };
+
+  const fetchDisputes = async () => {
+    if (!user?._id) return;
+    
+    try {
+      setDisputesLoading(true)
+      const response = await fetch(`/api/get-dispute?customerId=${user._id}&userType=${user.userType}`);
+      const data: DisputeResponse = await response.json();
+      
+      if (data.success) {
+        setDisputes(data.data.disputes);
+        fetchUnreadCounts(data.data.disputes);
+        
+        if (!selectedDispute && data.data.latestDispute) {
+          setSelectedDisputeTitle(data.data.latestDispute.title);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching disputes:", error);
+    } finally {
+      setDisputesLoading(false)
+    }
+  };
+
+  const handleDisputeClick = (dispute: Dispute) => {
+    setSelectedDispute(dispute);
+    setSelectedDisputeTitle(dispute.title);
+    setShowMobileChat(true);
+    setLoading(true);
+    router.push(`?disputeId=${dispute._id}`);
+  };
+
+  const handleBackToDisputes = () => {
+    setShowMobileChat(false);
+    router.push('?');
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      const newMsg: Message = {
-        id: messages.length + 1,
-        sender: "Grace Miller",
-        content: newMessage,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isCurrentUser: true,
-      };
-      setMessages([...messages, newMsg]);
-      setNewMessage("");
+    if (userId && disputeId) {
+      fetchChat()
     }
-  };
+  }, [userId, disputeId])
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+  useEffect(() => {
+    if (user?._id) {
+      fetchDisputes();
     }
-  };
+  }, [user?._id]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages])
+
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      handleSendMessage()
+    }
+  }
+
+  // Show loading state while user data is being fetched
+  if (userLoading) {
+    return <div className="flex justify-center items-center h-screen">
+      <Loader size="lg" text="Loading user data..." fullHeight={true} />
+    </div>
+  }
+
+  // Show message if no user is found
+  if (!user) {
+    return <div className="flex justify-center items-center h-screen">Please log in to view chat</div>
+  }
 
   return (
-    <>
-      <Topbar
-        title="Title of the Dispute"
-        description="ID: 12345623"
-      />
-      <div className="flex flex-col h-[calc(90vh-80px)] mt-[60px]">
-        <div className="h-[90px] border-b border-[#DFDFDF] flex items-center w-full">
-          <div className="flex-shrink-0 relative">
-            <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-white dark:text-dark-text text-base-medium">
-                T
-              </span>
-            </div>
-            <div className="absolute bottom-0 right-0 bg-[#00A3FF] w-[14px] h-[14px] rounded-full"></div>
+    <div className="flex flex-col h-screen">
+      <Topbar title="Dispute Chat" description="Select a dispute to start chatting" />
+
+      <div className="flex flex-1 overflow-hidden mt-[100px]">
+        {/* Disputes Sidebar */}
+        <div className={`md:w-80 w-full border-r border-[#DFDFDF] dark:border-dark-border bg-white dark:bg-dark-bg flex flex-col h-full ${showMobileChat ? 'hidden md:flex' : 'flex'}`}>
+          <div className="px-4 py-[31px] border-b border-[#DFDFDF] dark:border-dark-border">
+            <h2 className="text-lg font-medium text-paragraph dark:text-dark-text">Disputes</h2>
           </div>
-          <div className="ml-4 flex flex-col gap-2">
-            <p className="text-paragraph dark:text-dark-text text-[20px] font-[500] leading-[23.44px]">Title of the Dispute</p>
-            <span className="text-[14px] font-[400] leading-[16.41px] text-primary">ID: 12363622</span>
-          </div>
-        </div>
-        <div className="flex-1 overflow-y-auto scrollbar-hide px-4 md:px-6 lg:px-8 mt-4">
-          <div className="max-w-6xl mx-auto space-y-6 mb-12">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${
-                  message.isCurrentUser ? "justify-end" : "justify-start"
-                }`}
-              >
+          <div className="flex-1 overflow-y-auto">
+            {disputesLoading ? (
+              <div className="flex justify-center items-center h-full">
+                <Loader size="md" text="Loading disputes..." fullHeight={false} />
+              </div>
+            ) : disputes.length > 0 ? (
+              disputes.map((dispute) => (
                 <div
-                  className={`flex gap-3 md:max-w-[70%] ${
-                    message.isCurrentUser ? "flex-row-reverse" : "flex-row"
+                  key={dispute._id}
+                  onClick={() => handleDisputeClick(dispute)}
+                  className={`p-4 flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-input-bg ${
+                    disputeId === dispute._id ? "bg-gray-50 dark:bg-dark-input-bg" : ""
                   }`}
                 >
-                  <div className="flex-shrink-0">
+                  <div className="relative flex-shrink-0">
                     <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-                      <span className="text-white dark:text-dark-text text-base-medium">
-                        {message.sender.charAt(0)}
+                      <span className="text-white dark:text-dark-text text-[16px] font-medium">
+                        {dispute.disputeId.slice(-4)}
                       </span>
                     </div>
+                    <div
+                      className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-dark-bg ${
+                        dispute.status === "pending" ? "bg-yellow-500" : 
+                        dispute.status === "resolved" ? "bg-green-500" : "bg-red-500"
+                      }`}
+                    />
                   </div>
-                  <div>
-                    <div className={`flex flex-col ${message.isCurrentUser ? "items-end" : "items-start"}`}>
-                      <div className="flex items-center gap-2 md:gap-4 mb-1">
-                        {message.isCurrentUser ? (
-                          <>
-                            <span className="text-[#8A8F9B] dark:text-dark-2 text-[10px] md:text-[12px] font-[400] leading-[14.52px]">
-                              {message.timestamp}
-                            </span>
-                            <span className="text-paragraph dark:text-dark-text text-base-medium md:text-[16px] lg:text-base-medium">
-                              {message.sender}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="text-paragraph dark:text-dark-text text-base-medium md:text-[16px] lg:text-base-medium">
-                              {message.sender}
-                            </span>
-                            <span className="text-[#8A8F9B] dark:text-dark-2 text-[10px] md:text-[12px] font-[400] leading-[14.52px]">
-                              {message.timestamp}
-                            </span>
-                          </>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className={`font-medium truncate text-paragraph dark:text-dark-text ${dispute.chat?.unreadCount ? 'font-semibold' : ''}`}>
+                        {dispute.title}
+                      </h3>
+                      <span className="text-xs text-gray-500 dark:text-dark-text/60 flex-shrink-0 ml-2">
+                        {formatMessageDate(dispute.chat?.lastMessageAt || dispute.createdAt)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <span className="text-sm text-gray-600 dark:text-dark-text/80 truncate">
+                          {dispute.contractId.title}
+                        </span>
+                        <p className="text-sm text-gray-500 dark:text-dark-text/60 truncate">
+                          {user?._id === dispute.raisedBy._id ? 
+                            `To: ${dispute.raisedTo.userName}` : 
+                            `From: ${dispute.raisedBy.userName}`}
+                        </p>
+                        {dispute.chat?.lastMessage && (
+                          <p className="text-sm text-gray-500 dark:text-dark-text/60 truncate">
+                            {dispute.chat.lastMessage}
+                          </p>
                         )}
                       </div>
-                    </div>
-                    <div
-                      className={`p-3 md:p-4 ${
-                        message.isCurrentUser
-                          ? "bg-primary text-white dark:text-dark-text rounded-b-[14px] rounded-tl-[14px]"
-                          : "bg-white border border-[#E7E7E7] dark:bg-dark-input-bg text-paragraph dark:text-dark-text rounded-b-[14px] rounded-tr-[14px]"
-                      }`}
-                    >
-                      <p className="text-[14px] md:text-body-normal break-words">{message.content}</p>
+                      {dispute.chat?.unreadCount > 0 && (
+                        <div className="ml-2 flex-shrink-0">
+                          <div className="bg-primary text-white dark:text-dark-text text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center">
+                            {dispute.chat.unreadCount}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full p-4 text-center text-gray-500 dark:text-dark-text/60">
+                <p>No disputes found</p>
               </div>
-            ))}
-            <div ref={messagesEndRef} />
+            )}
           </div>
         </div>
-        <div className="border-t border-[#E8EAEE] bg-white dark:bg-dark-bg dark:border-dark-border px-2 md:px-4 py-3 md:py-4 absolute bottom-0 right-0 md:left-10 left-0 w-full">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex gap-2 md:gap-4 justify-between items-center">
-              <div className="flex-1 bg-white-2 dark:bg-dark-input-bg rounded-lg">
-                <input
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  placeholder="Type your message..."
-                  className="w-full p-2 md:p-4 text-paragraph dark:text-dark-text placeholder:text-[#A0A0A0] dark:placeholder:text-dark-2 text-[16px] md:text-[20px] lg:text-[24px] font-[400] leading-normal md:leading-[29.05px] resize-none focus:outline-none "
-                />
+
+        {/* Main Chat Area */}
+        <div className={`flex-1 flex flex-col h-full ${!showMobileChat ? 'hidden md:flex' : 'flex'}`}>
+          {(disputeId || showMobileChat) ? (
+            <>
+              {/* Chat Header */}
+              <div className="h-[90px] border-b border-[#DFDFDF] dark:border-dark-border flex items-center px-4 flex-shrink-0 bg-white dark:bg-dark-bg">
+                {showMobileChat && (
+                  <button 
+                    onClick={handleBackToDisputes}
+                    className="mr-4 md:hidden text-paragraph dark:text-dark-text"
+                  >
+                    <ArrowLeft size={20} />
+                  </button>
+                )}
+                <div className="flex-shrink-0 relative">
+                  <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center">
+                    <span className="text-white dark:text-dark-text text-base-medium">D</span>
+                  </div>
+                </div>
+                <div className="ml-4 flex flex-col gap-2">
+                  <p className="text-paragraph dark:text-dark-text text-[20px] font-[500] leading-[23.44px]">
+                    {selectedDispute?.title || "Dispute Chat"}
+                  </p>
+                  <span className="text-[14px] font-[400] leading-[16.41px] text-primary">ID: {disputeId}</span>
+                </div>
               </div>
-              <Paperclip className="cursor-pointer dark:text-dark-text" />
-              <Button
-                onClick={handleSendMessage}
-                className="bg-primary hover:bg-primary-500 text-white dark:text-dark-text h-10 md:h-12 px-4 md:px-6 rounded-[12px] flex items-center gap-1 md:gap-2 whitespace-nowrap"
-              >
-                <span className="text-[16px] md:text-[20px] font-[500] leading-[24.2px] hidden md:inline">Send</span>
-                <Send size={20} className="w-[16px] h-[16px] md:w-[20px] md:h-[20px]" />
-              </Button>
+
+              {/* Chat Messages */}
+              <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 bg-white dark:bg-dark-bg">
+                <div className="max-w-6xl mx-auto space-y-6 py-4">
+                  {loading ? (
+                    <div className="flex justify-center items-center h-full">
+                      <Loader size="md" text="Loading messages..." fullHeight={false} />
+                    </div>
+                  ) : messages && messages.length > 0 ? (
+                    messages.map((message) => (
+                      message && message.sender && (
+                        <div
+                          key={message._id}
+                          className={`flex ${message.sender._id === userId ? "justify-end" : "justify-start"}`}
+                        >
+                          <div
+                            className={`flex gap-3 md:max-w-[70%] ${
+                              message.sender._id === userId ? "flex-row-reverse" : "flex-row"
+                            }`}
+                          >
+                            <div className="flex-shrink-0">
+                              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
+                                <span className="text-white dark:text-dark-text">
+                                  {message.sender.userName?.[0] || message.sender.email?.[0] || 'U'}
+                                </span>
+                              </div>
+                            </div>
+                            <div>
+                              <div
+                                className={`flex flex-col ${
+                                  message.sender._id === userId ? "items-end" : "items-start"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 md:gap-4 mb-1">
+                                  {message.sender._id === userId ? (
+                                    <>
+                                      <span className="text-[#8A8F9B] dark:text-dark-text/60 text-[10px] md:text-[12px]">
+                                        {new Date(message.createdAt).toLocaleTimeString()}
+                                      </span>
+                                      <span className="text-paragraph dark:text-dark-text text-base-medium">
+                                        {message.sender.userName || message.sender.email}
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span className="text-paragraph dark:text-dark-text text-base-medium">
+                                        {message.sender.userName || message.sender.email}
+                                      </span>
+                                      <span className="text-[#8A8F9B] dark:text-dark-text/60 text-[10px] md:text-[12px]">
+                                        {new Date(message.createdAt).toLocaleTimeString()}
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                                <div
+                                  className={`p-3 md:p-4 ${
+                                    message.sender._id === userId
+                                      ? "bg-primary text-white dark:text-dark-text rounded-b-[14px] rounded-tl-[14px]"
+                                      : "bg-white dark:bg-dark-input-bg border border-[#E7E7E7] dark:border-dark-border text-paragraph dark:text-dark-text rounded-b-[14px] rounded-tr-[14px]"
+                                  }`}
+                                >
+                                  <p className="text-[14px]">{message.content}</p>
+                                </div>
+                                {message.sender._id === userId && (
+                                  <span className="text-xs text-gray-500 dark:text-dark-text/60 mt-1">
+                                    {message.isRead ? "Seen" : "Sent"}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    ))
+                  ) : (
+                    <div className="text-center text-gray-500 dark:text-dark-text/60 py-10">
+                      No messages yet
+                    </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+              </div>
+
+              {/* Message Input */}
+              <div className="border-t border-[#E8EAEE] dark:border-dark-border bg-white dark:bg-dark-bg px-2 md:px-4 py-3 md:py-4">
+                <div className="max-w-7xl mx-auto flex gap-2 md:gap-4 justify-between items-center">
+                  <input
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    placeholder="Type your message..."
+                    className="w-full p-2 md:p-4 text-paragraph dark:text-dark-text text-[16px] md:text-[20px] focus:outline-none bg-transparent dark:placeholder:text-dark-text/40"
+                  />
+                  <Button
+                    onClick={handleSendMessage}
+                    className="bg-primary hover:bg-primary-500 text-white dark:text-dark-text flex items-center gap-2"
+                  >
+                    <Send size={20} />
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center bg-white dark:bg-dark-bg">
+              <div className="text-center max-w-[500px] mx-auto px-4">
+                <div className="mb-6">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+                    <Send className="w-10 h-10 text-primary" />
+                  </div>
+                  <h3 className="text-[24px] font-semibold text-paragraph dark:text-dark-text mb-2">
+                    No Dispute Selected
+                  </h3>
+                  <p className="text-[16px] text-gray-500 dark:text-dark-text/60 leading-relaxed">
+                    Select a dispute from the sidebar to view the conversation and manage your dispute resolution process.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-4">
+                  <div className="p-4 rounded-lg border border-[#E8EAEE] dark:border-dark-border bg-gray-50 dark:bg-dark-input-bg">
+                    <h4 className="text-[16px] font-medium text-paragraph dark:text-dark-text mb-2">
+                      Quick Tips
+                    </h4>
+                    <ul className="space-y-2 text-[14px] text-gray-500 dark:text-dark-text/60">
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                        <span>Click on any dispute in the sidebar to view messages</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                        <span>All messages are saved and secured</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                        <span>You'll be notified of new messages</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
-    </>
-  );
-};
+    </div>
+  )
+}
 
-export default DisputeChat;
+export default DisputeChat

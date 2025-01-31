@@ -11,7 +11,7 @@ import {
 import PaymentHistory, { Transaction } from "../../../../components/dashboard/PaymentHistory";
 import Pagination from "../../../../components/dashboard/Pagination";
 import HeadBar from "../../../../components/dashboard/HeadBar";
-import FilterButton from "../../../../components/dashboard/FilterButton";
+import FilterButton from "../../../../components/ui/filter-button";
 import { useParams } from "next/navigation";
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
@@ -75,8 +75,8 @@ export default function TransactionDetails() {
       payment.payeeId.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.contractTitle?.toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesStatus = statusFilter === "" || 
-      payment.status.toLowerCase() === statusFilter.toLowerCase();
+    const matchesStatus = statusFilter === "" || statusFilter === "All" || 
+      payment.status.toLowerCase().replace('_', ' ') === statusFilter.toLowerCase();
 
     let matchesDate = true;
     if (dateFilter) {

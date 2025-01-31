@@ -105,7 +105,7 @@ const ContactDetails = () => {
   return (
     <>
       <Topbar
-        title={contract?.title || "Graphic Designing"}
+        title={contract?.title && contract.title.length > 30 ? contract.title.slice(0, 30) + "..." : contract?.title || "Graphic Designing"}
         description="Contract Details and Information"
       />
       {loading ? (
@@ -114,13 +114,13 @@ const ContactDetails = () => {
         <div className="flex-1 mt-[85px] w-full">
           <div className="flex lg:flex-row flex-col justify-between gap-6 lg:gap-0 w-full">
             <div className="flex flex-col gap-6 w-full max-w-3xl">
-              <div className="flex justify-between items-center">
-                <h2 className="text-paragraph dark:text-white text-heading3-bold">
+              <div className="flex sm:justify-between items-center flex-wrap-reverse">
+                <h2 className="text-paragraph dark:text-white text-heading3-bold break-words w-[75%]">
                   {contract?.title || "Graphic Designing"}
                 </h2>
                 {contract?.status === "onboarding" &&
                   user?.userType === "vendor" && (
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-2">
                       <Button
                         variant="secondary"
                         className="text-base-medium text-white rounded-[12px]"
@@ -165,7 +165,7 @@ const ContactDetails = () => {
                 <p className="text-sm text-paragraph dark:text-dark-2 text-small-medium font-[400]">
                   Contract ID: {contract?.contractId}
                 </p>
-                <p className="mt-2 text-paragraph dark:text-dark-text text-base-regular w-full">
+                <p className="mt-2 text-paragraph dark:text-dark-text text-base-regular w-full break-words">
                   {contract?.description}
                 </p>
               </div>

@@ -22,6 +22,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/api/(client-side)/(notification)/socket/route.ts", "server.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/api/(client-side)/(notification)/socket/route.ts", "server.js", "lib/createStripe.js"],
   "exclude": ["node_modules"]
 }

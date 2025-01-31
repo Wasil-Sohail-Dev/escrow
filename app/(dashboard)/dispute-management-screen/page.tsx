@@ -2,13 +2,17 @@
 
 import ProjectTable from "../../../components/dashboard/PaymentHistory";
 import Topbar from "../../../components/dashboard/Topbar";
-import Overview, { TabOption } from "../../../components/dashboard/Overview";
-import { disputeData } from "@/lib/data/transactions";
+import Overview from "../../../components/dashboard/Overview";
 import { useState } from "react";
+import { formatDate } from "@/lib/helpers/fromatDate";
+import { useUser } from "@/contexts/UserContext";
 
 export default function DisputeManagementScreen() {
-  const [activeTab, setActiveTab] = useState<any>("disputes");
+  const {user} = useUser();
+  const [activeTab, setActiveTab] = useState<any>("disputed");
   const [contractData, setContractData] = useState<any>(null);
+  console.log(contractData?.payments,"contractData?.payments");
+  
   return (
     <>
       <Topbar
@@ -20,12 +24,21 @@ export default function DisputeManagementScreen() {
           dispute={true}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          onDataFetched={setContractData}
         />
-
         <ProjectTable
-          showFilter={true}
-          transactions={disputeData}
+          showFilter={true} 
+          transactions={contractData?.payments?.map((payment: any) => ({
+            id: payment._id,
+            contractId: payment.contractId.contractId,
+            milestoneName: payment.contractTitle,
+            date: formatDate(payment.createdAt, false),
+            vendorName: user?.userType === 'vendor' ? payment.payerId.userName : payment.payeeId.userName,
+            status: payment.status.toLowerCase(),
+            amount: `$${payment.amount.toFixed(2)}`,
+          })) || []}
           dispute={true}
+          showOnlyOne={true}
         />
       </div>
     </>

@@ -1,4 +1,4 @@
-"use client"; // Required for hooks like useParams
+"use client"
 
 import Topbar from "@/components/dashboard/Topbar";
 import { Button } from "@/components/ui/button";
@@ -8,40 +8,6 @@ import { useContractAction } from "@/contexts/ContractActionContext";
 import { useContract } from "@/contexts/ContractContext";
 import Loader from "@/components/ui/loader";
 import { useUser } from "@/contexts/UserContext";
-
-interface Milestone {
-  milestoneId: string;
-  title: string;
-  description: string;
-  amount: number;
-  status: string;
-}
-
-interface Contract {
-  _id: string;
-  contractId: string;
-  title: string;
-  description: string;
-  clientId: {
-    _id: string;
-    email: string;
-    userName: string;
-  };
-  vendorId: {
-    _id: string;
-    email: string;
-    userName: string;
-  };
-  budget: number;
-  paymentType: string;
-  milestones: Milestone[];
-  status: string;
-  substatus: string | null;
-  startDate: string;
-  endDate: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
 const Page = () => {
   const { contractId } = useParams<{ contractId: string }>();

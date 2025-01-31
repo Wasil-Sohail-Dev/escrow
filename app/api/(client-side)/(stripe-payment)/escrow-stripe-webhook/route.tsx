@@ -5,12 +5,15 @@ import { Payment } from "@/models/paymentSchema";
 import { Contract } from "@/models/ContractSchema";
 
 // Initialize Stripe
-if (!process.env.STRIPE_SECRET_KEY) {
+if (
+  !process.env.PLATFORM_FEE_STRIPE_SECRET_KEY ||
+  !process.env.PLATFORM_STRIPE_WEBHOOK_SECRET
+) {
   throw new Error("Stripe secret key is not defined in environment variables.");
 }
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.PLATFORM_FEE_STRIPE_SECRET_KEY);
 
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+const endpointSecret = process.env.PLATFORM_STRIPE_WEBHOOK_SECRET;
 
 export const config = {
   api: {
@@ -95,7 +98,7 @@ async function handlePaymentCreated(paymentIntent: Stripe.PaymentIntent) {
   }
 }
 
-// Helper Functions for Business Logic
+// Helper Functions for Business Logic when payment is authhorized from client
 async function handlePaymentFunding(paymentIntent: Stripe.PaymentIntent) {
   console.log("Handling PaymentIntent funding:", paymentIntent.id);
 

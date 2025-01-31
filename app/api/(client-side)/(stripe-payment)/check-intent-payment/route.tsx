@@ -4,10 +4,10 @@ import { Payment } from "@/models/paymentSchema";
 import { Contract } from "@/models/ContractSchema"; // Assuming you have a Contract model
 import Stripe from "stripe";
 
-if (!process.env.STRIPE_SECRET_KEY) {
+if (!process.env.PLATFORM_FEE_STRIPE_SECRET_KEY) {
   throw new Error("Stripe secret key is not defined in environment variables.");
 }
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.PLATFORM_FEE_STRIPE_SECRET_KEY);
 
 export async function POST(req: Request) {
   await dbConnect();

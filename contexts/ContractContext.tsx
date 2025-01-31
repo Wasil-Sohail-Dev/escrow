@@ -59,8 +59,13 @@ export function ContractProvider({ children }: { children: React.ReactNode }) {
   const fetchContract = async (contractId: string) => {
     setLoading(true);
     try {
-      const response = await axios.get(`/api/get-contract?contractId=${contractId}`);
-      if (response.data.message === "Contract details retrieved successfully.") {
+      const response = await axios.get(
+        `/api/get-contract?contractId=${contractId}`
+      );
+      if (
+        response.data.message === "Contract details retrieved successfully."
+      ) {
+        console.log("Contract details:", response.data.data);
         setContract(response.data.data);
       } else {
         toast({
@@ -89,4 +94,4 @@ export function ContractProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const useContract = () => useContext(ContractContext); 
+export const useContract = () => useContext(ContractContext);

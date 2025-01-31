@@ -12,7 +12,7 @@ import Pagination from "../../../components/dashboard/Pagination";
 
 // Utils & Types
 import { cn } from "@/lib/utils";
-import FilterButton from "../../../components/dashboard/FilterButton";
+import FilterButton from "../../../components/ui/filter-button";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/helpers/fromatDate";
@@ -30,7 +30,7 @@ const TableHeader: React.FC<{
           type="checkbox"
           checked={selectAll}
           onChange={onSelectAll}
-          className={`${checkboxStyle} -ml-[22px]`}
+          className={`${checkboxStyle} -ml-[24px]`}
         />
       </th>
       {['PAYMENT ID', 'STATUS', 'AMOUNT', 'P. METHOD', 'CREATION DATE'].map((header, index, arr) => (

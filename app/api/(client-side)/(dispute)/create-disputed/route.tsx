@@ -3,6 +3,7 @@ import dbConnect from "@/lib/dbConnect";
 import { Dispute } from "@/models/DisputeSchema";
 import { Customer } from "@/models/CustomerSchema";
 import { Contract } from "@/models/ContractSchema";
+import { ChatSystem } from "@/models/ChatSystem"; // Import ChatSystem model
 
 interface RequestBody {
   raisedByEmail: string;
@@ -88,7 +89,7 @@ export async function POST(req: Request) {
     milestone.status = "disputed";
     await contract.save();
 
-    // Create dispute
+    // Create the dispute
     const dispute = new Dispute({
       contractId: contract._id,
       milestoneId,
@@ -96,17 +97,36 @@ export async function POST(req: Request) {
       raisedTo: raisedTo._id,
       title,
       reason,
-      files, // Attach any files provided
+      files,
     });
 
     await dispute.save();
+
+    // **Step 1: Find or Assign an Admin**
+    // const admin = await Customer.findOne({ role: "admin" }); // Ensure there's an admin
+    // if (!admin) {
+    //   return NextResponse.json(
+    //     { success: false, message: "Admin not found for dispute chat." },
+    //     { status: 500 }
+    //   );
+    // }
+
+    // **Step 2: Create a Chat System Entry for Dispute**
+    const chat = new ChatSystem({
+      disputeId: dispute._id,
+      participants: [raisedBy._id, raisedTo._id], // Both customers + Admin
+      messages: [], // Empty initially
+    });
+
+    await chat.save();
 
     return NextResponse.json(
       {
         success: true,
         message:
-          "Dispute raised successfully. Contract and milestone status updated.",
+          "Dispute raised successfully. Contract and milestone status updated. Chat created.",
         disputeId: dispute.disputeId,
+        chatId: chat._id,
       },
       { status: 200 }
     );

@@ -10,7 +10,7 @@ import Pagination from "../../../components/dashboard/Pagination";
 
 // Utils & Types
 import { cn } from "@/lib/utils";
-import FilterButton from "../../../components/dashboard/FilterButton";
+import FilterButton from "../../../components/ui/filter-button";
 import { milestoneData } from "@/lib/data/transactions";
 import { CircularProgressbar } from "react-circular-progressbar";
 import { useTheme } from "next-themes";
