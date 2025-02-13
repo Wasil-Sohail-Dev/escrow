@@ -110,7 +110,13 @@ const FilePreview: React.FC<FilePreviewProps> = ({
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                                  <div className='font-bold text-4xl bg-white dark:bg-transparent'>📄</div>
+                  <Image
+                    src={getFileIcon(file) || ''}
+                    alt={file.name}
+                    width={24}
+                    height={24}
+                    className="w-8 h-8 bg-white dark:bg-transparent"
+                  />
                 </div>
               )}
             </div>
