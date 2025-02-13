@@ -12,8 +12,13 @@ export async function GET(req: Request) {
     const customerId = searchParams.get("customerId");
     const role = searchParams.get("role"); // "client" or "vendor"
     const status = searchParams.get("status"); // Contract status or "all"
-    const limit = parseInt(searchParams.get("limit") || "0", 10); // Number of contracts to return
+    const limit = 5; // Force limit to always be 5
+    const page = parseInt(searchParams.get("page") || "1", 10); // Default page: 1
     const sort = searchParams.get("sort") || "desc"; // "asc" or "desc"
+    const searchTerm = searchParams.get("search") || ""; // Search term
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+    const projectFilter = searchParams.get("project"); // Project title filter
 
     // Validate query parameters
     if (!customerId) {
@@ -51,31 +56,68 @@ export async function GET(req: Request) {
       [queryField]: customerId,
     };
 
-    // If status is not "all" or empty, filter by status
+    // Add status filter
     if (status && status !== "all") {
       query.status = status;
     }
 
-    // Fetch contracts with sorting and limiting
-    const contracts = await Contract.find(query)
-      .sort({ createdAt: sort === "asc" ? 1 : -1 }) // Sort by createdAt
-      .limit(limit > 0 ? limit : 0); // Apply limit if provided
-
-    if (contracts.length === 0) {
-      return NextResponse.json(
-        {
-          message: `No contracts found ${
-            status && status !== "all" ? `with status "${status}"` : ""
-          } for the provided customer.`,
-        },
-        { status: 404 }
-      );
+    // Add search functionality
+    if (searchTerm) {
+      query.$or = [
+        { title: { $regex: searchTerm, $options: 'i' } },
+        { contractId: { $regex: searchTerm, $options: 'i' } },
+        { description: { $regex: searchTerm, $options: 'i' } }
+      ];
     }
+
+    // Add date range filter
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) {
+        query.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        query.createdAt.$lte = new Date(endDate);
+      }
+    }
+
+    // Add project filter
+    if (projectFilter && projectFilter !== "All Projects") {
+      query.title = projectFilter;
+    }
+
+    // Get total count for pagination
+    const totalContracts = await Contract.countDocuments(query);
+
+    // Fetch contracts with sorting and pagination
+    const contracts = await Contract.find(query)
+      .populate([
+        { path: "clientId", select: "userName email" },
+        { path: "vendorId", select: "userName email" },
+      ])
+      .sort({ createdAt: sort === "asc" ? 1 : -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    // Get unique project titles for filter options
+    const allProjects = await Contract.distinct('title', {
+      [queryField]: customerId,
+      status: status !== "all" ? status : { $exists: true }
+    });
 
     return NextResponse.json(
       {
         message: "Contracts retrieved successfully.",
         data: contracts,
+        pagination: {
+          total: totalContracts,
+          page,
+          limit,
+          totalPages: Math.ceil(totalContracts / limit),
+        },
+        filterOptions: {
+          projects: ["All Projects", ...allProjects]
+        }
       },
       { status: 200 }
     );

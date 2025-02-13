@@ -1,14 +1,27 @@
+/**
+ * The function captures a payment, transfers platform fees and escrow amounts, and sends a
+ * notification to the client upon successful processing.
+ * @param {Request} req - The `req` parameter in the `POST` function represents the incoming request
+ * object. It contains information about the HTTP request made to the server, such as headers, body,
+ * parameters, and more. In this specific context, the `req` object is used to extract the
+ * `paymentIntentId`
+ * @returns The POST function returns a JSON response based on the outcome of processing a payment
+ * capture request. Here are the possible return scenarios:
+ */
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import dbConnect from "@/lib/dbConnect";
 import { Contract } from "@/models/ContractSchema";
 import { Payment } from "@/models/paymentSchema";
+import { sendNotification } from "@/lib/actions/sender.action";
 
-// Initialize Stripe clients with the escrow and platform secret keys
-if (!process.env.PLATFORM_FEE_STRIPE_SECRET_KEY) {
-  throw new Error(
-    "PLATFORM_FEE_STRIPE_SECRET_KEY is not defined in environment variables."
-  );
+// Initialize Stripe clients
+if (
+  !process.env.PLATFORM_FEE_STRIPE_SECRET_KEY ||
+  !process.env.ESCROW_STRIPE_ACCOUNT_ID ||
+  !process.env.PLATFORM_FEE_STRIPE_ACCOUNT_ID
+) {
+  throw new Error("Missing Stripe environment variables.");
 }
 const escrowStripe = new Stripe(process.env.PLATFORM_FEE_STRIPE_SECRET_KEY);
 
@@ -20,92 +33,127 @@ export async function POST(req: Request) {
 
     if (!paymentIntentId) {
       return NextResponse.json(
-        { error: "Payment Intent ID is required" },
+        { error: "Payment Intent ID is required." },
         { status: 400 }
       );
     }
 
-    // Fetch the payment record from the database
+    // Fetch the payment record
     const payment = await Payment.findOne({
       stripePaymentIntentId: paymentIntentId,
     });
 
     if (!payment) {
       return NextResponse.json(
-        { error: "Payment record not found" },
+        { error: "Payment record not found." },
         { status: 404 }
       );
     }
 
-    const { contractId, platformFee, escrowAmount } = payment;
+    const { contractId, platformFee, escrowAmount, payerId } = payment;
 
     // Fetch the associated contract
-    const contract = await Contract.findById(contractId);
+    const contract = await Contract.findById(contractId).populate(
+      "clientId vendorId",
+      "email username"
+    );
+
     if (!contract) {
       return NextResponse.json(
-        { error: "Contract not found" },
+        { error: "Contract not found." },
         { status: 404 }
       );
     }
 
-    // Capture the payment in the escrow account
-    const paymentIntent = await escrowStripe.paymentIntents.capture(
-      paymentIntentId
-    );
+    const transferGroup = contract.contractId.toString(); // Ensure it's a string
 
-    if (paymentIntent.status === "succeeded") {
-      // Dynamically retrieve account IDs
-      const escrowAccountId = process.env.ESCROW_STRIPE_ACCOUNT_ID || "";
-      const platformFeeAccountId =
-        process.env.PLATFORM_FEE_STRIPE_ACCOUNT_ID || "";
+    // Retrieve account IDs
+    const escrowAccountId = process.env.ESCROW_STRIPE_ACCOUNT_ID;
+    const platformFeeAccountId = process.env.PLATFORM_FEE_STRIPE_ACCOUNT_ID;
 
-      console.log("Escrow Account ID:", escrowAccountId);
-      console.log("Platform Fee Account ID:", platformFeeAccountId);
+    console.log("Escrow Account ID:", escrowAccountId);
+    console.log("Platform Fee Account ID:", platformFeeAccountId);
 
-      // Transfer the platform fee to the platform fee account
-      await escrowStripe.transfers.create({
-        amount: Math.round(platformFee * 100), // Convert to cents
+    try {
+      // **1️ Transfer Platform Fee (Auto-Payout)**
+      const platformFeeTransfer = await escrowStripe.transfers.create({
+        amount: Math.round(platformFee * 100),
         currency: "usd",
-        description: `Platform fee for contract: ${contractId}`,
-        destination: platformFeeAccountId, // Platform fee account ID
+        description: `Platform fee for contract: ${transferGroup}`,
+        destination: platformFeeAccountId || "",
+        transfer_group: transferGroup,
+        metadata: {
+          contractId: transferGroup,
+          type: "fee",
+        },
       });
 
-      console.log("Platform fee transfer succeeded:");
+      console.log("Platform fee transfer succeeded:", platformFeeTransfer.id);
 
-      // Transfer the escrow amount to the vendor account (payee)
-      await escrowStripe.transfers.create({
-        amount: Math.round(escrowAmount * 100), // Convert to cents
+      // **2️⃣ Transfer Escrow Amount to Escrow Account (Manual Payout)**
+      const escrowTransfer = await escrowStripe.transfers.create({
+        amount: Math.round(escrowAmount * 100),
         currency: "usd",
-        description: `Escrow amount for contract: ${contractId}`,
-        destination: escrowAccountId, // Vendor account ID (payee)
+        description: `Escrow amount for contract: ${transferGroup}`,
+        destination: escrowAccountId || "",
+        transfer_group: transferGroup,
+        metadata: {
+          contractId: transferGroup,
+          type: "funding",
+        },
       });
 
-      console.log("Escrow transfer succeeded:");
+      console.log("Escrow transfer succeeded:", escrowTransfer.id);
 
-      // Update payment record in the database
-      payment.status = "funded";
-      await payment.save();
+      // **3️⃣ Only Capture Payment If Transfers Succeed**
+      const paymentIntent = await escrowStripe.paymentIntents.capture(
+        paymentIntentId
+      );
+      if (paymentIntent.status === "succeeded") {
+        console.log("Payment captured successfully:", paymentIntent.id);
 
-      // Update contract status
-      contract.status = "active";
-      await contract.save();
+        // **📌 Send Notification to Client**
+        try {
+          await sendNotification({
+            receiverId: payerId.toString(),
+            senderId: contract.vendorId._id.toString(),
+            title: "Payment Captured",
+            message: `Your escrow payment for contract ${contractId} has been successfully processed.`,
+            type: "payment",
+            severity: "success",
+            link: `/contact-details/${contractId}`,
+            meta: { contractId, escrowAmount },
+          });
+        } catch (notificationError) {
+          console.error(
+            "Error sending payment capture notification:",
+            notificationError
+          );
+        }
+
+        return NextResponse.json(
+          {
+            success: true,
+            message: "Payment captured and transfers successful.",
+          },
+          { status: 200 }
+        );
+      } else {
+        throw new Error("Payment capture failed after successful transfers.");
+      }
+    } catch (transferError: any) {
+      console.error("Error transferring funds:", transferError);
 
       return NextResponse.json(
         {
-          success: true,
-          message:
-            "Payment captured successfully. Platform fee and escrow transferred.",
+          error: "Transfer failed, payment not captured.",
+          details: transferError.message,
         },
-        { status: 200 }
-      );
-    } else {
-      return NextResponse.json(
-        { error: "Payment capture failed" },
-        { status: 400 }
+        { status: 500 }
       );
     }
   } catch (error: any) {
-    console.error("Error capturing payment:", error);
+    console.error("Error processing capture-payment:", error);
     return NextResponse.json(
       { error: error.message || "Internal server error." },
       { status: 500 }

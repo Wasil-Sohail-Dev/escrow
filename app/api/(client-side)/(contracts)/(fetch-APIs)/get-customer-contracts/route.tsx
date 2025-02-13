@@ -8,8 +8,15 @@ export async function GET(req: Request) {
 
   try {
     const { searchParams } = new URL(req.url);
+
+    // Extract query parameters
     const customerId = searchParams.get("customerId");
-    const role = searchParams.get("role"); // Role can be "client" or "vendor"
+    const role = searchParams.get("role"); // "client" or "vendor"
+    const status = searchParams.get("status") || "all"; // Contract status filter
+    const limit = parseInt(searchParams.get("limit") || "10", 10); // Default limit: 10
+    const page = parseInt(searchParams.get("page") || "1", 10); // Default page: 1
+    const sortOrder = searchParams.get("sort") === "asc" ? 1 : -1; // "asc" or "desc"
+    const searchTerm = searchParams.get("search") || ""; // Search term
 
     // Validate query parameters
     if (!customerId) {
@@ -26,7 +33,7 @@ export async function GET(req: Request) {
       );
     }
 
-    // Check if the customer exists in the database with the correct role
+    // Verify customer exists
     const customer = await Customer.findOne({
       _id: customerId,
       userType: role,
@@ -39,28 +46,47 @@ export async function GET(req: Request) {
       );
     }
 
-    // Determine the query field based on the role
+    // Determine the query field based on role
     const queryField = role === "client" ? "clientId" : "vendorId";
 
-    // Fetch contracts from the database
-    const contracts = await Contract.find({
-      [queryField]: customerId,
-    }).populate([
-      { path: "clientId", select: "userName email" },
-      { path: "vendorId", select: "userName email" },
-    ]);
-
-    if (!contracts.length) {
-      return NextResponse.json(
-        { error: `No contracts found for the given ${role} ID: ${customerId}` },
-        { status: 404 }
-      );
+    // Build the contract query with optional status filter and search
+    const contractQuery: any = { [queryField]: customerId };
+    if (status !== "all") {
+      contractQuery.status = status;
     }
+
+    // Add search functionality
+    if (searchTerm) {
+      contractQuery.$or = [
+        { title: { $regex: searchTerm, $options: 'i' } },
+        { contractId: { $regex: searchTerm, $options: 'i' } },
+        { description: { $regex: searchTerm, $options: 'i' } }
+      ];
+    }
+
+    // Fetch paginated contracts
+    const contracts = await Contract.find(contractQuery)
+      .populate([
+        { path: "clientId", select: "userName email" },
+        { path: "vendorId", select: "userName email" },
+      ])
+      .sort({ createdAt: sortOrder }) // Sort by createdAt (latest or oldest)
+      .skip((page - 1) * limit) // Skip for pagination
+      .limit(limit); // Apply limit
+
+    // Get total count for pagination info
+    const totalContracts = await Contract.countDocuments(contractQuery);
 
     return NextResponse.json(
       {
         message: "Contracts retrieved successfully.",
         data: contracts,
+        pagination: {
+          total: totalContracts,
+          page,
+          limit,
+          totalPages: Math.ceil(totalContracts / limit),
+        },
       },
       { status: 200 }
     );

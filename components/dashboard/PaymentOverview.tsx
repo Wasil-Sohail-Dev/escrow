@@ -15,13 +15,14 @@ const DATE_OPTIONS = [
   "Last 30 days",
   "Last 3 months",
   "Last 6 months",
-  "Last Year"
+  "Last Year",
 ];
 
 interface Payment {
   _id: string;
-  amount: number;
+  totalAmount: number;
   escrowAmount: number;
+  releasedAmount: number;
   status: string;
   createdAt: string;
 }
@@ -34,20 +35,34 @@ interface PaymentCardProps {
   percentage: number;
 }
 
-const PaymentCard = ({ title, amount, description, progressColor, percentage }: PaymentCardProps) => (
-  <div className="bg-[#DADADA33] p-4 rounded-lg flex flex-row justify-between items-center
-    lg:p-4 md:p-3 max-md:p-3 dark:border dark:border-dark-border">
+const PaymentCard = ({
+  title,
+  amount,
+  description,
+  progressColor,
+  percentage,
+}: PaymentCardProps) => (
+  <div
+    className="bg-[#DADADA33] p-4 rounded-lg flex flex-row justify-between items-center
+    lg:p-4 md:p-3 max-md:p-3 dark:border dark:border-dark-border"
+  >
     <div>
-      <h3 className="text-sm font-bold text-[#525252] dark:text-dark-text
-        lg:text-sm md:text-xs max-md:text-xs">
+      <h3
+        className="text-sm font-bold text-[#525252] dark:text-dark-text
+        lg:text-sm md:text-xs max-md:text-xs"
+      >
         {title}
       </h3>
-      <p className="text-heading3-bold font-semibold mt-1 dark:text-dark-text
-        lg:text-heading3-bold md:text-heading4-medium max-md:text-heading4-medium">
+      <p
+        className="text-heading3-bold font-semibold mt-1 dark:text-dark-text
+        lg:text-heading3-bold md:text-heading4-medium max-md:text-heading4-medium"
+      >
         {amount}
       </p>
-      <p className="text-small-medium mt-1 text-[#676767] dark:text-dark-text/60
-        lg:text-small-medium md:text-small-regular max-md:text-small-regular">
+      <p
+        className="text-small-medium mt-1 text-[#676767] dark:text-dark-text/60
+        lg:text-small-medium md:text-small-regular max-md:text-small-regular"
+      >
         {description}
       </p>
     </div>
@@ -57,11 +72,11 @@ const PaymentCard = ({ title, amount, description, progressColor, percentage }: 
         strokeWidth={20}
         styles={buildStyles({
           rotation: 0,
-          strokeLinecap: 'round',
+          strokeLinecap: "round",
           pathTransitionDuration: 0.5,
           pathColor: progressColor,
           textColor: progressColor,
-          trailColor: '#E4E8EF',
+          trailColor: "#E4E8EF",
         })}
       />
     </div>
@@ -70,17 +85,25 @@ const PaymentCard = ({ title, amount, description, progressColor, percentage }: 
 
 interface PaymentOverviewProps {
   show: boolean;
-  payments?: Payment[];
+  payments?: any[];
 }
 
-export default function PaymentOverview({ show, payments = [] }: PaymentOverviewProps) {
+export default function PaymentOverview({
+  show,
+  payments = [],
+}: PaymentOverviewProps) {
+  console.log(payments, "payments");
+  
   const [selectedDateOption, setSelectedDateOption] = useState("Last 30 days");
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
+    null,
+    null,
+  ]);
   const [startDate, endDate] = dateRange;
   const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
 
   useEffect(() => {
-      filterPayments();
+    filterPayments();
   }, [selectedDateOption, dateRange, payments]);
 
   const filterPayments = () => {
@@ -92,13 +115,13 @@ export default function PaymentOverview({ show, payments = [] }: PaymentOverview
     let filtered = [...payments];
 
     if (startDate && endDate) {
-      filtered = filtered.filter(payment => {
+      filtered = filtered.filter((payment) => {
         const paymentDate = new Date(payment.createdAt);
         return paymentDate >= startDate && paymentDate <= endDate;
       });
     } else {
       const today = new Date();
-      let filterDate = new Date();
+      const filterDate = new Date();
 
       switch (selectedDateOption) {
         case "Last 7 days":
@@ -120,7 +143,7 @@ export default function PaymentOverview({ show, payments = [] }: PaymentOverview
           filterDate.setDate(today.getDate() - 30);
       }
 
-      filtered = filtered.filter(payment => {
+      filtered = filtered.filter((payment) => {
         const paymentDate = new Date(payment.createdAt);
         return paymentDate >= filterDate && paymentDate <= today;
       });
@@ -129,119 +152,99 @@ export default function PaymentOverview({ show, payments = [] }: PaymentOverview
     setFilteredPayments(filtered);
   };
 
-  const calculateTotalAmount = () => {
-    if (!filteredPayments.length) return 0;
-    return filteredPayments.reduce((total, payment) => total + payment.amount, 0);
-  };
-
-  const calculateEscrowAmount = () => {
-    if (!filteredPayments.length) return 0;
-    return filteredPayments.reduce((total, payment) => {
-      if (['process', 'on_hold', 'funded'].includes(payment.status)) {
-        return total + payment.escrowAmount;
-      }
-      return total;
-    }, 0);
-  };
-
-  const calculateReleasedAmount = () => {
-    if (!filteredPayments.length) return 0;
-    return filteredPayments.reduce((total, payment) => {
-      if (payment.status === 'released') {
-        return total + payment.amount;
-      }
-      return total;
-    }, 0);
-  };
-
-  const calculatePercentages = () => {
-    if (!filteredPayments.length) return { total: 0, escrow: 0, released: 0 };
-
-    const calculateStateProgress = (payment: Payment) => {
-      const stateWeights: { [key: string]: number } = {
-        'pending': 20,
-        'process': 40,
-        'on_hold': 60,
-        'funded': 80,
-        'released': 100,
-        'failed': 0,
-        'refunded': 0,
-        'disputed': 30
+  const calculatePayments = (payments: Payment[]) => {
+    if (!payments.length) {
+      return {
+        totalAmount: 0,
+        escrowAmount: 0,
+        releasedAmount: 0,
+        totalPercentage: 0,
+        escrowPercentage: 0,
+        releasedPercentage: 0,
       };
-
-      return stateWeights[payment.status] || 0;
-    };
-
-    const progressValues = filteredPayments.map(calculateStateProgress);
-    const totalProgress = Math.round(
-      progressValues.reduce((sum, value) => sum + value, 0) / filteredPayments.length
-    );
-
-    const escrowPayments = filteredPayments.filter(p => 
-      ['process', 'on_hold', 'funded'].includes(p.status)
-    );
-    const escrowProgress = escrowPayments.length ? Math.round(
-      escrowPayments.map(calculateStateProgress)
-        .reduce((sum, value) => sum + value, 0) / escrowPayments.length
-    ) : 0;
-
-    const releasedPayments = filteredPayments.filter(p => p.status === 'released');
-    const releasedProgress = releasedPayments.length ? 100 : 0;
-
+    }
+  
+    const totalAmount = payments.reduce((sum, payment) => sum + payment.totalAmount, 0);
+    
+    const escrowAmount = payments.reduce((sum, payment) => {
+      return ["process", "on_hold", "funded", "partially_released", "fully_released"].includes(payment.status)
+        ? sum + payment.escrowAmount
+        : sum;
+    }, 0);
+  
+    const releasedAmount = payments.reduce((sum, payment) => sum + payment.releasedAmount, 0);
+  
+    // Avoid division by zero
+    const totalPercentage = totalAmount > 0 ? 100 : 0;
+    const escrowPercentage = totalAmount > 0 ? (escrowAmount / totalAmount) * 100 : 0;
+    const releasedPercentage = totalAmount > 0 ? (releasedAmount / totalAmount) * 100 : 0;
+  
     return {
-      total: totalProgress,
-      escrow: escrowProgress,
-      released: releasedProgress
+      totalAmount,
+      escrowAmount,
+      releasedAmount,
+      totalPercentage,
+      escrowPercentage,
+      releasedPercentage,
     };
   };
 
-  const percentages = calculatePercentages();
+  const { totalAmount, escrowAmount, releasedAmount, totalPercentage, escrowPercentage, releasedPercentage } =
+  calculatePayments(filteredPayments);
 
-  const PAYMENT_CARDS = [
-    {
-      title: "Total Amount",
-      amount: `$${calculateTotalAmount().toFixed(2)}`,
-      description: "Total Amount submitted for project",
-      progressColor: "#68E05E",
-      percentage: percentages.total
-    },
-    {
-      title: "Amount Withheld",
-      amount: `$${calculateEscrowAmount().toFixed(2)}`,
-      description: "In Escrow",
-      progressColor: "#EB2E2E",
-      percentage: percentages.escrow
-    },
-    {
-      title: "Amount Released",
-      amount: `$${calculateReleasedAmount().toFixed(2)}`,
-      description: "Available for Payout",
-      progressColor: "#F29A2E",
-      percentage: percentages.released
-    }
-  ];
+const PAYMENT_CARDS = [
+  {
+    title: "Total Amount",
+    amount: `$${totalAmount.toFixed(2)}`,
+    description: "Total Amount submitted for project",
+    progressColor: "#68E05E",
+    percentage: totalPercentage,
+  },
+  {
+    title: "Amount Withheld",
+    amount: `$${escrowAmount.toFixed(2)}`,
+    description: "In Escrow",
+    progressColor: "#EB2E2E",
+    percentage: escrowPercentage,
+  },
+  {
+    title: "Amount Released",
+    amount: `$${releasedAmount.toFixed(2)}`,
+    description: "Available for Payout",
+    progressColor: "#F29A2E",
+    percentage: releasedPercentage,
+  },
+];
 
   return (
     <div className="mt-8">
       {show && (
         <div className="flex items-center md:justify-between flex-col md:flex-row mb-4 md:gap-0 gap-2">
-          <h2 className="text-[22px] font-bold leading-[28.5px] dark:text-dark-text
-            lg:text-[22px] md:text-[20px] max-md:text-[18px] ">
+          <h2
+            className="text-[22px] font-bold leading-[28.5px] dark:text-dark-text
+            lg:text-[22px] md:text-[20px] max-md:text-[18px] "
+          >
             Payment Overview
           </h2>
-          <div className="flex gap-4 text-[#676767] dark:text-dark-text/60
-            lg:gap-4 md:gap-3 max-md:gap-2">
-            
+          <div
+            className="flex gap-4 text-[#676767] dark:text-dark-text/60
+            lg:gap-4 md:gap-3 max-md:gap-2"
+          >
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-2 text-small-medium px-3 py-1.5 rounded-md 
-                dark:bg-dark-bg dark:text-dark-text">
+              <DropdownMenuTrigger
+                className="flex items-center gap-2 text-small-medium px-3 py-1.5 rounded-md 
+                dark:bg-dark-bg dark:text-dark-text"
+              >
                 {selectedDateOption}
                 <ChevronDown size={16} />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="dark:bg-dark-bg dark:border-dark-border">
+              <DropdownMenuContent
+                align="end"
+                className="dark:bg-dark-bg dark:border-dark-border"
+              >
                 {DATE_OPTIONS.map((option) => (
-                  <DropdownMenuItem 
-                    key={option} 
+                  <DropdownMenuItem
+                    key={option}
                     onClick={() => {
                       setSelectedDateOption(option);
                       setDateRange([null, null]);
@@ -273,9 +276,11 @@ export default function PaymentOverview({ show, payments = [] }: PaymentOverview
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-4
+      <div
+        className="grid grid-cols-3 gap-4
         lg:grid-cols-3 md:grid-cols-2 max-md:grid-cols-1
-        lg:gap-4 md:gap-3 max-md:gap-3">
+        lg:gap-4 md:gap-3 max-md:gap-3"
+      >
         {PAYMENT_CARDS.map((card, index) => (
           <PaymentCard key={index} {...card} />
         ))}

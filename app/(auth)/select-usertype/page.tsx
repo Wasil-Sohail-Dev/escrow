@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { UserRound, Briefcase } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -101,7 +100,7 @@ const SelectUserType = () => {
           Choose Your Account Type
         </h1>
         <p className="text-base text-paragraph/60 dark:text-dark-text/60 mb-12">
-          Select how you'd like to use our platform. You can be either a client looking to hire,<br />
+          Select how you&apos;d like to use our platform. You can be either a client looking to hire,<br />
           or a vendor offering your services.
         </p>
 
@@ -133,7 +132,7 @@ const SelectUserType = () => {
               )}
               <div className="text-center">
                 <h2 className="text-2xl font-semibold text-[#292929] dark:text-dark-text mb-2">
-                  I'm a Client
+                  I&apos;m a Client
                 </h2>
                 <p className="text-paragraph/60 dark:text-dark-text/60">
                   I want to hire professionals and<br />manage projects
@@ -169,7 +168,7 @@ const SelectUserType = () => {
               )}
               <div className="text-center">
                 <h2 className="text-2xl font-semibold text-[#292929] dark:text-dark-text mb-2">
-                  I'm a Vendor
+                  I&apos;m a Vendor
                 </h2>
                 <p className="text-paragraph/60 dark:text-dark-text/60">
                   I want to offer my services and<br />find work opportunities

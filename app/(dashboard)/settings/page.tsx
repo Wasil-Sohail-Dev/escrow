@@ -143,9 +143,6 @@ const Settings = () => {
       <div className="flex flex-col gap-6 w-full mt-[85px]">
         {/* Profile Header */}
         <div>
-          <h2 className="text-subtle-medium md:text-base-medium dark:text-dark-text">
-            Your Profile Picture
-          </h2>
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-10">
             {/* Profile Picture Upload */}
             <div className="relative border border-dashed dark:border-dark-border rounded-lg flex items-center justify-center cursor-pointer hover:opacity-80 w-[100px] h-[100px] md:w-[130px] md:h-[130px]">

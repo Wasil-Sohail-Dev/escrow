@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import Image from "next/image";
 
 interface EditContractModalProps {
   isOpen: boolean;

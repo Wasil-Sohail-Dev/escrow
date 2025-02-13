@@ -134,6 +134,14 @@ const contractSchema = new mongoose.Schema(
             ],
             default: null,
         },
+        contractTemplate: {
+            type: String,
+            required: false,
+        },
+        contractFile: [{
+            type: String,
+            required: false,
+        }],
         startDate: { type: Date },
         endDate: { type: Date },
     },

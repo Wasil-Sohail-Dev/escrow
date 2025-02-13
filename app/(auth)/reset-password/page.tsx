@@ -114,6 +114,8 @@ const NewPassword = () => {
         setError(responseData.error || 'Failed to reset password');
       }
     } catch (err) {
+      console.log(err);
+      
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",

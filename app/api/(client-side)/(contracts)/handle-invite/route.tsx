@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import { Contract } from "@/models/ContractSchema";
+import { sendNotification } from "@/lib/actions/sender.action";
 
 export async function PATCH(req: Request) {
   await dbConnect();
@@ -18,7 +19,9 @@ export async function PATCH(req: Request) {
     }
 
     // Find the contract by contractId
-    const contract = await Contract.findOne({ contractId });
+    const contract = await Contract.findOne({ contractId }).populate(
+      "clientId vendorId"
+    );
 
     if (!contract) {
       return NextResponse.json(
@@ -26,6 +29,8 @@ export async function PATCH(req: Request) {
         { status: 404 }
       );
     }
+
+    const { clientId, vendorId, title } = contract;
 
     // Check if the contract is in a valid state for action
     if (contract.status === "funding_pending") {
@@ -37,7 +42,6 @@ export async function PATCH(req: Request) {
       );
     }
 
-    // Check if the contract is in a valid state for action
     if (contract.status !== "onboarding") {
       return NextResponse.json(
         {
@@ -47,24 +51,44 @@ export async function PATCH(req: Request) {
       );
     }
 
+    let notificationMessage = "";
+
     // Handle the action
     if (action === "accept") {
       contract.status = "funding_pending"; // Update the status to onboarding
       await contract.save();
-      return NextResponse.json(
-        { message: "Invitation accepted. Contract is now onboard." },
-        { status: 200 }
-      );
-    }
-
-    if (action === "reject") {
+      notificationMessage = `Your contract (${title}) has been accepted and is now onboarding.`;
+    } else if (action === "reject") {
       contract.status = "cancelled"; // Update the status to cancelled
       await contract.save();
-      return NextResponse.json(
-        { message: "Invitation rejected. Contract has been cancelled." },
-        { status: 200 }
-      );
+      notificationMessage = `Your contract (${title}) has been rejected.`;
     }
+
+    // **📌 Send Notification to Client**
+    try {
+      await sendNotification({
+        receiverId: clientId._id.toString(),
+        senderId: vendorId._id.toString(),
+        title: "Contract Update",
+        message: notificationMessage,
+        type: "user",
+        severity: "info",
+        link: `/contact-details/${contractId}`,
+        meta: { contractId },
+      });
+    } catch (notificationError) {
+      console.error("Error sending notification:", notificationError);
+    }
+
+    return NextResponse.json(
+      {
+        message:
+          action === "accept"
+            ? "Invitation accepted. Contract is now onboard."
+            : "Invitation rejected. Contract has been cancelled.",
+      },
+      { status: 200 }
+    );
   } catch (error: any) {
     console.error(error);
     return NextResponse.json(

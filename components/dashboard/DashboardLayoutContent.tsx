@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 import Loader from "@/components/ui/loader";
-import { Suspense } from "react";
+import { Suspense, useState, useEffect } from "react";
 
 export default function DashboardLayoutContent({
   children,
@@ -12,11 +12,18 @@ export default function DashboardLayoutContent({
 }) {
   const pathname = usePathname();
   const isDisputeChat = pathname.includes("/dispute-chat");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleClickOutside = () => {
+    if (isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+    }
+  };
 
   return (
-    <section className="flex min-h-screen bg-white dark:bg-dark-bg">
+    <section className="flex min-h-screen bg-white dark:bg-dark-bg" onClick={handleClickOutside}>
       <div className="fixed left-0 top-0 z-50">
-        <Sidebar />
+        <Sidebar isOpen={isMobileMenuOpen} setIsOpen={setIsMobileMenuOpen} />
       </div>
       <section className="flex-1 md:ml-[118px] ml-0 min-h-screen">
         <main

@@ -42,9 +42,35 @@ const PreBuildDetails = () => {
       sessionStorage.setItem('contractFormData', JSON.stringify(formData));
     }
     if (formData?.isSelected) {
-      router.push('/pre-build-contracts');
-    }else{
+      router.push('/pre-built-contracts');
+    } else {
       router.push('/create-contract');
+    }
+  };
+
+  const showPreview = () => {
+    if (formData?.isSelected) {
+      // If using a pre-built template, prepare template data
+      const templateData = {
+        ...formData,
+        contractId: "", // This will be generated on create contract
+        vendorEmail: "", // Reset vendor email
+        startDate: "", // Reset dates
+        endDate: "", // Reset dates
+        documents: [], // Initialize empty documents array
+        isSelected: false, // Set isSelected to false when going to create contract
+        milestones: formData.milestones.map((milestone: Milestone) => ({
+          ...milestone,
+          startDate: "", // Reset milestone dates
+          endDate: "" // Reset milestone dates
+        }))
+      };
+      sessionStorage.setItem('contractFormData', JSON.stringify(templateData));
+      router.push('/create-contract');
+    } else {
+      // If in create contract flow, just save current state
+      sessionStorage.setItem('contractFormData', JSON.stringify(formData));
+      router.push('/pre-built-details');
     }
   };
 
@@ -146,7 +172,7 @@ console.log(formData,"formDataformData");
           <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-[400] leading-[28px] sm:leading-[32px] lg:leading-[35.2px] mb-4 text-[#292929] dark:text-dark-text/60">
             Project Duration: {formData ? `${new Date(formData.startDate).toLocaleDateString()} - ${new Date(formData.endDate).toLocaleDateString()}` : 'Loading...'}
           </p>
-          <div className=" mt-8 md:max-w-3xl w-full overflow-x-auto pb-4">
+          <div className=" mt-8 md:max-w-4xl w-full overflow-x-auto pb-4">
             <div className="min-w-[600px] relative">
               {/* Timeline line */}
               <div className="absolute h-[2px] bg-[#D0D0D0] dark:bg-dark-border w-full top-[6px]"></div>
@@ -242,23 +268,7 @@ console.log(formData,"formDataformData");
             Back
           </Button>
           {formData?.isSelected && <Button
-            onClick={() => {
-              // Store the current form data but remove contractId and reset dates/vendor email
-              const templateData = {
-                ...formData,
-                contractId: "", // This will be generated on create contract
-                vendorEmail: "", // Reset vendor email
-                startDate: "", // Reset dates
-                endDate: "", // Reset dates
-                milestones: formData.milestones.map((milestone: Milestone) => ({
-                  ...milestone,
-                  startDate: "", // Reset milestone dates
-                  endDate: "" // Reset milestone dates
-                }))
-              };
-              sessionStorage.setItem('contractFormData', JSON.stringify(templateData));
-              router.push('/create-contract');
-            }}
+            onClick={showPreview}
             className="w-full sm:w-auto h-[42px] px-6 md:px-10 bg-primary hover:bg-primary/90 text-white dark:text-dark-text"
           >
             Use Template

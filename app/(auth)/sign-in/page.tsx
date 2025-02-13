@@ -16,7 +16,6 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 
@@ -31,8 +30,6 @@ type SignInFormValues = z.infer<typeof signInSchema>;
 const Page = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [facebookLoading, setFacebookLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { refreshUser } = useUser();
@@ -53,9 +50,12 @@ const Page = () => {
       email: data.email,
       password: data.password,
     });
-console.log(result,"result");
     if (result?.error) {
-      setError(result.error==="CredentialsSignin"?"Credentials are not valid":result.error);
+      setError(
+        result.error === "CredentialsSignin"
+          ? "Credentials are not valid"
+          : result.error
+      );
     } else if (result?.ok) {
       await refreshUser();
       router.push("/home");
@@ -64,40 +64,6 @@ console.log(result,"result");
     }
 
     setLoading(false);
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      setGoogleLoading(true);
-      const result = await signIn("google", { redirect: false });
-
-      if (result?.error) {
-        setError("Failed to sign in with Google.");
-      } else if (result?.ok && result.url) {
-        router.push(result.url);
-      }
-    } catch (error) {
-      setError("Something went wrong with Google sign-in.");
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
-
-  const handleFacebookSignIn = async () => {
-    try {
-      setFacebookLoading(true);
-      const result = await signIn("facebook", { redirect: false });
-
-      if (result?.error) {
-        setError("Failed to sign in with Facebook.");
-      } else if (result?.ok && result.url) {
-        router.push(result.url);
-      }
-    } catch (error) {
-      setError("Something went wrong with Facebook sign-in.");
-    } finally {
-      setFacebookLoading(false);
-    }
   };
 
   return (
@@ -157,7 +123,7 @@ console.log(result,"result");
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dark-text"
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -172,13 +138,16 @@ console.log(result,"result");
           )}
 
           <div className="flex justify-end">
-            <Link href="/forgot-password" className="text-sm text-primary hover:text-primary-500">
+            <Link
+              href="/forgot-password"
+              className="text-sm text-primary hover:text-primary-500"
+            >
               Forgot Password?
             </Link>
           </div>
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="h-11 bg-primary hover:bg-primary/90 text-white rounded-lg"
             disabled={loading}
           >
@@ -190,52 +159,12 @@ console.log(result,"result");
           </Button>
         </form>
       </Form>
-
-      {/* <div className="flex items-center gap-2">
-        <div className="h-[1px] flex-1 bg-[#E8EAEE] dark:bg-dark-border" />
-        <span className="text-sm text-paragraph dark:text-dark-text">OR</span>
-        <div className="h-[1px] flex-1 bg-[#E8EAEE] dark:bg-dark-border" />
-      </div> */}
-
-      {/* <div className="flex flex-col gap-3">
-        <Button 
-          type="button"
-          variant="outline"
-          className="h-11 border border-[#E8EAEE] dark:border-dark-border hover:bg-white/90 dark:hover:bg-dark-input-bg rounded-lg text-paragraph dark:text-dark-text flex items-center justify-center gap-2"
-          onClick={handleGoogleSignIn}
-          disabled={googleLoading}
-        >
-          {googleLoading ? (
-            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <>
-              <Image src="/assets/google.svg" alt="Google" width={20} height={20} />
-              Sign in with Google
-            </>
-          )}
-        </Button>
-
-        <Button 
-          type="button"
-          variant="outline"
-          className="h-11 border border-[#E8EAEE] dark:border-dark-border hover:bg-white/90 dark:hover:bg-dark-input-bg rounded-lg text-paragraph dark:text-dark-text flex items-center justify-center gap-2"
-          onClick={handleFacebookSignIn}
-          disabled={facebookLoading}
-        >
-          {facebookLoading ? (
-            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <>
-              <Image src="/assets/facebook.svg" alt="Facebook" width={20} height={20} />
-              Sign in with Facebook
-            </>
-          )}
-        </Button>
-      </div> */}
-
       <p className="text-sm text-paragraph dark:text-dark-text text-center">
-        Don't have an account?{" "}
-        <Link href="/user-register" className="text-primary hover:text-primary-500">
+        Dont have an account?{" "}
+        <Link
+          href="/user-register"
+          className="text-primary hover:text-primary-500"
+        >
           Sign up
         </Link>
       </p>

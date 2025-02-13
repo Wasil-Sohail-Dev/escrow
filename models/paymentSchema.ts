@@ -1,16 +1,12 @@
 import mongoose from "mongoose";
 
-// Schema for Payments
+// Schema for Payments (Tracks overall escrow deposit for a contract)
 const paymentSchema = new mongoose.Schema(
     {
         contractId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Contract",
             required: true,
-        },
-        milestoneId: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: false,
         },
         payerId: {
             type: mongoose.Schema.Types.ObjectId,
@@ -22,7 +18,7 @@ const paymentSchema = new mongoose.Schema(
             ref: "Customer",
             required: true, // Vendor receiving the payment
         },
-        amount: {
+        totalAmount: {
             type: Number,
             required: true, // Total amount including platform fees
         },
@@ -32,32 +28,40 @@ const paymentSchema = new mongoose.Schema(
         },
         escrowAmount: {
             type: Number,
-            required: true, // Amount held in escrow (amount - platformFee)
+            required: true, // Amount held in escrow (totalAmount - platformFee)
         },
         stripePaymentIntentId: {
             type: String,
             required: true, // Stripe Payment Intent ID for tracking
         },
-        stripeTransferId: {
-            type: String, // Stripe Transfer ID when funds are released to the vendor
+        onHoldAmount: {
+            type: Number,
+            required: true, // Amount still in escrow
+            default: 0,
+        },
+        releasedAmount: {
+            type: Number,
+            required: true, // Amount already transferred to vendor
+            default: 0,
         },
         status: {
             type: String,
-            enum: ["pending", "process", "on_hold", "funded", "released", "failed", "refunded", "disputed"],
-            default: "pending",
+            enum: [
+                "processing",
+                "funded",
+                "on_hold",
+                "partially_released",
+                "fully_released",
+                "failed",
+                "refunded",
+                "disputed"
+            ], // Tracks the status of the payment
+            default: "processing",
         },
         paymentMethod: {
             type: String,
             enum: ["stripe"],
             default: "stripe",
-        },
-        createdAt: {
-            type: Date,
-            default: Date.now,
-        },
-        updatedAt: {
-            type: Date,
-            default: Date.now,
         },
     },
     {

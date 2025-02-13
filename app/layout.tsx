@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "../components/theme-provider";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster as ShadCNToaster } from "@/components/ui/toaster"; // ✅ For API toast messages
+import { Toaster as SonnerToaster } from "sonner"; // ✅ For FCM notifications
 import { AppProviders } from "@/components/providers/AppProviders";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -26,10 +27,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AppProviders>
-            {children}
-          </AppProviders>
-          <Toaster />
+          <AppProviders>{children}</AppProviders>
+
+          {/* ✅ ShadCN Toaster (For API Responses) */}
+          <ShadCNToaster />
+
+          {/* ✅ Sonner Toaster (For Real-Time Notifications) */}
+          <SonnerToaster position="top-right" expand richColors />
         </ThemeProvider>
       </body>
     </html>

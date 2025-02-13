@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import { Contract } from "@/models/ContractSchema";
 import Stripe from "stripe";
-import { Payment } from "@/models/paymentSchema";
+import { sendNotification } from "@/lib/actions/sender.action";
 
 // Initialize Stripe with the escrow account's secret key
 if (!process.env.PLATFORM_FEE_STRIPE_SECRET_KEY) {
@@ -16,8 +16,8 @@ export async function POST(req: Request) {
   await dbConnect();
 
   try {
-    const body = await req.json();
-    const { contractId, clientId, vendorId, platformFee, escrowAmount } = body;
+    const { contractId, clientId, vendorId, platformFee, escrowAmount } =
+      await req.json();
 
     // Validate required fields
     if (
@@ -28,18 +28,15 @@ export async function POST(req: Request) {
       !escrowAmount
     ) {
       return NextResponse.json(
-        {
-          error:
-            "Contract ID, Client ID, Vendor ID, Platform Fee, and Escrow Amount are required.",
-        },
+        { error: "Missing required fields." },
         { status: 400 }
       );
     }
 
-    // Find the contract from the database
+    // Fetch contract details
     const contract = await Contract.findOne({ contractId }).populate(
       "clientId vendorId",
-      "email username firstName lastName"
+      "email username"
     );
 
     if (!contract) {
@@ -49,7 +46,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check contract status
+    // Ensure the contract is in `funding_pending` state
     if (contract.status !== "funding_pending") {
       return NextResponse.json(
         {
@@ -69,13 +66,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const totalAmount = platformFee + escrowAmount;
+    const totalAmount = Math.round((platformFee + escrowAmount) * 100);
 
-    // Create Payment Intent with Escrow Stripe account
+    // Create Payment Intent with Stripe
     const paymentIntent = await escrowStripe.paymentIntents.create({
-      amount: totalAmount * 100, // Convert to cents
+      amount: totalAmount, // Convert to cents
       currency: "usd",
-      capture_method: "manual", // Authorize without capturing
+      capture_method: "manual", // Funds stay in escrow until captured
       description: `Payment for contract: ${contractId}`,
       receipt_email: contract.clientId.email,
       metadata: {
@@ -83,34 +80,30 @@ export async function POST(req: Request) {
         platformFee: platformFee.toString(),
         escrowAmount: escrowAmount.toString(),
       },
+      transfer_group: contractId, // Links all transfers together
     });
 
-    // Save payment details in the database
-    const payment = new Payment({
-      contractId: contract._id,
-      payerId: contract.clientId._id,
-      payeeId: contract.vendorId._id,
-      amount: totalAmount,
-      platformFee,
-      escrowAmount,
-      stripePaymentIntentId: paymentIntent.id,
-      status: "process",
-    });
+    // **📌 Send Notification to Vendor**
+    try {
+      await sendNotification({
+        receiverId: vendorId.toString(),
+        senderId: clientId.toString(),
+        title: "Contract Funded",
+        message: `The client has successfully added funds to the escrow for contract ${contractId}. Work can now begin.`,
+        type: "payment",
+        severity: "success",
+        link: `/contact-details/${contractId}`,
+        meta: { contractId, escrowAmount },
+      });
+    } catch (notificationError) {
+      console.error("Error sending funding notification:", notificationError);
+    }
 
-    await payment.save();
-
-    // Update contract status
-    contract.paymentIntentId = paymentIntent.id;
-    contract.status = "funding_processing";
-    await contract.save();
-
-    // Send response with payment intent and other details
     return NextResponse.json(
       {
-        message: "Payment intent created and authorized successfully.",
+        message: "Payment intent created successfully.",
         clientSecret: paymentIntent.client_secret,
-        platformFee,
-        escrowAmount,
+        paymentIntentId: paymentIntent.id,
       },
       { status: 201 }
     );

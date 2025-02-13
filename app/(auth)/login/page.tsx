@@ -176,7 +176,7 @@ const Page = () => {
       </div>
 
       <p className="text-sm text-paragraph dark:text-dark-text text-center">
-        Don't have an account?{" "}
+        Don&apos;t have an account?{" "}
         <Link href="/user-register" className="text-primary hover:text-primary-500">
           Sign up
         </Link>

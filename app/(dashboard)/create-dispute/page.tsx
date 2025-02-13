@@ -17,6 +17,10 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Contract } from "@/contexts/ContractContext";
+import { Eye, Search } from "lucide-react";
+import DragDropFile from "@/components/shared/DragDropFile";
+import FilePreviewModal from "@/components/modals/FilePreviewModal";
+import Loader from "@/components/ui/loader";
 
 const CreateDispute = () => {
   const { user } = useUser();
@@ -24,6 +28,11 @@ const CreateDispute = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [contracts, setContracts] = useState<Contract[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
   const [touchedFields, setTouchedFields] = useState({
     contractId: false,
     milestoneId: false,
@@ -37,8 +46,10 @@ const CreateDispute = () => {
     title: "",
     reason: "",
     raisedToEmail: "",
-    documents: [],
   });
+
+  const [documents, setDocuments] = useState<File[]>([]);
+  const [isFilePreviewOpen, setIsFilePreviewOpen] = useState(false);
 
   const [errors, setErrors] = useState({
     contractId: "",
@@ -51,13 +62,21 @@ const CreateDispute = () => {
     null
   );
 
-  const fetchContracts = async () => {
+  const fetchContracts = async (pageNum: number = 1, append: boolean = false) => {
     try {
+      setLoading(true);
       const response = await fetch(
-        `/api/get-customer-contracts?customerId=${user?._id}&role=${user?.userType}`
+        `/api/get-customer-contracts?customerId=${user?._id}&role=${user?.userType}&page=${pageNum}&limit=10${searchTerm ? `&search=${encodeURIComponent(searchTerm)}` : ''}`
       );
-      const { data } = await response.json();
-      setContracts(data);
+      const { data, pagination } = await response.json();
+      
+      if (append) {
+        setContracts(prev => [...prev, ...data]);
+      } else {
+        setContracts(data);
+      }
+      
+      setHasMore(pagination.page < pagination.totalPages);
     } catch (error) {
       console.error("Error fetching contracts:", error);
       toast({
@@ -65,14 +84,30 @@ const CreateDispute = () => {
         description: "Failed to fetch contracts",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     if (user) {
-      fetchContracts();
+      // Reset pagination when search term changes
+      setPage(1);
+      fetchContracts(1, false);
     }
-  }, [user]);
+  }, [user, searchTerm]);
+
+  const handleSelectScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement;
+    if (
+      !loading && 
+      hasMore && 
+      target.scrollTop + target.clientHeight >= target.scrollHeight - 20
+    ) {
+      setPage(prev => prev + 1);
+      fetchContracts(page + 1, true);
+    }
+  };
 
   const validateField = (name: string, value: string) => {
     switch (name) {
@@ -148,7 +183,6 @@ const CreateDispute = () => {
   };
 
   const handleSubmit = async () => {
-    
     // Validate all fields
     const newErrors = {
       contractId: validateField("contractId", formData.contractId),
@@ -177,53 +211,70 @@ const CreateDispute = () => {
 
     setIsLoading(true);
     try {
+      // Create FormData instance
+      const submitFormData = new FormData();
+
+      // Add JSON data
+      const jsonData = {
+        raisedByEmail: user?.email,
+        raisedToEmail: formData.raisedToEmail,
+        contractId: formData.contractId,
+        milestoneId: formData.milestoneId,
+        title: formData.title,
+        reason: formData.reason,
+      };
+      submitFormData.append('data', JSON.stringify(jsonData));
+
+      // Add files if they exist
+      if (documents.length > 0) {
+        documents.forEach((file) => {
+          submitFormData.append('files', file);
+        });
+      }
+
       const response = await fetch("/api/create-disputed", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          raisedByEmail: user?.email,
-          raisedToEmail: formData.raisedToEmail,
-          contractId: formData.contractId,
-          milestoneId: formData.milestoneId,
-          title: formData.title,
-          reason: formData.reason,
-        }),
+        body: submitFormData,
       });
 
       if (!response.ok) {
         throw new Error("Failed to create dispute");
       }
-      router.push("/dispute-management-screen");
 
-      toast({
-        title: "Success",
-        description: "Dispute created successfully",
-      });
+      const result = await response.json();
 
-      // Reset form
-      setFormData({
-        contractId: "",
-        milestoneId: "",
-        title: "",
-        reason: "",
-        raisedToEmail: "",
-        documents: [],
-      });
-      setSelectedContract(null);
-      setTouchedFields({
-        contractId: false,
-        milestoneId: false,
-        title: false,
-        reason: false,
-      });
-      setErrors({
-        contractId: "",
-        milestoneId: "",
-        title: "",
-        reason: "",
-      });
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Dispute created successfully",
+        });
+
+        // Reset form
+        setFormData({
+          contractId: "",
+          milestoneId: "",
+          title: "",
+          reason: "",
+          raisedToEmail: "",
+        });
+        setDocuments([]);
+        setSelectedContract(null);
+        setTouchedFields({
+          contractId: false,
+          milestoneId: false,
+          title: false,
+          reason: false,
+        });
+        setErrors({
+          contractId: "",
+          milestoneId: "",
+          title: "",
+          reason: "",
+        });
+
+        // Redirect to appropriate page
+        router.push(`/dispute-management-screen?contractId=${formData.contractId}`);
+      }
     } catch (error) {
       console.error("Error creating dispute:", error);
       toast({
@@ -236,14 +287,12 @@ const CreateDispute = () => {
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      setFormData((prev: any) => ({
-        ...prev,
-        documents: [...prev.documents, ...Array.from(files)],
-      }));
-    }
+  const handleFileUpload = (files: File[]) => {
+    setDocuments(prev => [...prev, ...files]);
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setDocuments(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -264,7 +313,7 @@ const CreateDispute = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-20">
               <div className="space-y-2">
                 <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
-                  Select Contract
+                  Select Contract <span className="text-red-500">*</span>
                 </label>
                 <Select
                   onValueChange={handleContractSelect}
@@ -278,22 +327,54 @@ const CreateDispute = () => {
                   >
                     <SelectValue placeholder="Select a contract" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {contracts.map((contract) => (
-                      <SelectItem
-                        key={contract.contractId}
-                        value={contract.contractId}
-                      >
-                        {contract.title} ({contract.contractId})
-                      </SelectItem>
-                    ))}
+                  <SelectContent className="max-h-[300px] overflow-hidden">
+                    <div className="sticky top-0 bg-white dark:bg-dark-bg z-10 px-2 py-2 border-b dark:border-dark-border">
+                      <div className="flex items-center gap-2 border dark:border-dark-border rounded-lg bg-[#FBFBFB] dark:bg-dark-input-bg px-3 focus-within:border-primary dark:focus-within:border-primary transition-colors">
+                        <Search className="text-[#959BA4] dark:text-dark-text" style={{ height: '16px', width: '16px' }} />
+                        <Input
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          placeholder="Search by contract title or ID..."
+                          className="h-[36px] border-none bg-transparent dark:text-dark-text text-[14px] placeholder:text-[#959BA4] dark:placeholder:text-dark-text/40 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        />
+                      </div>
+                    </div>
+                    <div 
+                      className="overflow-y-auto max-h-[200px]"
+                      onScroll={handleSelectScroll}
+                    >
+                      {contracts.map((contract) => (
+                        <SelectItem
+                          key={contract.contractId}
+                          value={contract.contractId}
+                          className="cursor-pointer"
+                        >
+                          {contract.title} ({contract.contractId})
+                        </SelectItem>
+                      ))}
+                      {loading && (
+                        <div className="py-1 text-center">
+                          <Loader size="sm" text="Loading more..." fullHeight={false} />
+                        </div>
+                      )}
+                      {!hasMore && contracts.length > 0 && (
+                        <div className="py-1 text-center text-gray-500 text-xs">
+                          No more contracts
+                        </div>
+                      )}
+                      {!loading && contracts.length === 0 && (
+                        <div className="py-2 text-center text-gray-500">
+                          No contracts found
+                        </div>
+                      )}
+                    </div>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
                 <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
-                  Select Milestone
+                  Select Milestone <span className="text-red-500">*</span>
                 </label>
                 <Select
                   onValueChange={(value) =>
@@ -326,7 +407,7 @@ const CreateDispute = () => {
 
             <div className="space-y-2">
               <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
-                Dispute Title
+                Dispute Title <span className="text-red-500">*</span>
               </label>
               <Input
                 type="text"
@@ -345,7 +426,7 @@ const CreateDispute = () => {
 
             <div className="space-y-2">
               <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
-                Reason for Dispute
+                Reason for Dispute <span className="text-red-500">*</span>
               </label>
               <Textarea
                 value={formData.reason}
@@ -365,34 +446,30 @@ const CreateDispute = () => {
               <label className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
                 Upload Documents (Optional)
               </label>
-              <div className="border-2 border-dashed border-[#CACED8] dark:border-dark-border rounded-lg p-6 md:p-8 text-center cursor-pointer dark:bg-dark-input-bg hover:border-primary dark:hover:border-primary transition-colors">
-                <input
-                  type="file"
-                  className="hidden"
-                  id="file-upload"
-                  onChange={handleFileUpload}
-                  multiple
-                />
-                <label
-                  htmlFor="file-upload"
-                  className="w-full h-full cursor-pointer"
-                >
-                  <div className="flex justify-center mb-2">
-                    <Image
-                      src={"/assets/download2.svg"}
-                      alt="upload"
-                      width={40}
-                      height={30}
-                    />
-                  </div>
-                  <p className="text-subtle-medium text-[#64748B] dark:text-dark-text/60">
-                    Drag and drop file here or{" "}
-                    <span className="text-primary text-[12px] font-[700] leading-[18px]">
-                      browse file
-                    </span>
-                  </p>
-                </label>
-              </div>
+              <p className="text-[14px] text-gray-500 dark:text-dark-text/60">
+                Upload any relevant documents to support your dispute
+              </p>
+              <DragDropFile
+                onFileSelect={handleFileUpload}
+                acceptedFileTypes="image/*,.pdf,.doc,.docx"
+                maxFiles={5}
+                maxSize={10}
+              />
+
+              {/* File Preview Button */}
+              {documents.length > 0 && (
+                <div className="flex justify-end mt-4">
+                  <Button
+                    type="button"
+                    onClick={() => setIsFilePreviewOpen(true)}
+                    className="text-primary hover:text-primary/80 hover:bg-primary/10"
+                    variant="ghost"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View selected files ({documents.length})
+                  </Button>
+                </div>
+              )}
             </div>
           </form>
         </div>
@@ -414,6 +491,14 @@ const CreateDispute = () => {
           </Button>
         </div>
       </div>
+
+      <FilePreviewModal
+        isOpen={isFilePreviewOpen}
+        onClose={() => setIsFilePreviewOpen(false)}
+        files={documents}
+        onRemove={handleRemoveFile}
+        isDownloadable={false}
+      />
     </>
   );
 };

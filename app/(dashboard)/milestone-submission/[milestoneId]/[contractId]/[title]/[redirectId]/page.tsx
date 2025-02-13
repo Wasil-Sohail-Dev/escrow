@@ -13,11 +13,15 @@ import MenuBar from "../../../../../../../components/dashboard/EditorMenu";
 import { useParams, useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/use-toast";
-import axios from "axios";
+import { Eye } from "lucide-react";
+import FilePreviewModal from "@/components/modals/FilePreviewModal";
+import DragDropFile from "@/components/shared/DragDropFile";
 
 const Page = () => {
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [documents, setDocuments] = useState<File[]>([]);
+  const [isFilePreviewOpen, setIsFilePreviewOpen] = useState(false);
   const { contractId, milestoneId, title, redirectId } = useParams();
   const { user } = useUser();
   const { toast } = useToast();
@@ -39,6 +43,18 @@ const Page = () => {
       },
     },
   });
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      setDocuments(prev => [...prev, ...Array.from(files)]);
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setDocuments(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async () => {
     if (!editor?.getText().trim()) {
       toast({
@@ -51,7 +67,11 @@ const Page = () => {
 
     setIsLoading(true);
     try {
-      const response = await axios.post("/api/manage-milestone-tasks", {
+      // Create FormData
+      const formData = new FormData();
+      
+      // Add JSON data
+      const jsonData = {
         contractId,
         milestoneId,
         action: "vendor_submitted",
@@ -59,20 +79,36 @@ const Page = () => {
         title: decodeURIComponent(title as string),
         description: editor?.getText(),
         userRole: user?.userType,
+      };
+      formData.append('data', JSON.stringify(jsonData));
+
+      // Add files if they exist
+      if (documents.length > 0) {
+        documents.forEach((file) => {
+          formData.append('files', file);
+        });
+      }
+
+      const response = await fetch("/api/manage-milestone-tasks", {
+        method: "POST",
+        body: formData,
       });
 
-      if (response.status === 200) {
+      const data = await response.json();
+      
+      if (response.ok) {
         toast({
           title: "Success",
           description: "Milestone submitted successfully",
         });
         router.push(`/contact-details/${redirectId}`);
+      } else {
+        throw new Error(data.error || "Failed to submit milestone");
       }
     } catch (error: any) {
       toast({
         title: "Error",
-        description:
-          error.response?.data?.message || "Failed to submit milestone",
+        description: error.message || "Failed to submit milestone",
         variant: "destructive",
       });
     } finally {
@@ -94,10 +130,7 @@ const Page = () => {
               Task Detail
             </h2>
             <p className="text-[16px] font-[400] leading-[25.6px] text-paragraph dark:text-dark-text/60 mb-6">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-              enim ad minim veniam, quis nostrud exercitation ullamco laboris
-              nisi ut aliquip ex ea commodo consequat.
+              Please ensure all tasks are completed as per the project requirements. Submitting a milestone marks the completion of a significant phase in the project.
             </p>
           </div>
 
@@ -122,57 +155,34 @@ const Page = () => {
                 />
               </div>
             </div>
-
-            {/* <div className="md:col-span-1">
-              <div
-                className={`w-full border ${
-                  focusedInput === "title"
-                    ? "border-primary"
-                    : "border-[#D1D5DB] dark:border-dark-border"
-                } rounded-lg text-[#334155] dark:text-dark-text py-2 px-4 transition-colors dark:bg-dark-input-bg`}
-              >
-                <label className="text-[14px] text-[#334155] dark:text-dark-text font-[400] mb-2 block leading-[21px]">
-                  Title
-                </label>
-                <input
-                  placeholder="Graphic Designing"
-                  className="dark:bg-transparent flex items-center justify-center w-full text-[16px] font-[400] leading-[25.6px] placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
-                  onFocus={() => setFocusedInput("title")}
-                  onBlur={() => setFocusedInput(null)}
-                />
-              </div>
-            </div> */}
+            
             <div className="md:col-span-2">
               <label className="text-[14px] text-[#334155] dark:text-dark-text font-[400] mb-2 block leading-[21px]">
                 Upload File
               </label>
-              <div className="border-2 border-dashed border-[#CACED8] dark:border-dark-border rounded-lg flex items-center justify-center h-[200px] text-center cursor-pointer dark:bg-dark-input-bg hover:border-primary dark:hover:border-primary transition-colors ">
-                <div>
-                  <input
-                    type="file"
-                    className="hidden"
-                    id="file-upload"
-                    multiple
-                  />
-                  <label
-                    htmlFor="file-upload"
-                    className="w-full h-full cursor-pointer"
+              <DragDropFile
+                onFileSelect={(files: File[]) => {
+                  handleFileUpload({ target: { files } } as any);
+                }}
+                acceptedFileTypes="image/*,.pdf,.doc,.docx"
+                maxFiles={5}
+                maxSize={10}
+              />
+
+              {/* File Preview Button */}
+              {documents.length > 0 && (
+                <div className="flex justify-end mt-4">
+                  <Button
+                    type="button"
+                    onClick={() => setIsFilePreviewOpen(true)}
+                    className="text-primary hover:text-primary/80 hover:bg-primary/10"
+                    variant="ghost"
                   >
-                    <div className="flex justify-center mb-2">
-                      <Image
-                        src={"/assets/download2.svg"}
-                        alt="upload"
-                        width={40}
-                        height={30}
-                      />
-                    </div>
-                    <p className="text-[18px] font-[600] leading-[28.8px] text-[#64748B] dark:text-dark-text/60">
-                      Drag and drop file here or{" "}
-                      <span className="text-primary">browse file</span>
-                    </p>
-                  </label>
+                    <Eye className="h-4 w-4 mr-2" />
+                    View selected files ({documents.length})
+                  </Button>
                 </div>
-              </div>
+              )}
             </div>
             <div className="md:col-span-1">
               <div className="h-0 sm:h-6"></div>
@@ -229,6 +239,14 @@ const Page = () => {
           </div>
         </div>
       </div>
+
+      <FilePreviewModal
+        isOpen={isFilePreviewOpen}
+        onClose={() => setIsFilePreviewOpen(false)}
+        files={documents}
+        onRemove={handleRemoveFile}
+        isDownloadable={false}
+      />
     </>
   );
 };

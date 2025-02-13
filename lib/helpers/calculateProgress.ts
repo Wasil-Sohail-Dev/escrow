@@ -1,9 +1,9 @@
 export interface Milestone {
-    title: string;
-    amount: number;
-    description: string;
-    status: string;
-    milestoneId: string;
+  title: string;
+  amount: number;
+  description: string;
+  status: string;
+  milestoneId: string;
 }
 
 const CONTRACT_STATUS_WEIGHTS = {
@@ -23,6 +23,12 @@ const CONTRACT_STATUS_WEIGHTS = {
 
 export type ContractStatus = keyof typeof CONTRACT_STATUS_WEIGHTS;
 
-export const calculateProgress = (status: string): number => {
-  return CONTRACT_STATUS_WEIGHTS[status as ContractStatus] || 0;
+export const calculateProgress = (milestones: Milestone[]) => {
+  const totalMileStones = milestones.length;
+  const completedMileStones = milestones.filter(
+    (milestone) =>
+      milestone.status === "approved" || milestone.status === "payment_released"
+  ).length;
+  const progress = (completedMileStones / totalMileStones) * 100;
+  return progress;
 };

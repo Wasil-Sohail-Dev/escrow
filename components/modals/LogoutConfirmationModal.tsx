@@ -47,9 +47,9 @@ const LogoutConfirmationModal = ({ isOpen, onClose }: LogoutConfirmationModalPro
 
           <div className="flex items-center justify-end gap-3 border-t border-[#E3E3E3] pt-6">
             <Button
-              variant="outline" 
+              variant="outline"
               onClick={onClose}
-              className="text-[12px] sm:text-[13px] md:text-[14px] font-[600] leading-[16px] h-[36px] sm:h-[38px] md:h-[42px] rounded-lg"
+              className="text-[12px] sm:text-[13px] md:text-[14px] font-[600] leading-[16px] h-[36px] sm:h-[38px] md:h-[42px] rounded-lg dark:text-dark-text"
             >
               Cancel
             </Button>

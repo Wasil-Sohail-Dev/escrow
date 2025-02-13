@@ -70,10 +70,11 @@ export default function TransactionDetails() {
   // Filter and search logic
   const filteredPayments = payments.filter(payment => {
     const matchesSearch = searchTerm === "" || 
-      payment.amount.toString().includes(searchTerm) ||
+      payment.totalAmount.toString().includes(searchTerm) ||
       payment.paymentMethod.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.payeeId.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.contractTitle?.toLowerCase().includes(searchTerm.toLowerCase())
+
 
     const matchesStatus = statusFilter === "" || statusFilter === "All" || 
       payment.status.toLowerCase().replace('_', ' ') === statusFilter.toLowerCase();
@@ -106,29 +107,6 @@ export default function TransactionDetails() {
     return matchesSearch && matchesStatus && matchesDate;
   });
 
-  const handleExport = () => {
-    const csvContent = [
-      ["Contract", "Date", "Vendor", "Status", "Amount"],
-      ...filteredPayments.map(payment => [
-        payment.contractTitle || "Untitled Contract",
-        new Date(payment.createdAt).toLocaleDateString(),
-        payment.payeeId.userName,
-        payment.status,
-        `$${payment.amount.toFixed(2)}`
-      ])
-    ].map(row => row.join(",")).join("\n");
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `payment_history_${new Date().toISOString()}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   const paginatedPayments = filteredPayments.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -140,7 +118,7 @@ export default function TransactionDetails() {
     date: new Date(payment.createdAt).toLocaleDateString(),
     vendorName: payment.payeeId.userName,
     status: payment.status.toLowerCase() as Transaction["status"],
-    amount: `$${payment.amount.toFixed(2)}`,
+    amount: `$${payment?.totalAmount.toFixed(2)}`,
   }));
 
   const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
@@ -160,7 +138,7 @@ export default function TransactionDetails() {
         <HeadBar 
           title="Transaction Details" 
           buttonName="Export" 
-          onExport={handleExport}
+          payments={filteredPayments}
         />
         <div className="px-4 md:px-10 lg:px-20">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6">

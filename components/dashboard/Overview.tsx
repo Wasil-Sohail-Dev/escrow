@@ -143,18 +143,6 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
               : "justify-end"
           }`}
         >
-          {/* {dispute && (
-            <div className="flex items-center text-[20px] font-[800] leading-[24px] text-[#3A3A3A] gap-6 dark:text-dark-text">
-              Sort by:{" "}
-              <span className="text-[14px] font-[500] leading-[16.8px] underline">
-                Status
-              </span>{" "}
-              <span className="text-[14px] font-[500] leading-[16.8px]">|</span>{" "}
-              <span className="text-[14px] font-[500] leading-[16.8px] underline">
-                Date
-              </span>
-            </div>
-          )} */}
           {(dispute || user?.userType === 'client') && <Button
             className={`bg-primary hover:bg-primary/90 px-6 py-6 rounded-md flex items-center gap-2 text-small-medium text-white ${
               dispute
@@ -177,8 +165,8 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
         <BlockedAlert />
       )}
       <div
-        className="grid lg:grid-cols-4 md:grid-cols-2 max-md:grid-cols-1 
-        lg:gap-4 md:gap-4 max-md:gap-3 mb-4"
+        className={`grid ${dispute ? "lg:grid-cols-3 md:grid-cols-2 max-md:grid-cols-1" : "lg:grid-cols-4 md:grid-cols-2 max-md:grid-cols-1"} 
+        lg:gap-4 md:gap-4 max-md:gap-3 mb-4 w-full mx-auto`}
       >
         <ProjectCard
           title={dispute ? "Total Disputes Raised" : "Active Projects"}
@@ -191,7 +179,8 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
           }
           dispute={dispute}
         />
-        <ProjectCard
+        
+       {!dispute && <ProjectCard
           title={dispute ? "Pending Disputes" : "Completed Projects"}
           count={dispute? getDisputeCount("disputed_in_process") : getFilteredCount("completed") }
           status="completed"
@@ -201,7 +190,7 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
               : "/projects/completed"
           }
           dispute={dispute}
-        />
+        />}
         <ProjectCard
           title={dispute ? "In Progress Disputes" : "All Projects"}
           count={dispute? getDisputeCount("disputed_in_process") : getFilteredCount("all")}
@@ -300,13 +289,13 @@ const Overview = ({ dispute, activeTab, setActiveTab, onDataFetched }: OverviewP
         <div className="flex items-center justify-between">
           <div className="flex items-center justify-center gap-2 max-md:gap-2">
             <h2 className="lg:text-[22px] md:text-[20px] max-md:text-heading4-medium leading-[27.5px] font-bold dark:text-dark-text">
-              {`${((activeTab as any) === "disputed_in_process") ? "Disputed In Process" : ((activeTab as any) === "disputed_resolved") ? "Disputed Resolved" : activeTab?.charAt(0).toUpperCase() + activeTab?.slice(1)!} Projects`}
+              {`${((activeTab as any) === "disputed_in_process") ? "Disputed In Process" : ((activeTab as any) === "disputed_resolved") ? "Disputed Resolved" : activeTab ? activeTab.charAt(0).toUpperCase() + activeTab.slice(1) : ''} Projects`}
             </h2>
             <span className="text-white rounded-full lg:w-6 lg:h-6 md:w-5 md:h-5 max-md:w-5 max-md:h-5 lg:text-subtle-semibold md:text-small-semibold max-md:text-tiny-medium flex items-center justify-center mt-1 bg-[#EC1A1A]">
               {dispute ? getDisputeCount(activeTab) : getFilteredCount(activeTab as TabOption)}
             </span>
           </div>
-          <Link href={`/projects/${activeTab}`} className="lg:text-base1-semibold md:text-base-semibold max-md:text-small-semibold underline flex items-center gap-2 dark:text-dark-text">
+          <Link href={dispute ? `/dispute-management-screen/${activeTab}` : `/projects/${activeTab}`} className="lg:text-base1-semibold md:text-base-semibold max-md:text-small-semibold underline flex items-center gap-2 dark:text-dark-text">
             See Details <ChevronDown size={20} />
           </Link>
         </div>

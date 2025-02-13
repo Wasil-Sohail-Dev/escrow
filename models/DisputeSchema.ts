@@ -38,7 +38,7 @@ const disputeSchema = new mongoose.Schema(
             required: true,
         },
         milestoneId: {
-            type: "String",
+            type: String,
             required: false,
         },
         raisedBy: {
@@ -72,6 +72,7 @@ const disputeSchema = new mongoose.Schema(
         },
         clientEvidence: evidenceSchema, // Evidence provided by the client
         vendorEvidence: evidenceSchema, // Evidence provided by the vendor
+        files: [fileSchema], // New field to store dispute-related files
         createdAt: {
             type: Date,
             default: Date.now,

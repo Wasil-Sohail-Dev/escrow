@@ -44,7 +44,6 @@ export const authOptions: NextAuthOptions = {
                     { email },
                     "email username password userType userStatus onboardingToken tokenExpiresAt"
                 );
-                console.log('user', user)
                 if (!user) {
                     console.error(`Authentication failed: User with email ${email} not found.`);
                     return null;
@@ -127,7 +126,7 @@ export const authOptions: NextAuthOptions = {
 
                     if (!existingUser) {
                         // Get userType from credentials or default to client
-                        
+
                         // Create new user if doesn't exist
                         const newUser = await Customer.create({
                             email: user.email,

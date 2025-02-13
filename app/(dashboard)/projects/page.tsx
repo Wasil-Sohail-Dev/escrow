@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { CalendarDays } from "lucide-react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
@@ -30,21 +30,51 @@ export interface Contract {
   updatedAt: string;
 }
 
+interface PaginationInfo {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 const Projects = () => {
   const { user } = useUser();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
+  const [paginationInfo, setPaginationInfo] = useState<PaginationInfo | null>(null);
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastContractElementRef = useCallback((node: HTMLDivElement) => {
+    if (loading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [loading, hasMore]);
 
-  const fetchContractStatus = async () => {
+  const fetchContractStatus = async (pageNum: number, isInitialLoad = false) => {
     const customerId = user?._id;
+    if (!customerId) return;
+
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/get-customer-contracts?customerId=${customerId}&role=${user?.userType}`
+        `/api/get-customer-contracts?customerId=${customerId}&role=${user?.userType}&page=${pageNum}&limit=10`
       );
-      const { data } = await response.json();
+      const { data, pagination } = await response.json();
       
-      setContracts([...data].filter((contract) => contract.status !== "cancelled"));
+      if (isInitialLoad) {
+        setContracts([...data].filter((contract) => contract.status !== "cancelled"));
+      } else {
+        setContracts(prev => [...prev, ...[...data].filter((contract) => contract.status !== "cancelled")]);
+      }
+      
+      setPaginationInfo(pagination);
+      setHasMore(pagination.page < pagination.totalPages);
     } catch (error) {
       console.error("Error fetching contracts:", error);
     } finally {
@@ -54,21 +84,52 @@ const Projects = () => {
 
   useEffect(() => {
     if (user) {
-      fetchContractStatus();
+      fetchContractStatus(1, true);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (page > 1) {
+      fetchContractStatus(page, false);
+    }
+  }, [page]);
 
   return (
     <>
       <Topbar title="Projects" description="Detailed information about your Contracts" />
       <div className="flex flex-col gap-2 lg:px-10 mt-[85px]">
         {/* <h1 className="text-2xl font-bold dark:text-dark-text">All Projects</h1> */}
-        {loading ? (
+        {contracts && contracts.length > 0 ? (
+          <>
+            {contracts.map((contract, index) => {
+              if (contracts.length === index + 1) {
+                return (
+                  <div ref={lastContractElementRef} key={contract._id}>
+                    <ContractCard 
+                      contract={contract} 
+                      fetchContractStatus={() => fetchContractStatus(1, true)} 
+                    />
+                  </div>
+                );
+              } else {
+                return (
+                  <ContractCard 
+                    key={contract._id} 
+                    contract={contract} 
+                    fetchContractStatus={() => fetchContractStatus(1, true)} 
+                  />
+                );
+              }
+            })}
+            {loading && (
+              <div className="py-4">
+                <Loader size="md" text="Loading more contracts..." fullHeight={false} />
+                {/* <div className="w-full h-[10px] bg-gray-200 animate-pulse">Loading more contracts...</div> */}
+              </div>
+            )}
+          </>
+        ) : loading ? (
           <Loader size="lg" text="Loading contracts..." />
-        ) : contracts && contracts.length > 0 ? (
-          contracts.map((contract) => (
-            <ContractCard key={contract._id} contract={contract} fetchContractStatus={fetchContractStatus} />
-          ))
         ) : (
           <div className="flex justify-center items-center mt-[100px]">
             <p className="text-base-regular text-[#0D1829B2] dark:text-dark-text">

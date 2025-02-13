@@ -1,14 +1,25 @@
 import mongoose from "mongoose";
 
-// Message schema (Stored separately from ChatSystem)
+// File schema to handle uploaded files (images, documents, etc.)
+const fileSchema = new mongoose.Schema(
+    {
+        fileUrl: { type: String, required: true }, // URL/path to the file
+        fileName: { type: String, required: true }, // Original file name
+        fileType: { type: String, required: true }, // E.g., image, pdf, zip
+    },
+    { timestamps: true }
+);
+
+// Message schema (Supports text and file messages)
 const messageSchema = new mongoose.Schema(
     {
         chatId: { type: mongoose.Schema.Types.ObjectId, ref: 'ChatSystem', required: true },
         sender: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true },
-        content: { type: String, required: true },
-        type: { type: String, enum: ['text', 'image', 'document'], default: 'text' },
-        readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Customer' }], // Track participants who read this message
-        isRead: { type: Boolean, default: false }, // Track if the message is read by all participants
+        content: { type: String, default: "", trim: true }, // Text message (optional if sending files)
+        type: { type: String, enum: ['text', 'image', 'document', 'file'], default: 'text' }, // Message type
+        files: [fileSchema], // Stores multiple uploaded files per message
+        readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Customer' }], // Users who read the message
+        isRead: { type: Boolean, default: false }, // Tracks if all participants read it
     },
     { timestamps: true }
 );
@@ -18,33 +29,33 @@ messageSchema.index({ chatId: 1, createdAt: -1 });
 
 const Message = mongoose.models.Message || mongoose.model("Message", messageSchema);
 
-// Chat schema (Now references messages instead of embedding them)
+// Chat schema (References messages instead of embedding)
 const chatSystemSchema = new mongoose.Schema(
     {
         disputeId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Dispute", // Link the chat to a specific dispute
+            ref: "Dispute", // Links chat to a dispute
             required: true,
         },
         participants: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "Customer", // Array of users participating in the chat
+                ref: "Customer", // Users in the chat
                 required: true,
             },
         ],
-        messages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Message" }], // Reference messages instead of embedding
+        messages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Message" }], // References messages
         lastMessage: {
             type: String,
-            default: "", // Store the last message for easy display in a list view
+            default: "", // Stores last text message or file info
         },
         lastMessageAt: {
             type: Date,
-            default: Date.now, // Store the timestamp of the last message
+            default: Date.now, // Timestamp of last message
         },
     },
     {
-        timestamps: true, // Automatically handle `createdAt` and `updatedAt`
+        timestamps: true,
     }
 );
 

@@ -69,39 +69,61 @@ export async function PATCH(req: Request) {
           { status: 404 }
         );
       }
-      await capturePayment(payment.stripePaymentIntentId);
-    }
 
-    // Update contract status
-    if (contractStatus) {
-      contract.status = contractStatus;
-    }
+      try {
+        const captureResponse = await capturePayment(
+          payment.stripePaymentIntentId
+        );
 
-    // Update milestone status
-    if (milestoneStatus) {
-      const firstPendingMilestone = contract.milestones.find(
-        (milestone: Milestone) => milestone.status === "pending"
-      );
+        if (!captureResponse.success) {
+          return NextResponse.json(
+            {
+              error: "Payment capture failed",
+              details: captureResponse.message,
+            },
+            { status: 400 } // Return a 400 Bad Request if capture fails
+          );
+        }
+      } catch (error: any) {
+        console.error("Error capturing payment:", error);
 
-      if (!firstPendingMilestone) {
         return NextResponse.json(
-          { error: "No pending milestone found to update." },
-          { status: 404 }
+          { error: "Internal Server Error", details: error.message },
+          { status: 500 } // Return 500 if there's an unexpected server error
         );
       }
 
-      firstPendingMilestone.status = milestoneStatus;
+      // Update contract status
+      if (contractStatus) {
+        contract.status = contractStatus;
+      }
+
+      // Update milestone status
+      if (milestoneStatus) {
+        const firstPendingMilestone = contract.milestones.find(
+          (milestone: Milestone) => milestone.status === "pending"
+        );
+
+        if (!firstPendingMilestone) {
+          return NextResponse.json(
+            { error: "No pending milestone found to update." },
+            { status: 404 }
+          );
+        }
+
+        firstPendingMilestone.status = milestoneStatus;
+      }
+
+      await contract.save();
+
+      return NextResponse.json(
+        {
+          message: "Contract and milestone statuses updated successfully.",
+          data: contract,
+        },
+        { status: 200 }
+      );
     }
-
-    await contract.save();
-
-    return NextResponse.json(
-      {
-        message: "Contract and milestone statuses updated successfully.",
-        data: contract,
-      },
-      { status: 200 }
-    );
   } catch (error: any) {
     console.error("Error managing contract:", error);
     return NextResponse.json(

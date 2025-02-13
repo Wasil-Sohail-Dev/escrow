@@ -3,7 +3,9 @@ import dbConnect from "@/lib/dbConnect";
 import { Dispute } from "@/models/DisputeSchema";
 import { Customer } from "@/models/CustomerSchema";
 import { Contract } from "@/models/ContractSchema";
-import { ChatSystem } from "@/models/ChatSystem"; // Import ChatSystem model
+import { ChatSystem } from "@/models/ChatSystem";
+import { sendNotification } from "@/lib/actions/sender.action";
+import { uploadFileToS3 } from "@/lib/s3";
 
 interface RequestBody {
   raisedByEmail: string;
@@ -12,14 +14,24 @@ interface RequestBody {
   milestoneId: string;
   title: string;
   reason: string;
-  files?: { fileUrl: string; fileType: string; fileName: string }[];
 }
 
 export async function POST(req: Request) {
   await dbConnect();
 
   try {
-    const body: RequestBody = await req.json();
+    const formData = await req.formData();
+
+    // Extract JSON fields from FormData
+    const jsonData = formData.get("data") as string;
+    if (!jsonData) {
+      return NextResponse.json(
+        { success: false, message: "Missing dispute data." },
+        { status: 400 }
+      );
+    }
+
+    const body: RequestBody = JSON.parse(jsonData);
     const {
       raisedByEmail,
       raisedToEmail,
@@ -27,10 +39,9 @@ export async function POST(req: Request) {
       milestoneId,
       title,
       reason,
-      files,
     } = body;
 
-    // Validate the provided email addresses
+    // Validate provided email addresses
     const raisedBy = await Customer.findOne({ email: raisedByEmail });
     if (!raisedBy) {
       return NextResponse.json(
@@ -50,7 +61,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if a dispute already exists for the same contract and milestone
+    // Check if a dispute already exists for the milestone
     const existingDispute = await Dispute.findOne({ milestoneId });
     if (existingDispute) {
       return NextResponse.json(
@@ -62,7 +73,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate contract and milestone using contractId
+    // Validate contract and milestone
     const contract = await Contract.findOne({ contractId });
     if (!contract) {
       return NextResponse.json(
@@ -76,20 +87,46 @@ export async function POST(req: Request) {
     );
     if (!milestone) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Milestone not found in the specified contract.",
-        },
+        { success: false, message: "Milestone not found in the contract." },
         { status: 404 }
       );
     }
 
-    // Update contract and milestone status
+    // **Handle file uploads (if present)**
+    let uploadedFiles: {
+      fileUrl: string;
+      fileName: string;
+      fileType: string;
+    }[] = [];
+    const fileEntries = formData.getAll("files") as File[];
+
+    if (fileEntries.length > 0) {
+      try {
+        const uploadPromises = fileEntries.map((file) =>
+          uploadFileToS3(file, "disputes")
+        );
+        const uploadResults = await Promise.all(uploadPromises);
+
+        uploadedFiles = uploadResults.map(({ fileUrl, fileName }) => ({
+          fileUrl,
+          fileName,
+          fileType: fileName.split(".").pop() || "unknown",
+        }));
+      } catch (uploadError) {
+        console.error("File upload failed:", uploadError);
+        return NextResponse.json(
+          { success: false, message: "Failed to upload dispute files." },
+          { status: 500 }
+        );
+      }
+    }
+
+    // **Update contract and milestone status**
     contract.status = "disputed";
     milestone.status = "disputed";
     await contract.save();
 
-    // Create the dispute
+    // **Create the dispute**
     const dispute = new Dispute({
       contractId: contract._id,
       milestoneId,
@@ -97,13 +134,13 @@ export async function POST(req: Request) {
       raisedTo: raisedTo._id,
       title,
       reason,
-      files,
+      files: uploadedFiles, // Store uploaded files in dispute
     });
 
     await dispute.save();
 
-    // **Step 1: Find or Assign an Admin**
-    // const admin = await Customer.findOne({ role: "admin" }); // Ensure there's an admin
+    // **Find or Assign an Admin**
+    // const admin = await Customer.findOne({ userType: "admin" });
     // if (!admin) {
     //   return NextResponse.json(
     //     { success: false, message: "Admin not found for dispute chat." },
@@ -111,27 +148,56 @@ export async function POST(req: Request) {
     //   );
     // }
 
-    // **Step 2: Create a Chat System Entry for Dispute**
+    // **Create a Chat System Entry for Dispute**
     const chat = new ChatSystem({
       disputeId: dispute._id,
       participants: [raisedBy._id, raisedTo._id], // Both customers + Admin
-      messages: [], // Empty initially
+      messages: [],
     });
 
     await chat.save();
+
+    // **📌 Send Notifications**
+    try {
+      // Notify the opposing party
+      await sendNotification({
+        receiverId: raisedTo._id.toString(),
+        senderId: raisedBy._id.toString(),
+        title: "New Dispute Raised",
+        message: `A dispute has been raised for milestone ${milestoneId} under contract ${contractId}.`,
+        type: "alert",
+        severity: "warning",
+        link: `/dispute-management-screen?contractId=${contractId}`,
+        meta: { disputeId: dispute._id.toString(), contractId, milestoneId },
+      });
+
+      // Notify the admin
+      // await sendNotification({
+      //   receiverId: admin._id.toString(),
+      //   senderId: raisedBy._id.toString(),
+      //   title: "Dispute Requires Attention",
+      //   message: `A dispute has been raised by ${raisedByEmail} for contract ${contractId}.`,
+      //   type: "system",
+      //   severity: "error",
+      //   link: `/admin/disputes/${dispute._id}`,
+      //   meta: { disputeId: dispute._id.toString(), contractId, milestoneId },
+      // });
+    } catch (notificationError) {
+      console.error("Error sending dispute notifications:", notificationError);
+    }
 
     return NextResponse.json(
       {
         success: true,
         message:
-          "Dispute raised successfully. Contract and milestone status updated. Chat created.",
-        disputeId: dispute.disputeId,
+          "Dispute raised successfully. Files uploaded. Chat created. Notifications sent.",
+        disputeId: dispute._id,
         chatId: chat._id,
       },
       { status: 200 }
     );
   } catch (error: any) {
-    console.error(error);
+    console.error("Error creating dispute:", error);
     return NextResponse.json(
       { success: false, message: error.message || "Internal server error." },
       { status: 500 }

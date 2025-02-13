@@ -6,41 +6,23 @@ export async function PATCH(req: Request) {
   await dbConnect();
 
   try {
-    const body = await req.json();
-    const { notificationId, action } = body;
+    const { notificationId } = await req.json();
 
-    // Validate action
-    if (!["markAsRead", "markAsUnread"].includes(action)) {
+    if (!notificationId) {
       return NextResponse.json(
-        { error: "Invalid action. Must be 'markAsRead' or 'markAsUnread'." },
+        { error: "Notification ID is required." },
         { status: 400 }
       );
     }
 
-    // Find the notification by ID
-    const notification = await Notification.findById(notificationId);
-
-    if (!notification) {
-      return NextResponse.json(
-        { error: "Notification not found." },
-        { status: 404 }
-      );
-    }
-
-    // Update the read status based on the action
-    notification.isRead = action === "markAsRead";
-    await notification.save();
+    await Notification.findByIdAndUpdate(notificationId, { status: "read" });
 
     return NextResponse.json(
-      {
-        message: `Notification ${
-          action === "markAsRead" ? "marked as read" : "marked as unread"
-        }.`,
-      },
+      { success: true, message: "Notification marked as read." },
       { status: 200 }
     );
   } catch (error: any) {
-    console.error(error);
+    console.error("Error marking notification as read:", error);
     return NextResponse.json(
       { error: error.message || "Internal server error." },
       { status: 500 }

@@ -8,6 +8,7 @@ import { Button } from "../ui/button";
 import { Eye, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import DisputeDetailsModal from "../modals/DisputeDetailsModal";
+import Loader from "../ui/loader";
 
 interface TableHeader {
   key: string;
@@ -30,13 +31,23 @@ interface PaymentHistoryProps {
   transactions: Transaction[];
   dispute?: boolean;
   showOnlyOne?: boolean;
+  paramContractId?: string;
+  startDateFilter?: Date | null;
+  endDateFilter?: Date | null;
+  setDateRangeFilter?: (dateRange: [Date | null, Date | null]) => void;
+  loading?: boolean;
 }
 
 export default function PaymentHistory({
   showFilter,
   transactions: initialTransactions,
   dispute,
-  showOnlyOne
+  showOnlyOne,
+  paramContractId,
+  startDateFilter,
+  endDateFilter,
+  setDateRangeFilter,
+  loading,
 }: PaymentHistoryProps) {
   const { user } = useUser();
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
@@ -44,6 +55,13 @@ export default function PaymentHistory({
   const [filteredTransactions, setFilteredTransactions] = useState(initialTransactions);
   const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
   const [selectedContractId, setSelectedContractId] = useState<string>("");
+  
+  useEffect(() => {
+    if (paramContractId) {
+      setSelectedContractId(paramContractId);
+      setIsDisputeModalOpen(true);
+    }
+  }, [paramContractId]);
 
   useEffect(() => {
     if (!initialTransactions?.length) {
@@ -106,7 +124,6 @@ export default function PaymentHistory({
   };
 
   const handleViewDispute = (contractId: string) => {
-    console.log(contractId,"contractIdcontractId");
     setSelectedContractId(contractId);
     setIsDisputeModalOpen(true);
   };
@@ -123,10 +140,14 @@ export default function PaymentHistory({
             <div className="flex gap-4">
               <DatePicker
                 selectsRange={true}
-                startDate={startDate}
-                endDate={endDate}
+                startDate={startDateFilter || startDate}
+                endDate={endDateFilter || endDate}
                 onChange={(update) => {
-                  setDateRange(update);
+                  if (setDateRangeFilter) {
+                    setDateRangeFilter(update);
+                  }else{
+                    setDateRange(update);
+                  }
                 }}
                 isClearable={true}
                 placeholderText="Select date range"
@@ -152,10 +173,17 @@ export default function PaymentHistory({
               ))}
             </tr>
           </thead>
+
           <tbody className="w-full">
-            {filteredTransactions?.length > 0 ? (showOnlyOne?[filteredTransactions[0]]:filteredTransactions).map((transaction, index) => (
-              <tr
-                key={index}
+            {loading ? (
+              <tr>
+              <td colSpan={7} className="text-center pt-4 dark:text-dark-text/60"><Loader fullHeight={false} /></td>
+            </tr>
+            ) : (
+              <>
+              {filteredTransactions?.length > 0 ? (showOnlyOne?[filteredTransactions[0]]:filteredTransactions).map((transaction, index) => (
+                <tr
+                  key={index}
                 className="lg:text-base-regular md:text-base-regular max-md:text-small-regular border-t dark:border-dark-border text-[#292929] dark:text-dark-text/60"
               >
                 <td className="lg:py-4 lg:px-4 md:py-3 md:px-3 max-md:py-2 max-md:px-2 font-medium">
@@ -194,28 +222,6 @@ export default function PaymentHistory({
                     >
                       <Eye className="h-5 w-5 text-primary" style={{fontSize: "20px",height: "24px",width: "24px"}} />
                     </Button>
-                    {/* <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-[#292929] dark:text-dark-text hover:bg-[#F2F4F7] dark:hover:bg-dark-2/20"
-                        >
-                          <MoreHorizontal className="h-5 w-5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="p-2 bg-white dark:bg-dark-bg border dark:border-dark-border"
-                      >
-                        <DropdownMenuItem className="flex items-center justify-center gap-2 px-3 py-2 text-[14px] font-[500] text-black dark:text-dark-text hover:bg-[#F9FAFB] dark:hover:bg-dark-2/20 cursor-pointer rounded-lg">
-                          <Link href={`/dispute-chat/?disputeId=${transaction.id}`}>{"Resolve Dispute in Chat"}</Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center justify-center gap-2 px-3 py-2 text-[14px] font-[500] text-black dark:text-dark-text hover:bg-[#F9FAFB] dark:hover:bg-dark-2/20 cursor-pointer rounded-lg">
-                          {"Delete Dispute"}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu> */}
                   </div>
                 </td>}
               </tr>
@@ -224,13 +230,18 @@ export default function PaymentHistory({
                 <td colSpan={7} className="text-center py-4 dark:text-dark-text/60">No transactions found</td>
               </tr>
             )}
+            </>
+          )}
           </tbody>
         </table>
       </div>
 
       <DisputeDetailsModal 
         isOpen={isDisputeModalOpen}
-        onClose={() => setIsDisputeModalOpen(false)}
+        onClose={() => {
+          setIsDisputeModalOpen(false);
+          setSelectedContractId("");
+        }}
         contractId={selectedContractId}
       />
     </div>

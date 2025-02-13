@@ -28,6 +28,7 @@ export interface Contract {
     email: string;
     userName: string;
   };
+  contractFile: string[];
   budget: number;
   paymentType: string;
   milestones: Milestone[];

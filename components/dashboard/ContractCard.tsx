@@ -1,6 +1,6 @@
 import { Contract } from "@/app/(dashboard)/projects/page";
 import { CalendarDays } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
@@ -21,6 +21,8 @@ const ContractCard = ({
   const { user } = useUser();
   const { handleContractAction } = useContractAction();
   const { toast } = useToast();
+  const [startingWork, setStartingWork] = useState(false);
+
   const handlePayment = () => {
     router.push(`/make-payment/${contract.contractId}`);
   };
@@ -28,21 +30,25 @@ const ContractCard = ({
   const handleReject = async () => {
     await handleContractAction(contract.contractId, "reject", false, () => {
       fetchContractStatus();
-      router.refresh(); 
+      router.refresh();
     });
   };
 
   const handleStartWorking = async () => {
+    setStartingWork(true);
     try {
-      const response = await fetch("/api/manage-contract-status", {
+      const response = await fetch("/api/manage-milestone-status", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          contractId: contract.contractId,
+          contractId: contract?.contractId,
+          milestoneId: contract?.milestones[0].milestoneId,
+          newStatus: "working",
           contractStatus: "active",
-          milestoneStatus: "working"
+          customerId: user?._id,
+          userType: user?.userType,
         }),
       });
 
@@ -64,6 +70,8 @@ const ContractCard = ({
         variant: "warning",
       });
       console.error("Error starting work:", error);
+    } finally {
+      setStartingWork(false);
     }
   };
 
@@ -74,24 +82,35 @@ const ContractCard = ({
     >
       <div className="absolute top-5 left-0 h-[30px] w-[5px] bg-primary rounded-tr-[10.11px] rounded-br-[10.11px]" />
       <div className="space-y-1 w-[90%]">
-          <h3 className="font-[600] leading-[24px] text-[20px] dark:text-dark-text break-words">
-            {contract.title}
-          </h3>
+        <h3 className="font-[600] leading-[24px] text-[20px] dark:text-dark-text break-words">
+          {contract.title}
+        </h3>
         <p className="text-base-regular text-[#0D1829B2] dark:text-dark-text/60 break-words">
           {contract.description}
         </p>
-        <p className="text-subtle-medium font-[400] text-[#0D182999] dark:text-dark-text/40">
-          Due Date
-        </p>
-        <p className="text-subtle-medium text-[#445668] dark:text-dark-text/60 flex items-center gap-1">
-          <CalendarDays size={15} className="dark:text-dark-text/60" />
-          {formatDate(contract.endDate)}
-        </p>
-        
-        <div className="flex flex-wrap items-center gap-2 mt-4">
+        <div className="flex items-center gap-2">
+          <p className="text-subtle-medium font-[400] text-[#0D182999] dark:text-dark-text/40">
+            Status:
+          </p>
+          <p className="text-subtle-medium text-[#445668] dark:text-dark-text/60 flex items-center gap-1">
+            {contract.status}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 mb-2">
+          <p className="text-subtle-medium font-[400] text-[#0D182999] dark:text-dark-text/40">
+            Due Date:
+          </p>
+          <p className="text-subtle-medium text-[#445668] dark:text-dark-text/60 flex items-center gap-1">
+            <CalendarDays size={15} className="dark:text-dark-text/60" />
+            {formatDate(contract.endDate)}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 mt-6">
           <Button
             variant="default"
-            onClick={() => router.push(`/contact-details/${contract.contractId}`)}
+            onClick={() =>
+              router.push(`/contact-details/${contract.contractId}`)
+            }
             className="bg-primary hover:bg-primary/90 text-subtle-medium text-white rounded-[9px] px-4 py-2 hover:underline transition-colors duration-200"
           >
             View Details
@@ -109,41 +128,45 @@ const ContractCard = ({
               </Button>
             )}
 
-            {user?.userType === "vendor" && contract?.status === "funding_onhold" && (
+          {user?.userType === "vendor" &&
+            contract?.status === "funding_onhold" && (
               <Button
                 variant="default"
                 className="bg-primary hover:bg-primary/90 text-white rounded-[9px] px-4 py-2 hover:underline transition-colors duration-200"
                 onClick={handleStartWorking}
+                disabled={startingWork}
               >
-                Start Working
+                {startingWork ? "Starting..." : "Start Working"}
               </Button>
             )}
 
-            {user?.userType === "vendor" && contract?.status === "onboarding" && (
-              <>
-                <Button
-                  variant="secondary"
-                  className="text-base-medium text-white rounded-[9px] px-4 py-2 hover:bg-secondary/90 transition-colors duration-200"
-                  onClick={handleReject}
-                >
-                  Reject
-                </Button>
-                <Button
-                  variant="default"
-                  className="text-base-medium text-white rounded-[9px] px-4 py-2 hover:bg-primary/90 transition-colors duration-200"
-                  onClick={() => handleContractAction(contract.contractId, "accept")}
-                >
-                  Accept
-                </Button>
-              </>
-            )}
+          {user?.userType === "vendor" && contract?.status === "onboarding" && (
+            <>
+              <Button
+                variant="secondary"
+                className="text-base-medium text-white rounded-[9px] px-4 py-2 hover:bg-secondary/90 transition-colors duration-200"
+                onClick={handleReject}
+              >
+                Reject
+              </Button>
+              <Button
+                variant="default"
+                className="text-base-medium text-white rounded-[9px] px-4 py-2 hover:bg-primary/90 transition-colors duration-200"
+                onClick={() =>
+                  handleContractAction(contract.contractId, "accept")
+                }
+              >
+                Accept
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
       <div style={{ width: 80, height: 80, marginRight: "30px" }}>
         <CircularProgressbar
-          value={calculateProgress(contract.status)}
-          text={`${calculateProgress(contract.status)}%`}
+          value={calculateProgress(contract.milestones)}
+          text={`${calculateProgress(contract.milestones)}%`}
           strokeWidth={12}
           styles={buildStyles({
             rotation: 0,

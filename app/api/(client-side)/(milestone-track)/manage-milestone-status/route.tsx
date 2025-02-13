@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import { Contract } from "@/models/ContractSchema";
-import { Payment } from "@/models/paymentSchema"; // Import Payment schema
+import { Payment } from "@/models/paymentSchema";
+import { Customer } from "@/models/CustomerSchema";
 import Stripe from "stripe";
+import { sendNotification } from "@/lib/actions/sender.action";
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.PLATFORM_FEE_STRIPE_SECRET_KEY!);
@@ -17,13 +19,25 @@ export async function PATCH(req: Request) {
 
   try {
     const body = await req.json();
-    const { contractId, milestoneId, newStatus } = body;
+    const { contractId, milestoneId, newStatus, customerId, userType } = body;
 
     // Validate input
-    if (!contractId || !milestoneId || !newStatus) {
+    if (!contractId || !milestoneId || !newStatus || !customerId || !userType) {
       return NextResponse.json(
-        { error: "Contract ID, Milestone ID, and new status are required." },
+        {
+          error:
+            "Contract ID, Milestone ID, new status, customerId, and userType are required.",
+        },
         { status: 400 }
+      );
+    }
+
+    // Verify customer identity
+    const user = await Customer.findById(customerId);
+    if (!user || user.userType !== userType) {
+      return NextResponse.json(
+        { error: "Invalid user credentials. Unauthorized action." },
+        { status: 403 }
       );
     }
 
@@ -33,6 +47,14 @@ export async function PATCH(req: Request) {
       return NextResponse.json(
         { error: "Contract not found." },
         { status: 404 }
+      );
+    }
+
+    // Prevent changes if contract is disputed
+    if (contract.status === "disputed") {
+      return NextResponse.json(
+        { error: "Cannot update milestones for a disputed contract." },
+        { status: 400 }
       );
     }
 
@@ -79,7 +101,7 @@ export async function PATCH(req: Request) {
 
     // Check sequence rule
     for (let i = 0; i < milestoneIndex; i++) {
-      if (contract.milestones[i].status !== "approved") {
+      if (contract.milestones[i].status !== "payment_released") {
         return NextResponse.json(
           {
             error: `Milestone '${contract.milestones[i].milestoneId}' must be approved before updating this milestone.`,
@@ -89,7 +111,7 @@ export async function PATCH(req: Request) {
       }
     }
 
-    // Update milestone status
+    // Define allowed milestone transitions
     const allowedTransitions = {
       pending: ["working"],
       working: ["ready_for_review"],
@@ -111,53 +133,105 @@ export async function PATCH(req: Request) {
       );
     }
 
-    // If the milestone status is being updated to "working", capture the funding
-    if (newStatus === "working") {
-      // Fetch the Payment record related to this contract
-      const payment = await Payment.findOne({
-        contractId: contract._id,
-        status: "on_hold",
-      });
-
-      if (!payment) {
+    // If the vendor starts working on the **first milestone**, activate the contract
+    if (newStatus === "working" && milestoneIndex === 0) {
+      // Ensure only the vendor can start the milestone
+      if (userType !== "vendor") {
         return NextResponse.json(
-          { error: "No payment record found for this contract." },
-          { status: 400 }
+          { error: "Only the vendor can start working on a milestone." },
+          { status: 403 }
         );
       }
 
-      const paymentIntentId = payment.stripePaymentIntentId; // Get PaymentIntent ID from Payment schema
+      // If contract is still "funding_onhold", update to "active"
+      if (contract.status === "funding_onhold") {
+        contract.status = "active";
+      }
 
-      if (paymentIntentId) {
-        try {
-          // Capture the payment
-          await stripe.paymentIntents.capture(paymentIntentId);
-          console.log(`Captured payment for PaymentIntent ${paymentIntentId}`);
-        } catch (error) {
-          console.error("Error capturing payment:", error);
+      // Capture the payment if contract is active
+      if (contract.status === "active") {
+        const payment = await Payment.findOne({
+          contractId: contract._id,
+          status: "on_hold",
+        });
+
+        if (!payment) {
           return NextResponse.json(
-            { error: "Failed to capture the payment." },
-            { status: 500 }
+            { error: "No payment record found for this contract." },
+            { status: 400 }
           );
         }
-      } else {
-        return NextResponse.json(
-          { error: "PaymentIntent ID not found for this contract." },
-          { status: 400 }
-        );
+
+        const paymentIntentId = payment.stripePaymentIntentId;
+        if (paymentIntentId) {
+          try {
+            // Capture the payment
+            await stripe.paymentIntents.capture(paymentIntentId);
+            console.log(
+              `Captured payment for PaymentIntent ${paymentIntentId}`
+            );
+          } catch (error) {
+            console.error("Error capturing payment:", error);
+            return NextResponse.json(
+              { error: "Failed to capture the payment." },
+              { status: 500 }
+            );
+          }
+        } else {
+          return NextResponse.json(
+            { error: "PaymentIntent ID not found for this contract." },
+            { status: 400 }
+          );
+        }
       }
     }
 
     // Update the milestone status
     contract.milestones[milestoneIndex].status = newStatus;
-
-    // Save the updated contract
     await contract.save();
+
+    // **📌 Send Notifications**
+    try {
+      if (newStatus === "working") {
+        const clientId = contract.clientId.toString();
+
+        await sendNotification({
+          receiverId: clientId,
+          senderId: user._id.toString(),
+          title: "Milestone Work Started",
+          message: `The vendor has started working on milestone ${milestoneId}.`,
+          type: "user",
+          severity: "info",
+          link: `/contact-details/${contractId}`, // Redirect to contract details page
+          meta: { contractId, milestoneId, newStatus },
+        });
+
+        // Notify vendor about contract activation
+        if (contract.status === "active") {
+          await sendNotification({
+            receiverId: user._id.toString(),
+            senderId: contract.clientId.toString(),
+            title: "Contract Activated",
+            message: `The contract ${contractId} is now active as the first milestone has begun.`,
+            type: "system",
+            severity: "success",
+            link: `/contact-details/${contractId}`,
+            meta: { contractId, newStatus: "active" },
+          });
+        }
+      }
+    } catch (notificationError) {
+      console.error(
+        "Error sending milestone notifications:",
+        notificationError
+      );
+    }
 
     return NextResponse.json(
       {
         message: "Milestone status updated successfully.",
         milestone: contract.milestones[milestoneIndex],
+        contractStatus: contract.status,
       },
       { status: 200 }
     );

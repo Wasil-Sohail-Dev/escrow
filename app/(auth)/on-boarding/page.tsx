@@ -113,7 +113,6 @@ const Page = () => {
       };
       const response = await axios.post("/api/save-onboarding", {...apiData,email:jwt?.email,userType:jwt?.userType});
       if (response.status === 200) {
-        await refreshUser();
         toast({
           title: "Success",
           description: response.data.message || "Onboarding completed!",
@@ -129,6 +128,7 @@ const Page = () => {
         });
         if (result?.ok) {
           router.push("/home");
+          await refreshUser();
         } else {
           toast({
             title: "Error",

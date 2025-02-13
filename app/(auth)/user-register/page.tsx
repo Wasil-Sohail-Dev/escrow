@@ -49,8 +49,6 @@ type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 const Page = () => {
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [facebookLoading, setFacebookLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
@@ -96,66 +94,6 @@ const Page = () => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      setGoogleLoading(true);
-      const result = await signIn("google", {
-        redirect: false,
-        callbackUrl: "/select-usertype"
-      });
-      
-      if (result?.error) {
-        toast({
-          title: "Error",
-          description: "Failed to sign in with Google",
-          variant: "destructive",
-        });
-      }
-      
-      if (result?.ok && result.url) {
-        router.push(result.url);
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Something went wrong with Google sign in",
-        variant: "destructive",
-      });
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
-
-  const handleFacebookSignIn = async () => {
-    try {
-      setFacebookLoading(true);
-      const result = await signIn("facebook", {
-        redirect: false,
-        callbackUrl: "/select-usertype"
-      });
-      
-      if (result?.error) {
-        toast({
-          title: "Error",
-          description: "Failed to sign in with Facebook",
-          variant: "destructive",
-        });
-      }
-      
-      if (result?.ok && result.url) {
-        router.push(result.url);
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Something went wrong with Facebook sign in",
-        variant: "destructive",
-      });
-    } finally {
-      setFacebookLoading(false);
     }
   };
 
@@ -214,7 +152,7 @@ const Page = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dark-text"
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -244,7 +182,7 @@ const Page = () => {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dark-text"
                   >
                     {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -291,56 +229,7 @@ const Page = () => {
             )}
           </Button>
         </form>
-      </Form>
-
-      {/* <div className="flex items-center gap-2">
-        <div className="h-[1px] flex-1 bg-[#E8EAEE] dark:bg-dark-border" />
-        <span className="text-sm text-paragraph dark:text-dark-text">or</span>
-        <div className="h-[1px] flex-1 bg-[#E8EAEE] dark:bg-dark-border" />
-      </div> */}
-
-      {/* <div className="flex flex-col gap-3">
-        <Button 
-          type="button"
-          variant="outline"
-          className="h-11 border border-[#E8EAEE] dark:border-dark-border hover:bg-white/90 dark:hover:bg-dark-input-bg rounded-lg text-paragraph dark:text-dark-text flex items-center justify-center gap-2"
-          onClick={handleGoogleSignIn}
-          disabled={googleLoading}
-        >
-          {googleLoading ? (
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              <span>Connecting to Google...</span>
-            </div>
-          ) : (
-            <>
-              <Image src="/assets/google.svg" alt="Google" width={20} height={20} />
-              Sign up with Google
-            </>
-          )}
-        </Button>
-        <Button 
-          type="button"
-          variant="outline"
-          className="h-11 border border-[#E8EAEE] dark:border-dark-border hover:bg-white/90 dark:hover:bg-dark-input-bg rounded-lg text-paragraph dark:text-dark-text flex items-center justify-center gap-2"
-          onClick={handleFacebookSignIn}
-          disabled={facebookLoading}
-        >
-          {facebookLoading ? (
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              <span>Connecting to Facebook...</span>
-            </div>
-          ) : (
-            <>
-              <Image src="/assets/facebook.svg" alt="Facebook" width={20} height={20} />
-              Sign up with Facebook
-            </>
-          )}
-        </Button>
-      </div> */}
-
-      <p className="text-sm text-paragraph dark:text-dark-text text-center">
+      </Form><p className="text-sm text-paragraph dark:text-dark-text text-center">
         Already have an account?{" "}
         <Link href="/login" className="text-primary hover:text-primary-500">
           Sign in

@@ -6,7 +6,6 @@
   box-sizing: border-box;
   padding: 0;
   margin: 0;
-  scroll-behavior: smooth;
   outline: none;
 }
 
@@ -38,10 +37,20 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
-  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS devices */
   width: 100%;
 }
+
+/* Add smooth scroll only for main page navigation */
+html:not(.chat-open) {
+  scroll-behavior: smooth;
+}
+
+/* Disable smooth scroll for chat container */
+.chat-container {
+  scroll-behavior: auto !important;
+}
+
 .scrollbar-hide {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* Internet Explorer 10+ */
@@ -78,7 +87,7 @@ body {
 * {
   scrollbar-width: thin;
   scrollbar-color: #26B893 transparent;
-  scroll-behavior: smooth;
+  /* scroll-behavior: smooth; */
 }
 
 /* Smooth Scroll for Modern Browsers */

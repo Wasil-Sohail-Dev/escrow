@@ -12,7 +12,7 @@ export interface PaymentData {
     email: string;
     userName: string;
   };
-  amount: number;
+  totalAmount: number;
   platformFee: number;
   escrowAmount: number;
   stripePaymentIntentId: string;

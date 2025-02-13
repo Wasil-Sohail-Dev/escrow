@@ -17,6 +17,7 @@ const contractTemplates = [
     endDate: "",
     paymentType: "fixed",
     totalPayment: "15000",
+    contractType: "services",
     milestones: [
       {
         name: "Initial Consultation",
@@ -59,6 +60,7 @@ const contractTemplates = [
     endDate: "",
     paymentType: "fixed",
     totalPayment: "8000",
+    contractType: "services",
     milestones: [
       {
         name: "Brand Identity",
@@ -101,6 +103,7 @@ const contractTemplates = [
     endDate: "",
     paymentType: "fixed",
     totalPayment: "75000",
+    contractType: "services",
     milestones: [
       {
         name: "Planning and Design",
@@ -227,6 +230,7 @@ const contractTemplates = [
     endDate: "",
     paymentType: "fixed",
     totalPayment: "30000",
+    contractType: "products",
     milestones: [
       {
         name: "Logistics Planning",
@@ -284,7 +288,7 @@ const PreBuildContracts = () => {
             {contractTemplates.map((template) => (
               <Link 
                 key={template.id} 
-                href="/pre-build-details"
+                href="/pre-built-details"
                 onClick={() => handleTemplateClick(template)}
               >
                 <div className="group bg-[#F8F8F8] hover:bg-[#F3F4F6] dark:bg-dark-input-bg dark:hover:bg-dark-2/20 rounded-xl p-4 cursor-pointer transition-colors">

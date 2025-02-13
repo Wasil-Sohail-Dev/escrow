@@ -112,7 +112,7 @@ const PaymentHistoryPage = () => {
     // Apply date range filter
     if (filters.dateRange !== "All") {
       const today = new Date();
-      let filterDate = new Date();
+      const filterDate = new Date();
 
       switch (filters.dateRange) {
         case "Last 7 days":
@@ -159,9 +159,10 @@ const PaymentHistoryPage = () => {
       const searchLower = filters.search.toLowerCase();
       filtered = filtered.filter(payment => 
         payment.stripePaymentIntentId.toLowerCase().includes(searchLower) ||
-        payment.amount.toString().includes(searchLower) ||
+        payment.totalAmount.toString().includes(searchLower) ||
         payment.paymentMethod.toLowerCase().includes(searchLower) ||
         payment.status.replace('_', ' ').toLowerCase().includes(searchLower)
+
       );
     }
 
@@ -222,7 +223,11 @@ const PaymentHistoryPage = () => {
         description="Here is a list of all your payments made done yet"
       />
       <div className="flex-1 mt-[85px]">
-        <HeadBar title="Payment Overview" buttonName="Export" />
+        <HeadBar 
+          title="Payment Overview" 
+          buttonName="Export" 
+          payments={filteredPayments}
+        />
         <div className="px-4 md:px-10 lg:px-20">
           <PaymentOverview show={true} payments={filteredPayments} />
 
@@ -311,30 +316,35 @@ const PaymentHistoryPage = () => {
                       <td className="h-[72px] border-b border-[#EAECF0] dark:border-dark-border px-6">
                         <div className={cn(
                           "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+                          item.status === "processing" && "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/10",
+                          item.status === "funded" && "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/10", 
                           item.status === "on_hold" && "bg-red-50 text-red-700 dark:bg-red-900/10",
-                          item.status === "released" && "bg-green-50 text-green-700 dark:bg-green-900/10",
-                          item.status === "process" && "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/10",
-                          item.status === "disputed" && "bg-orange-50 text-orange-700 dark:bg-orange-900/10",
+                          item.status === "partially_released" && "bg-blue-50 text-blue-700 dark:bg-blue-900/10",
+                          item.status === "fully_released" && "bg-green-50 text-green-700 dark:bg-green-900/10",
                           item.status === "failed" && "bg-red-50 text-red-700 dark:bg-red-900/10",
-                          item.status === "refunded" && "bg-gray-50 text-gray-700 dark:bg-gray-900/10"
+                          item.status === "refunded" && "bg-gray-50 text-gray-700 dark:bg-gray-900/10",
+                          item.status === "disputed" && "bg-orange-50 text-orange-700 dark:bg-orange-900/10"
                         )}>
                           <div className={cn(
                             "w-1.5 h-1.5 rounded-full mr-1.5",
-                            item.status === "on_hold" && "bg-red-500",
-                            item.status === "released" && "bg-green-500",
-                            item.status === "process" && "bg-yellow-500",
-                            item.status === "disputed" && "bg-orange-500",
+                            item.status === "processing" && "bg-yellow-500",
+                            item.status === "funded" && "bg-emerald-500",
+                            item.status === "on_hold" && "bg-red-500", 
+                            item.status === "partially_released" && "bg-blue-500",
+                            item.status === "fully_released" && "bg-green-500",
                             item.status === "failed" && "bg-red-500",
-                            item.status === "refunded" && "bg-gray-500"
+                            item.status === "refunded" && "bg-gray-500",
+                            item.status === "disputed" && "bg-orange-500"
                           )} />
                           {getStatusDisplay(item.status)}
                         </div>
                       </td>
                       <td className="h-[72px] border-b border-[#EAECF0] dark:border-dark-border px-6">
                         <span className="text-[14px] text-[#101828] dark:text-dark-text font-[600]">
-                          ${item.amount.toFixed(2)}
+                          ${item.totalAmount?.toFixed(2)}
                         </span>
                       </td>
+
                       <td className="h-[72px] border-b border-[#EAECF0] dark:border-dark-border px-6">
                         <div className="flex items-center gap-2">
                           

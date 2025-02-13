@@ -3,16 +3,18 @@
 import ProjectTable from "../../../components/dashboard/PaymentHistory";
 import Topbar from "../../../components/dashboard/Topbar";
 import Overview from "../../../components/dashboard/Overview";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { formatDate } from "@/lib/helpers/fromatDate";
 import { useUser } from "@/contexts/UserContext";
+import { useSearchParams } from "next/navigation";
 
 export default function DisputeManagementScreen() {
   const {user} = useUser();
   const [activeTab, setActiveTab] = useState<any>("disputed");
   const [contractData, setContractData] = useState<any>(null);
-  console.log(contractData?.payments,"contractData?.payments");
-  
+  const searchParams = useSearchParams();
+  const paramContractId = searchParams.get("contractId")?.replace("==", ""); // Remove the double equals if present
+
   return (
     <>
       <Topbar
@@ -35,10 +37,11 @@ export default function DisputeManagementScreen() {
             date: formatDate(payment.createdAt, false),
             vendorName: user?.userType === 'vendor' ? payment.payerId.userName : payment.payeeId.userName,
             status: payment.status.toLowerCase(),
-            amount: `$${payment.amount.toFixed(2)}`,
+            amount: `$${payment.totalAmount?.toFixed(2)}`,
           })) || []}
           dispute={true}
           showOnlyOne={true}
+          paramContractId={paramContractId}
         />
       </div>
     </>

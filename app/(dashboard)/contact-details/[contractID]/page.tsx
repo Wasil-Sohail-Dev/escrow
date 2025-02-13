@@ -14,6 +14,13 @@ import { useContractAction } from "@/contexts/ContractActionContext";
 import { useContract } from "@/contexts/ContractContext";
 import Loader from "@/components/ui/loader";
 import { formatDate } from "@/lib/helpers/fromatDate";
+import { Eye } from "lucide-react";
+import FilePreviewModal from "@/components/modals/FilePreviewModal";
+import {
+  FilePreviewType,
+  convertContractFilesToPreviewFiles,
+  handleFileDownload,
+} from "@/lib/helpers/fileHelpers";
 
 const ContactDetails = () => {
   const router = useRouter();
@@ -26,6 +33,7 @@ const ContactDetails = () => {
   const { handleContractAction } = useContractAction();
   const { toast } = useToast();
   const [startingWork, setStartingWork] = useState(false);
+  const [isFilePreviewOpen, setIsFilePreviewOpen] = useState(false);
 
   useEffect(() => {
     if (contractID) {
@@ -39,29 +47,32 @@ const ContactDetails = () => {
   };
 
   const handleStartWorking = async () => {
+    setStartingWork(true);
     try {
-      const response = await fetch("/api/manage-contract-status", {
+      const response = await fetch("/api/manage-milestone-status", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           contractId: contract?.contractId,
+          milestoneId: contract?.milestones[0].milestoneId,
+          newStatus: "working",
           contractStatus: "active",
-          milestoneStatus: "working",
+          customerId: user?._id,
+          userType: user?.userType,
         }),
       });
 
       if (!response.ok) {
         throw new Error("Failed to update contract status");
       }
-
+      fetchContract(contractID);
       toast({
         title: "Successfully started working on the contract",
         description: "You can now start working on the contract",
         variant: "default",
       });
-      fetchContract(contractID);
       router.refresh();
     } catch (error) {
       toast({
@@ -70,6 +81,8 @@ const ContactDetails = () => {
         variant: "warning",
       });
       console.error("Error starting work:", error);
+    } finally {
+      setStartingWork(false);
     }
   };
 
@@ -79,16 +92,18 @@ const ContactDetails = () => {
       const response = await axios.patch("/api/manage-milestone-status", {
         contractId: contract?.contractId,
         milestoneId: milestone.milestoneId,
-        newStatus: "working"
+        newStatus: "working",
+        customerId: user?._id,
+        userType: user?.userType,
       });
 
       if (response.data) {
+        fetchContract(contractID);
         toast({
           title: "Success",
           description: "Started working on milestone successfully",
           variant: "default",
         });
-        fetchContract(contractID);
       }
     } catch (error) {
       console.error("Error starting milestone work:", error);
@@ -105,7 +120,11 @@ const ContactDetails = () => {
   return (
     <>
       <Topbar
-        title={contract?.title && contract.title.length > 30 ? contract.title.slice(0, 30) + "..." : contract?.title || "Graphic Designing"}
+        title={
+          contract?.title && contract.title.length > 30
+            ? contract.title.slice(0, 30) + "..."
+            : contract?.title || "Graphic Designing"
+        }
         description="Contract Details and Information"
       />
       {loading ? (
@@ -156,8 +175,16 @@ const ContactDetails = () => {
                       variant="default"
                       className="bg-primary hover:bg-primary/90 text-white rounded-[9px] px-4 py-2 hover:underline transition-colors duration-200"
                       onClick={handleStartWorking}
+                      disabled={startingWork}
                     >
-                      Start Working
+                      {startingWork ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Starting...
+                        </div>
+                      ) : (
+                        "Start Working"
+                      )}
                     </Button>
                   )}
               </div>
@@ -168,6 +195,19 @@ const ContactDetails = () => {
                 <p className="mt-2 text-paragraph dark:text-dark-text text-base-regular w-full break-words">
                   {contract?.description}
                 </p>
+                {contract?.contractFile && contract.contractFile.length > 0 && (
+                  <div className="mt-4">
+                    <Button
+                      type="button"
+                      onClick={() => setIsFilePreviewOpen(true)}
+                      className="text-primary hover:text-primary/80 hover:bg-primary/10"
+                      variant="ghost"
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View contract files ({contract.contractFile.length})
+                    </Button>
+                  </div>
+                )}
               </div>
               <div className="border-b border-[#D0D0D04D] dark:border-dark-border pb-6 flex justify-between">
                 <div className="flex flex-col gap-1 text-paragraph dark:text-dark-text text-base-regular">
@@ -179,7 +219,7 @@ const ContactDetails = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <p>Project Cost:</p>
-                    <p className="">${contract?.budget.toFixed(2)}</p>
+                    <p className="">${contract?.budget?.toFixed(2)}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <p>Start Date:</p>
@@ -251,14 +291,16 @@ const ContactDetails = () => {
                 <div className="flex flex-col gap-3 relative pl-8 max-w-md">
                   <div
                     className={`w-[13px] h-[13px] rounded-full ${
-                      (milestone.status === "approved")
+                      milestone.status === "approved" ||
+                      milestone.status === "payment_released"
                         ? "bg-primary"
                         : "bg-paragraph dark:bg-dark-2"
                     } absolute left-[0px] top-1`}
                   ></div>
                   <div
                     className={`absolute left-[5px] top-2 bottom-0 w-[2px]  ${
-                      (milestone.status === "approved")
+                      milestone.status === "approved" ||
+                      milestone.status === "payment_released"
                         ? "bg-primary"
                         : "bg-paragraph dark:bg-dark-2"
                     }`}
@@ -277,19 +319,20 @@ const ContactDetails = () => {
                         <span className="text-paragraph dark:text-dark-2 text-[12px] font-[400] leading-[16px]">
                           Status: {milestone.status}
                         </span>
-                        {(milestone.status === "ready_for_review" ||
-                          milestone.status === "change_requested") &&
-                          user?.userType === "vendor" && (
-                            <button
-                              onClick={() => {
-                                setMileStoneData(milestone);
-                                setIsWorkModalOpen(true);
-                              }}
-                              className="text-primary underline text-[12px] font-[600] leading-[19px]"
-                            >
-                              View Submitted Work
-                            </button>
-                          )}
+                        {(((milestone.status !== "pending"&&milestone.status !== "working") &&
+                          user?.userType === "vendor") ||
+                          (milestone.status === "payment_released" &&
+                            user?.userType === "client")) && (
+                          <button
+                            onClick={() => {
+                              setMileStoneData(milestone);
+                              setIsWorkModalOpen(true);
+                            }}
+                            className="text-primary underline text-[12px] font-[600] leading-[19px]"
+                          >
+                            View Submitted Work
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -298,7 +341,7 @@ const ContactDetails = () => {
                     <ul className="space-y-2">
                       <div className="flex items-start gap-2">
                         <span className="w-1 h-1 rounded-full bg-paragraph dark:bg-dark-2 mt-2"></span>
-                        <li className="text-paragraph dark:text-dark-text text-[14px] font-[400] leading-[19px]">
+                        <li className="text-paragraph dark:text-dark-text text-[14px] font-[400] leading-[19px] break-words w-full">
                           {milestone.description}
                         </li>
                       </div>
@@ -311,74 +354,92 @@ const ContactDetails = () => {
                       {contract?.status !== "onboarding" &&
                       user?.userType === "vendor" ? (
                         <>
-                          {milestone.status !== "approved" && (
-                            <Button
-                              onClick={() => {
-                                router.push(
-                                  `/milestone-submission/${
-                                    milestone.milestoneId
-                                  }/${contract?._id}/${encodeURIComponent(
-                                    milestone.title
-                                  )}/${contractID}`
-                                );
-                              }}
-                              className={`text-[14px] font-[700] leading-[20px] ${
-                                milestone.status === "change_requested" ||
-                                milestone.status === "working"
-                                  ? "bg-primary hover:bg-primary-500 dark:bg-primary dark:hover:bg-primary-500 dark:text-dark-text"
-                                  : "bg-[#CACED8] hover:bg-[#CACED8]/90 dark:bg-[#CACED8] dark:hover:bg-[#CACED8]/90 dark:text-white"
-                              } text-white px-6 md:px-10 rounded-lg transition-colors md:h-[46px] h-[36px] `}
-                              disabled={
-                                milestone?.status !== "working" &&
-                                milestone.status !== "change_requested"
-                              }
-                            >
-                              {"Submit Work"}
-                            </Button>
-                          )}
+                          {milestone.status !== "approved" &&
+                            milestone.status !== "payment_released" && (
+                              <Button
+                                onClick={() => {
+                                  router.push(
+                                    `/milestone-submission/${
+                                      milestone.milestoneId
+                                    }/${contract?._id}/${encodeURIComponent(
+                                      milestone.title
+                                    )}/${contractID}`
+                                  );
+                                }}
+                                className={`text-[14px] font-[700] leading-[20px] ${
+                                  milestone.status === "change_requested" ||
+                                  milestone.status === "working"
+                                    ? "bg-primary hover:bg-primary-500 dark:bg-primary dark:hover:bg-primary-500 dark:text-dark-text"
+                                    : "bg-[#CACED8] hover:bg-[#CACED8]/90 dark:bg-[#CACED8] dark:hover:bg-[#CACED8]/90 dark:text-white"
+                                } text-white px-6 md:px-10 rounded-lg transition-colors md:h-[46px] h-[36px] `}
+                                disabled={
+                                  milestone?.status !== "working" &&
+                                  milestone.status !== "change_requested"
+                                }
+                              >
+                                {"Submit Work"}
+                              </Button>
+                            )}
                         </>
                       ) : (
-                        <Button
-                          onClick={() => {
-                            setMileStoneData(milestone);
-                            setIsWorkModalOpen(true);
-                          }}
-                          className={`text-[14px] font-[700] leading-[20px] ${
-                            milestone.status === "ready_for_review" ||
-                            milestone.status === "change_requested" ||
-                            milestone.status === "approved"
-                              ? "bg-primary hover:bg-primary-500 dark:bg-primary dark:hover:bg-primary-500 dark:text-dark-text"
-                              : "bg-[#CACED8] hover:bg-[#CACED8]/90 dark:bg-[#CACED8] dark:hover:bg-[#CACED8]/90 dark:text-white"
-                          } text-white px-6 md:px-10 rounded-lg transition-colors md:h-[46px] h-[36px]`}
-                          disabled={
-                            milestone.status !== "ready_for_review" &&
-                            milestone.status !== "change_requested" &&
-                            milestone.status !== "approved"
-                          }
-                        >
-                          {"Ready for Review"}
-                        </Button>
+                        <>
+                          {milestone.status !== "payment_released" && (
+                            <Button
+                              onClick={() => {
+                                setMileStoneData(milestone);
+                                setIsWorkModalOpen(true);
+                              }}
+                              className={`text-[14px] font-[700] leading-[20px] ${
+                                milestone.status === "ready_for_review" ||
+                                milestone.status === "change_requested" ||
+                                milestone.status === "approved"
+                                  ? "bg-primary hover:bg-primary-500 dark:bg-primary dark:hover:bg-primary-500 dark:text-dark-text"
+                                  : "bg-[#CACED8] hover:bg-[#CACED8]/90 dark:bg-[#CACED8] dark:hover:bg-[#CACED8]/90 dark:text-white"
+                              } text-white px-6 md:px-10 rounded-lg transition-colors md:h-[46px] h-[36px]`}
+                              disabled={
+                                milestone.status !== "ready_for_review" &&
+                                milestone.status !== "change_requested" &&
+                                milestone.status !== "approved"
+                              }
+                            >
+                              {milestone.status === "approved"
+                                ? "Release Payment"
+                                : "Ready for Review"}
+                            </Button>
+
+                          )}
+                        </>
                       )}
                     </div>
                   )}
-                {(user?.userType === "vendor" && milestone?.status === "pending" && contract?.milestones[index - 1]?.status === "approved") && (
-                  <div className="mt-4 md:mt-0 flex justify-end">
-                    <Button
-                      onClick={() => handleStartMilestoneWorking(milestone)}
-                      disabled={startingWork}
-                      className={`text-[14px] font-[700] leading-[20px] bg-primary hover:bg-primary-500 dark:bg-primary dark:hover:bg-primary-500 dark:text-dark-text text-white px-6 md:px-10 rounded-lg transition-colors md:h-[46px] h-[36px] `}
-                    >
-                      {startingWork ? (
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Starting...
-                        </div>
-                      ) : (
-                        "Start Working"
-                      )}
-                    </Button>
-                  </div>
-                )}
+                {user?.userType === "vendor" &&
+                  milestone?.status === "pending" &&
+                  (contract?.milestones[index - 1]?.status ===
+                    "payment_released"||contract?.milestones[index - 1]?.status ===
+                    "approved") && (
+                    <div className="mt-4 md:mt-0 flex justify-end">
+                      <Button
+                        onClick={() => {
+                          if(contract?.milestones[index - 1]?.status === "payment_released"){
+                            handleStartMilestoneWorking(milestone)
+                          }
+                        }}
+
+                        disabled={startingWork}
+                        className={`text-[14px] font-[700] leading-[20px] ${contract?.milestones[index - 1]?.status === "payment_released" ? "bg-primary hover:bg-primary-500 dark:bg-primary dark:hover:bg-primary-500 dark:text-dark-text" : "bg-[#CACED8] hover:bg-[#CACED8]/90 dark:bg-[#CACED8] dark:hover:bg-[#CACED8]/90 dark:text-white"} text-white px-6 md:px-10 rounded-lg transition-colors md:h-[46px] h-[36px] `}
+                      >
+                        {startingWork ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Starting...
+                          </div>
+                        ) : (
+                          contract?.milestones[index - 1]?.status ===
+                    "approved"?"Waiting for Client Payment":"Start Working"
+                        )}
+                      </Button>
+                    </div>
+                  )}
               </div>
             ))}
           </div>
@@ -390,11 +451,24 @@ const ContactDetails = () => {
         isOpen={isWorkModalOpen}
         onClose={() => setIsWorkModalOpen(false)}
         fetchContract={() => fetchContract(contractID)}
+        contractId={contractID}
       />
       <RevisionRequestModal
         mileStoneData={{ ...mileStoneData, contractId: contract?._id }}
         isOpen={isRevisionModalOpen}
         onClose={() => setIsRevisionModalOpen(false)}
+        fetchContract={() => fetchContract(contractID)}
+      />
+      <FilePreviewModal
+        isOpen={isFilePreviewOpen}
+        onClose={() => setIsFilePreviewOpen(false)}
+        files={
+          contract?.contractFile
+            ? convertContractFilesToPreviewFiles(contract.contractFile)
+            : []
+        }
+        isDownloadable={true}
+        onDownload={(file) => handleFileDownload(file, toast)}
       />
     </>
   );

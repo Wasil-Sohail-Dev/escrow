@@ -4,15 +4,26 @@ import { contractSchema } from "@/lib/zodSchema";
 import { z } from "zod";
 import { Customer } from "@/models/CustomerSchema";
 import { Contract } from "@/models/ContractSchema";
+import { uploadFileToS3 } from "@/lib/s3";
 import { sendContractInvite } from "@/mail-system/sendMail";
+import { sendNotification } from "@/lib/actions/sender.action";
 
 export async function POST(req: Request) {
   await dbConnect();
 
   try {
-    const body = await req.json();
+    const formData = await req.formData();
 
-    // Validate request body using Zod
+    // Extract JSON fields from FormData
+    const jsonData = formData.get("data") as string;
+    if (!jsonData) {
+      return NextResponse.json(
+        { error: "Missing contract data." },
+        { status: 400 }
+      );
+    }
+
+    const body = JSON.parse(jsonData);
     const parsedBody = contractSchema.parse(body);
 
     const {
@@ -27,10 +38,8 @@ export async function POST(req: Request) {
       startDate,
       endDate,
       contractTemplate,
-      contractFile,
     } = parsedBody;
 
-    // Check if contractId is provided
     if (!contractId) {
       return NextResponse.json(
         { error: "contractId is required." },
@@ -38,47 +47,39 @@ export async function POST(req: Request) {
       );
     }
 
-    // Ensure the contractId is unique
     const existingContract = await Contract.findOne({ contractId });
     if (existingContract) {
       return NextResponse.json(
-        { error: `A contract with contractId ${contractId} already exists.` },
+        { error: `Contract ${contractId} already exists.` },
         { status: 422 }
       );
     }
 
-    // Ensure startDate is before endDate
     if (new Date(startDate) >= new Date(endDate)) {
       return NextResponse.json(
-        { error: "Invalid dates: Start date must be before end date." },
+        { error: "Start date must be before end date." },
         { status: 422 }
       );
     }
 
-    // Budget must be a positive number
     if (budget <= 0) {
       return NextResponse.json(
-        { error: "Invalid budget: Budget must be greater than 0." },
+        { error: "Budget must be greater than 0." },
         { status: 422 }
       );
     }
 
-    // Fetch client and vendor data
     const [client, vendor] = await Promise.all([
       Customer.findOne({ email: clientEmail, userType: "client" }),
       Customer.findOne({ email: vendorEmail, userType: "vendor" }),
     ]);
 
-    if (!client || client.userType !== "client") {
-      return NextResponse.json(
-        { error: "Unauthorized: Only clients can perform this action." },
-        { status: 403 }
-      );
+    if (!client) {
+      return NextResponse.json({ error: "Client not found." }, { status: 404 });
     }
-
     if (!vendor) {
       return NextResponse.json(
-        { error: `Vendor not found for email: ${vendorEmail}` },
+        { error: `Vendor not found: ${vendorEmail}` },
         { status: 404 }
       );
     }
@@ -87,14 +88,11 @@ export async function POST(req: Request) {
 
     if (milestones.length === 0) {
       return NextResponse.json(
-        {
-          error: "Invalid milestones: At least one milestone is required.",
-        },
+        { error: "At least one milestone is required." },
         { status: 422 }
       );
     }
 
-    // Validate milestones
     const milestoneSum = milestones.reduce(
       (sum, { amount }) => sum + amount,
       0
@@ -102,13 +100,33 @@ export async function POST(req: Request) {
     if (milestoneSum !== budget) {
       return NextResponse.json(
         {
-          error: `Budget mismatch: Milestone sum (${milestoneSum}) does not match budget (${budget}).`,
+          error: `Milestone sum (${milestoneSum}) does not match budget (${budget}).`,
         },
         { status: 422 }
       );
     }
 
-    // Create a new contract record
+    // Handle multiple file uploads
+    let contractFileUrls: string[] = [];
+    const fileEntries = formData.getAll("contractFile") as File[];
+
+    if (fileEntries.length > 0) {
+      try {
+        const uploadPromises = fileEntries.map((file) =>
+          uploadFileToS3(file, "contracts")
+        );
+        const uploadResults = await Promise.all(uploadPromises);
+        contractFileUrls = uploadResults.map(({ fileUrl }) => fileUrl);
+      } catch (uploadError) {
+        console.error("File upload failed:", uploadError);
+        return NextResponse.json(
+          { error: "Failed to upload contract files." },
+          { status: 500 }
+        );
+      }
+    }
+
+    // Create and save contract
     const newContract = new Contract({
       contractId,
       title,
@@ -123,28 +141,40 @@ export async function POST(req: Request) {
       endDate,
       status: "onboarding",
       contractTemplate,
-      contractFile,
+      contractFile: contractFileUrls, // Store multiple uploaded file URLs
     });
 
-    // Save the new contract
     const savedContract = await newContract.save();
 
-    // Optionally send an updated contract invite to the vendor
-    // try {
-    //   await sendContractInvite(
-    //     savedContract.contractId,
-    //     vendorEmail,
-    //     clientEmail
-    //   );
-    // } catch (emailError) {
-    //   console.error("Error sending contract update invite email:", emailError);
-    // }
+    // Send contract invite email to vendor
+    try {
+      await sendContractInvite(
+        savedContract.contractId,
+        vendorEmail,
+        clientEmail
+      );
+    } catch (emailError) {
+      console.error("Error sending contract invite email:", emailError);
+    }
+
+    // **📌 Send Notification to Vendor**
+    try {
+      await sendNotification({
+        receiverId: vendorId.toString(),
+        senderId: client._id.toString(),
+        title: "New Contract Assigned",
+        message: `A new contract (${title}) has been assigned to you.`,
+        type: "user",
+        severity: "info",
+        link: `/contact-details/${contractId}`, // Redirect to contract details page
+        meta: { contractId },
+      });
+    } catch (notificationError) {
+      console.error("Error sending notification:", notificationError);
+    }
 
     return NextResponse.json(
-      {
-        message: "Contract created successfully.",
-        data: savedContract,
-      },
+      { message: "Contract created successfully.", data: savedContract },
       { status: 200 }
     );
   } catch (error: any) {

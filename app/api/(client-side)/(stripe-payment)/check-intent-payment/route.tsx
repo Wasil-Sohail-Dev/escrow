@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     // Use the Contract's _id to find the corresponding Payment
     const payment = await Payment.findOne({
       contractId: contract._id,
-      status: "process",
+      status: "processing",
     });
 
     if (!payment) {
@@ -89,7 +89,13 @@ export async function POST(req: Request) {
     }
 
     // Return the clientSecret to the frontend
-    return NextResponse.json({ clientSecret: paymentIntent.client_secret });
+    return NextResponse.json(
+      {
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+      },
+      { status: 200 }
+    );
   } catch (error: any) {
     console.error(error);
     return NextResponse.json(

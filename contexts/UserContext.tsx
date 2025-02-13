@@ -14,6 +14,7 @@ interface User {
   lastName: string;
   phone: string;
   userName: string;
+  verificationStatus: string;
 }
 
 interface UserContextType {
@@ -22,10 +23,10 @@ interface UserContextType {
   refreshUser: () => Promise<void>;
 }
 
-const UserContext = createContext<UserContextType>({ 
-  user: null, 
+const UserContext = createContext<UserContextType>({
+  user: null,
   loading: true,
-  refreshUser: async () => {} 
+  refreshUser: async () => {},
 });
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
@@ -36,20 +37,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch("/api/get-user-profile", {
         // Add cache: no-store to prevent caching
-        cache: 'no-store',
+        cache: "no-store",
         headers: {
-          'Cache-Control': 'no-cache'
-        }
+          "Cache-Control": "no-cache",
+        },
       });
       const data = await response.json();
-      
       if (data.user) {
         setUser(data.user);
       } else {
         setUser(null);
       }
     } catch (error) {
-      console.error('Error fetching user:', error);
+      console.error("Error fetching user:", error);
       setUser(null);
     } finally {
       setLoading(false);
@@ -59,6 +59,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = async () => {
     setLoading(true);
     await fetchUser();
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -72,4 +73,4 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const useUser = () => useContext(UserContext); 
+export const useUser = () => useContext(UserContext);
