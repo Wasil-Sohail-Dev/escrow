@@ -390,6 +390,9 @@ const DisputeChat = () => {
     for (const dispute of disputes) {
       try {
         const response = await fetch(`/api/chat/${dispute._id}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const chatData: ChatData = await response.json();
 
         const unreadCount = chatData.messages.filter(
@@ -436,6 +439,7 @@ const DisputeChat = () => {
     setShowMobileChat(true);
     setLoading(true);
     router.push(`?disputeId=${dispute._id}`);
+    fetchChat(1, false);
   };
 
   const handleBackToDisputes = () => {
@@ -1215,7 +1219,7 @@ const DisputeChat = () => {
                       </li>
                       <li className="flex items-center gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                        <span>You'll be notified of new messages</span>
+                        <span>You&apos;ll be notified of new messages</span>
                       </li>
                     </ul>
                   </div>
