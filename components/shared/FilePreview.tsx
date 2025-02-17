@@ -31,8 +31,9 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   };
 
   // Function to check if file is an image
-  const isImageFile = (file: File | { type: string }) => {
-    return file.type.startsWith('image/');
+  const isImageFile = (file: { type: string }) => {
+    const imageTypes = ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"];
+    return imageTypes.includes(file.type.toLowerCase());
   };
 
   // Function to get file icon based on type
@@ -91,6 +92,8 @@ const FilePreview: React.FC<FilePreviewProps> = ({
       console.error('Error downloading file:', error);
     }
   };
+
+  console.log(files, 'files')
 
   return (
     <div className={`w-full ${className}`}>

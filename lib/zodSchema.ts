@@ -3,6 +3,7 @@ import { z } from "zod";
 // Define validation schema using Zod
 export const contractSchema = z.object({
     contractId: z.string().min(1, "Contract ID is required."),
+    contractType: z.enum(["services", "products"]),
     clientEmail: z.string().email("Invalid client email format."),
     vendorEmail: z.string().email("Invalid vendor email format."),
     title: z.string().min(1, "Title is required."),

@@ -126,18 +126,19 @@ const Page = () => {
             )}
           />
 
-          {error && (
-            <p className="text-error-accent">{error}</p>
-          )}
+          {error && <p className="text-error-accent">{error}</p>}
 
           <div className="flex justify-end">
-            <Link href="/forgot-password" className="text-sm text-primary hover:text-primary-500">
+            <Link
+              href="/forgot-password"
+              className="text-sm text-primary hover:text-primary-500"
+            >
               Forgot Password?
             </Link>
           </div>
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="h-11 bg-primary hover:bg-primary/90 text-white dark:text-dark-text rounded-lg"
             disabled={loading}
           >
@@ -157,7 +158,7 @@ const Page = () => {
       </div>
 
       <div className="flex flex-col gap-3">
-        <Button 
+        <Button
           type="button"
           variant="outline"
           className="h-11 border border-[#E8EAEE] dark:border-dark-border hover:bg-white/90 dark:hover:bg-dark-input-bg rounded-lg text-paragraph dark:text-dark-text flex items-center justify-center gap-2"
@@ -165,12 +166,17 @@ const Page = () => {
           <Image src="/assets/google.svg" alt="Google" width={20} height={20} />
           Sign in with Google
         </Button>
-        <Button 
+        <Button
           type="button"
           variant="outline"
           className="h-11 border border-[#E8EAEE] dark:border-dark-border hover:bg-white/90 dark:hover:bg-dark-input-bg rounded-lg text-paragraph dark:text-dark-text flex items-center justify-center gap-2"
         >
-          <Image src="/assets/facebook.svg" alt="Facebook" width={20} height={20} />
+          <Image
+            src="/assets/facebook.svg"
+            alt="Facebook"
+            width={20}
+            height={20}
+          />
           Sign in with Facebook
         </Button>
       </div>

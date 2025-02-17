@@ -18,18 +18,6 @@ interface ChatMessage {
   }[];
 }
 
-interface ChatParticipant {
-  name: string;
-  email: string;
-}
-
-interface Chat {
-  participants: ChatParticipant[];
-  messages: ChatMessage[];
-  hasMore: boolean;
-  totalMessages: number;
-}
-
 export async function GET(
   request: Request,
   context: { params: Promise<{ chatId: string }> }

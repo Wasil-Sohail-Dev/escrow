@@ -39,6 +39,7 @@ const contractSchema = new mongoose.Schema(
                 return `${letters}-${numbers}`;
             },
         },
+        
         title: {
             type: String,
             required: true,
@@ -142,6 +143,11 @@ const contractSchema = new mongoose.Schema(
             type: String,
             required: false,
         }],
+        contractType: {
+            type: String,
+            required: true,
+            enum: ["services", "products"],
+        },
         startDate: { type: Date },
         endDate: { type: Date },
     },

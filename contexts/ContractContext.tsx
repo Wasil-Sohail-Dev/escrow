@@ -16,6 +16,7 @@ interface Milestone {
 export interface Contract {
   _id: string;
   contractId: string;
+  contractType?: string; 
   title: string;
   description: string;
   clientId: {

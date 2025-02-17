@@ -28,6 +28,7 @@ export async function POST(req: Request) {
 
     const {
       contractId,
+      contractType,
       clientEmail,
       title,
       description,
@@ -125,10 +126,11 @@ export async function POST(req: Request) {
         );
       }
     }
-
+    console.log(contractType, 'contractType');
     // Create and save contract
     const newContract = new Contract({
       contractId,
+      contractType,
       title,
       description,
       clientId: client._id,

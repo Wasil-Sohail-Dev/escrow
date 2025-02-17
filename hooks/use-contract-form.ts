@@ -319,6 +319,7 @@ export const useContractForm = () => {
       // Add JSON data
       const jsonData = {
         ...formData,
+        contractType: formData.contractType === "services" ? "services" : "products",
         clientEmail: user?.email,
         budget: parseFloat(formData.totalPayment),
         milestones: formData.milestones.map((m) => ({
@@ -332,6 +333,8 @@ export const useContractForm = () => {
         endDate: new Date(formData.endDate).toISOString(),
       };
       formDataToSend.append('data', JSON.stringify(jsonData));
+
+      console.log(jsonData, 'jsonData');
 
       // Add files if they exist
       if (formData.documents && formData.documents.length > 0) {

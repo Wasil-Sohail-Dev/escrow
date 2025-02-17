@@ -30,7 +30,10 @@ function PaymentPage() {
     }
   }, [contractID]);
 
-  const escrowTax = calculateTax(contract?.budget || 0, "services");
+  const escrowTax = calculateTax(
+    contract?.budget || 0, 
+    (contract?.contractType || "services") as "services" | "products"
+  );
 
   const createPaymentIntent = async () => {
     setPaymentLoading(true);
@@ -169,7 +172,7 @@ function PaymentPage() {
 
                   <div className="flex justify-between items-center">
                     <span className="text-body-medium text-[#474747] dark:text-dark-text">
-                      Escrow Tax (21%)
+                      Escrow Tax
                     </span>
                     <span className="text-body-normal text-[#474747] dark:text-dark-text">
                       $ {escrowTax?.toFixed(2)}

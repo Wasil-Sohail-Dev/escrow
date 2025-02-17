@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import Image from "next/image";
 import { Check, Plus, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import DatePicker from "react-datepicker";
@@ -14,7 +13,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import ContractSuccessModal from "@/components/modals/ContractSuccessModal";
 import FilePreviewModal from "@/components/modals/FilePreviewModal";
 import { useContractForm } from "@/hooks/use-contract-form";
-import { calculateThirdPartyFee } from "@/lib/helpers/calculateThirdPartyFee";
 import DragDropFile from "@/components/shared/DragDropFile";
 import {
   Tooltip,
@@ -103,7 +101,7 @@ const CreateContract = () => {
                     <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="cursor-help">ⓘ</div>
+                        <div className="cursor-help dark:text-dark-text">ⓘ</div>
                       </TooltipTrigger>
                       <TooltipContent>
                         {type === "services" 
@@ -137,6 +135,7 @@ const CreateContract = () => {
                 </label>
                 <div className="relative">
                   <Input
+                  disabled={isLoading}
                     type="email"
                     value={formData.vendorEmail}
                     onChange={(e) => handleInputChange("vendorEmail", e.target.value)}
@@ -168,6 +167,7 @@ const CreateContract = () => {
                 Contract Title <span className="text-red-500">*</span>
               </label>
               <Input
+              disabled={isLoading}
                 type="text"
                 value={formData.title}
                 onChange={(e) => handleInputChange("title", e.target.value)}
@@ -285,6 +285,7 @@ const CreateContract = () => {
                   Total Project Payment <span className="text-red-500">*</span>
                 </label>
                 <Input
+                disabled={isLoading}
                   type="number"
                   value={formData.totalPayment}
                   onChange={(e) => handleInputChange("totalPayment", e.target.value)}
@@ -354,6 +355,7 @@ const CreateContract = () => {
                         Milestone Name <span className="text-red-500">*</span>
                       </label>
                       <Input
+                      disabled={isLoading}
                         type="text"
                         value={milestone.name}
                         onChange={(e) => handleMilestoneChange(index, "name", e.target.value)}
@@ -373,6 +375,7 @@ const CreateContract = () => {
                         Milestone Amount <span className="text-red-500">*</span>
                       </label>
                       <Input
+                      disabled={isLoading}
                         type="number"
                         value={milestone.amount}
                         onChange={(e) => handleMilestoneChange(index, "amount", e.target.value)}
