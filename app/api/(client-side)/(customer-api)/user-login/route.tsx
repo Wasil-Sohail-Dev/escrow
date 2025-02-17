@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import dbConnect from "@/lib/dbConnect";
 import argon2 from "argon2";
 import { Customer } from "@/models/CustomerSchema";
+import { sendMailCode } from "@/lib/actions/auth.action";
 
 export async function POST(req: NextRequest) {
   try {
@@ -79,7 +80,20 @@ export async function POST(req: NextRequest) {
       expiresIn: "24h",
     });
 
-    return NextResponse.json({ token, user: tokenPayload }, { status: 200 });
+    if (user.userStatus === "pendingVerification") {
+      
+      await sendMailCode(email); 
+      return NextResponse.json({message: "Verification email has been sent to your email address.", token: null, user: tokenPayload }, { status: 200 });
+    }
+
+    if (user.userStatus === "verified") {
+      return NextResponse.json({ token:null, user: tokenPayload }, { status: 200 });
+    }
+    if (user.userStatus === "active") {
+      return NextResponse.json({ token, user: tokenPayload }, { status: 200 });
+    }
+
+    // return NextResponse.json({ token, user: tokenPayload }, { status: 200 });
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(
