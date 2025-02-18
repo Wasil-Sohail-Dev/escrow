@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
     if (!verificationRecord) {
       return NextResponse.json(
-        { error: "Invalid email or code." },
+        { error: "The code you have entered is not correct or Invalid Code." },
         { status: 400 }
       );
     }

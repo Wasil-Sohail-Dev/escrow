@@ -56,22 +56,45 @@ export const sendForgotPasswordEmail = async (
   }
 };
 
-
-
 export const verifyMail = async (email: string, validationCode: number): Promise<void> => {
   console.log("Sending verification mail to:", email);
 
+  const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: process.env.SMTP_SECURE === "true",
+      auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+      },
+  });
+
+  const emailHTML = `
+      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+          <h2 style="color: #333; text-align: center;">Third Party Escrow</h2>
+          <p style="font-size: 16px; color: #555;">Dear User,</p>
+          <p style="font-size: 16px; color: #555;">Your verification code is:</p>
+          <div style="font-size: 22px; font-weight: bold; text-align: center; padding: 10px; background-color: #26B893; color: white; border-radius: 5px;">
+              ${validationCode}
+          </div>
+          <p style="font-size: 14px; color: #777;">Please enter this code to verify your email address.</p>
+          <p style="font-size: 14px; color: #777;">If you did not request this, please ignore this email.</p>
+          <p style="font-size: 14px; color: #777;">Thank you,<br/>Third Party Escrow Team</p>
+      </div>
+  `;
+
   try {
-    await transporter.sendMail({
-      from: `"Your App Name" <${process.env.SMTP_USER}>`,
-      to: email,
-      subject: "Your Verification Code",
-      text: `Your verification code is: ${validationCode}`,
-      html: `<p>Your verification code is: <strong>${validationCode}</strong></p>`,
-    });
-    console.log("Verification email sent successfully to:", email);
+      await transporter.sendMail({
+          from: `"Third Party Escrow" <${process.env.SMTP_USER}>`,
+          to: email,
+          subject: "Verify Your Email - Third Party Escrow",
+          text: `Your verification code is: ${validationCode}`,
+          html: emailHTML,
+      });
+
+      console.log("Verification email sent successfully to:", email);
   } catch (error) {
-    console.error("Error sending verification email:", error);
-    throw error; // Propagate the error to the calling function
+      console.error("Error sending verification email:", error);
+      throw error; // Propagate the error to the calling function
   }
 };

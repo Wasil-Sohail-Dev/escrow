@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import {
-  Menu
-} from "lucide-react";
+import { Menu } from "lucide-react";
 import Link from "next/link";
-import { usePathname} from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   Tooltip,
   TooltipContent,
@@ -41,7 +39,8 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   };
 
   const handleMenuItemClick = () => {
-    if (window.innerWidth < 768) { // Close only on mobile
+    if (window.innerWidth < 768) {
+      // Close only on mobile
       setIsOpen(false);
     }
   };
@@ -49,12 +48,32 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   const menuItems = [
     { path: "/home", label: "Dashboard", icon: DashboardIcon },
     { path: "/projects", label: "Projects", icon: ContactDetailIcon },
-    ...(user?.userType === "client" ? [{ path: "/create-contract", label: "Create Contract", icon: CreateContractIcon }] : []),
-    { path: "/payment-history", label: "Payment History", icon: PaymentHistoryIcon },
-    { path: "/dispute-management-screen", label: "Dispute Management", icon: CreateDisputeIcon },
+    ...(user?.userType === "client"
+      ? [
+          {
+            path: "/create-contract",
+            label: "Create Contract",
+            icon: CreateContractIcon,
+          },
+        ]
+      : []),
+    {
+      path: "/payment-history",
+      label: "Payment History",
+      icon: PaymentHistoryIcon,
+    },
+    {
+      path: "/dispute-management-screen",
+      label: "Dispute Management",
+      icon: CreateDisputeIcon,
+    },
     { path: "/dispute-chat", label: "Dispute Chat", icon: ChatIcon },
     { path: "/contact-us", label: "Contact Us", icon: HelpIcon },
-    { path: "/terms-conditions", label: "Terms & Conditions", icon: TermConditionIcon },
+    {
+      path: "/terms-conditions",
+      label: "Terms & Conditions",
+      icon: TermConditionIcon,
+    },
   ];
 
   const handleMenuClick = (e: React.MouseEvent) => {
@@ -79,7 +98,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       </button>
 
       {/* Logout Confirmation Modal */}
-      <LogoutConfirmationModal 
+      <LogoutConfirmationModal
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
       />
@@ -96,7 +115,11 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       >
         <div className="flex flex-col min-h-full">
           <div className="flex-shrink-0 flex justify-center">
-            <Link href={"/home"} className="flex items-center justify-center" onClick={handleMenuItemClick}>
+            <Link
+              href={"/home"}
+              className="flex items-center justify-center"
+              onClick={handleMenuItemClick}
+            >
               <Image
                 src={"/assets/logo.png"}
                 alt="logo"
@@ -111,18 +134,24 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             {menuItems.map((item) => {
               const Icon = item.icon;
               // const isActive = pathname.includes(item.path);
-              const isActive = item.path === "/home" 
-                ? pathname === "/home" || pathname.includes("/milestone-details")
-                : item.path === "/projects"
-                ? pathname.includes("/projects") || pathname.includes("/contact-details") || 
-                  pathname.includes("/make-payment") || pathname.includes("/transection-details")
-                : item.path === "/create-contract"
-                ? pathname === "/create-contract" || pathname === "/pre-built-contracts" || 
-                  pathname === "/pre-built-details"
-                : item.path === "/dispute-management-screen"
-                ? pathname.includes("/dispute-management-screen") || pathname.includes("/create-dispute")
-                : pathname.includes(item.path);
-              
+              const isActive =
+                item.path === "/home"
+                  ? pathname === "/home" ||
+                    pathname.includes("/milestone-details")
+                  : item.path === "/projects"
+                  ? pathname.includes("/projects") ||
+                    pathname.includes("/contact-details") ||
+                    pathname.includes("/make-payment") ||
+                    pathname.includes("/transection-details")
+                  : item.path === "/create-contract"
+                  ? pathname === "/create-contract" ||
+                    pathname === "/pre-built-contracts" ||
+                    pathname === "/pre-built-details"
+                  : item.path === "/dispute-management-screen"
+                  ? pathname.includes("/dispute-management-screen") ||
+                    pathname.includes("/create-dispute")
+                  : pathname.includes(item.path);
+
               return (
                 <Tooltip key={item.path}>
                   <TooltipTrigger asChild>
@@ -131,12 +160,20 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                       className="w-full p-3 hover:bg-sidebar-accent dark:hover:bg-white/10 rounded-lg transition-colors flex md:justify-center items-center gap-3"
                       onClick={handleMenuItemClick}
                     >
-                      <Icon className={`w-7 h-7 flex-shrink-0 ${
-                        isActive ? "text-primary" : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
-                      }`} />
-                      <span className={`md:hidden text-sm ${
-                        isActive ? "text-primary" : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
-                      } `}>
+                      <Icon
+                        className={`w-7 h-7 flex-shrink-0 ${
+                          isActive
+                            ? "text-primary"
+                            : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
+                        }`}
+                      />
+                      <span
+                        className={`md:hidden text-sm ${
+                          isActive
+                            ? "text-primary"
+                            : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
+                        } `}
+                      >
                         {item.label}
                       </span>
                     </Link>
@@ -147,9 +184,6 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                 </Tooltip>
               );
             })}
-          </div>
-
-          <div className="flex-shrink-0 flex flex-col items-center gap-7 pb-7">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -174,8 +208,8 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <div 
-                  className="w-full p-3 hover:bg-sidebar-accent dark:hover:bg-white/10 rounded-lg transition-colors flex md:justify-center items-center gap-3 cursor-pointer" 
+                <div
+                  className="w-full p-3 hover:bg-sidebar-accent dark:hover:bg-white/10 rounded-lg transition-colors flex md:justify-center items-center gap-3 cursor-pointer"
                   onClick={(e) => {
                     handleLogoutClick();
                     handleMenuItemClick();

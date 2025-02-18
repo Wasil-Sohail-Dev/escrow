@@ -2,8 +2,8 @@
 
 import TermsConditions from "@/components/TermsConditions";
 
-const TermsConditionsPage = () => {
+const TermsConditionPage = () => {
   return <TermsConditions />;
 };
 
-export default TermsConditionsPage;
+export default TermsConditionPage;

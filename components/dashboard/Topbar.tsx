@@ -1,4 +1,4 @@
-import { Bell, ChevronDown } from "lucide-react";
+import { Bell, ChevronDown, Key } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -104,7 +104,8 @@ export default function Topbar({
               <h2 className="text-primary font-bold text-lg">Third Party</h2>
               <span className="text-gray-400 dark:text-dark-text/60">|</span>
               <h2 className="text-main-heading dark:text-dark-text text-[26px] font-bold leading-[33px] lg:text-[26px] md:text-[24px] max-md:text-[18px]">
-                {formatTitle(title)}
+               <span className="lg:hidden inline text-sm">{formatTitle(title)}</span> 
+               <span className="hidden lg:inline">{title}</span>
               </h2>
             </div>
             <p className="text-body-normal text-[#64748B] dark:text-dark-text/60 lg:text-body-normal md:text-base-regular max-md:hidden">
@@ -222,7 +223,7 @@ export default function Topbar({
                   </Link>
                   <Link href="/change-password">
                     <DropdownMenuItem className="gap-2 cursor-pointer text-subtle-medium dark:text-dark-text dark:hover:bg-white/5">
-                      <Settings size={14} />
+                      <Key size={14} />
                       Change Password
                     </DropdownMenuItem>
                   </Link>

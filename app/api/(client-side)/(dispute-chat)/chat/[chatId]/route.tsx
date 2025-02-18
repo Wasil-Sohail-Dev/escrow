@@ -1,6 +1,7 @@
 import { ChatSystem } from "@/models/ChatSystem";
 import dbConnect from "@/lib/dbConnect";
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 
 interface ChatMessage {
   sender: {
@@ -29,7 +30,15 @@ export async function GET(
   const limit = 10;
 
   try {
-    const chat = await ChatSystem.findOne({ disputeId: chatId });
+    // Validate chatId format
+    if (!chatId || !mongoose.Types.ObjectId.isValid(chatId)) {
+      return NextResponse.json(
+        { error: "Invalid chat ID format" },
+        { status: 400 }
+      );
+    }
+
+    const chat = await ChatSystem.findOne({ disputeId: new mongoose.Types.ObjectId(chatId) });
     if (!chat) {
       return NextResponse.json({ error: "Chat not found" }, { status: 404 });
     }

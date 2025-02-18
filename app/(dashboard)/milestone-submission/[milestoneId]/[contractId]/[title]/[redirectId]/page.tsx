@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import Topbar from "../../../../../../../components/dashboard/Topbar";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TextStyle from "@tiptap/extension-text-style";
@@ -232,7 +231,7 @@ const Page = () => {
                     Submitting...
                   </div>
                 ) : (
-                  "Save"
+                  "Submit"
                 )}
               </Button>
             </div>

@@ -30,14 +30,14 @@ const signUpSchema = z
       .regex(/[a-z]/, "Password must contain at least one lowercase letter")
       .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
       .regex(/\d/, "Password must contain at least one number")
-      .regex(/[@$!%*?&]/, "Password must contain at least one special character"),
-    cnfPassword: z
-      .string()
-      .min(8, "Passwords don't match"),
-    acceptPolicy: z.boolean()
-      .refine((val) => val === true, {
-        message: "Please accept the Terms and Conditions to proceed."
-      }),
+      .regex(
+        /[@$!%*?&]/,
+        "Password must contain at least one special character"
+      ),
+    cnfPassword: z.string().min(8, "Passwords don't match"),
+    acceptPolicy: z.boolean().refine((val) => val === true, {
+      message: "Please accept the Terms and Conditions to proceed.",
+    }),
   })
   .refine((data) => data.password === data.cnfPassword, {
     message: "Passwords don't match",
@@ -73,17 +73,15 @@ const Page = () => {
       });
       return;
     }
-
     setLoading(true);
-
     try {
-      // Store form data in localStorage temporarily
-      localStorage.setItem("tempRegisterData", JSON.stringify({
-        email: data.email,
-        password: data.password
-      }));
-      
-      // Redirect to user type selection
+      localStorage.setItem(
+        "tempRegisterData",
+        JSON.stringify({
+          email: data.email,
+          password: data.password,
+        })
+      );
       router.push("/select-usertype");
     } catch (err: any) {
       toast({
@@ -99,12 +97,14 @@ const Page = () => {
   return (
     <div className="flex flex-col gap-6 w-full max-w-[500px] bg-white dark:bg-dark-input-bg p-12 my-12 border border-[#E8EAEE] dark:border-dark-border">
       <div className="text-center space-y-1">
-        <h1 className="text-3xl font-semibold text-paragraph dark:text-dark-text">Create Account</h1>
+        <h1 className="text-3xl font-semibold text-paragraph dark:text-dark-text">
+          Create Account
+        </h1>
         <p className="text-sm text-paragraph/60 dark:text-dark-text/60">
           Fill in your details to get started
         </p>
       </div>
-      
+
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSignUp)}
@@ -183,7 +183,11 @@ const Page = () => {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dark-text"
                   >
-                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    {showConfirmPassword ? (
+                      <EyeOff size={20} />
+                    ) : (
+                      <Eye size={20} />
+                    )}
                   </button>
                 </div>
                 <FormMessage />
@@ -197,24 +201,35 @@ const Page = () => {
             name="acceptPolicy"
             render={({ field }) => (
               <FormItem>
-                <div className="flex items-center gap-2">
+                <div className="flex items-start gap-2">
                   <Checkbox
                     checked={field.value}
                     onCheckedChange={field.onChange}
                     disabled={loading}
-                    className="border-[#D1D5DB] dark:border-dark-border data-[state=checked]:bg-primary"
+                    className="mt-1 h-4 w-4 rounded border-[#D1D5DB] dark:border-dark-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                   />
-                  <label className="text-sm text-paragraph dark:text-dark-text">
-                    I agree to the terms and conditions
-                  </label>
+                  <div className="flex flex-wrap text-[14px] text-paragraph dark:text-dark-text">
+                    <span className="mr-1">I agree to</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        router.push("/term-condition");
+                      }}
+                      className="text-primary hover:text-primary/90 font-medium px-0 mr-1"
+                    >
+                      Terms and Conditions
+                    </button>
+                    <span>of Third Party Escrow</span>
+                  </div>
                 </div>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="h-11 bg-primary hover:bg-primary/90 text-white dark:text-dark-text rounded-lg"
             disabled={loading}
           >
@@ -228,7 +243,8 @@ const Page = () => {
             )}
           </Button>
         </form>
-      </Form><p className="text-sm text-paragraph dark:text-dark-text text-center">
+      </Form>
+      <p className="text-sm text-paragraph dark:text-dark-text text-center">
         Already have an account?{" "}
         <Link href="/login" className="text-primary hover:text-primary-500">
           Sign in

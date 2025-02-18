@@ -28,7 +28,7 @@ const DeleteAccountModal = ({
   return (
     <Modal open={isOpen} onOpenChange={onClose}>
       <ModalContent className="w-[95%] max-w-[538px] px-4 sm:px-6 md:px-8 overflow-hidden">
-        <ModalHeader className="text-center">
+        <div className="text-center pt-10 space-y-2">
           <div className="mx-auto w-16 h-16 sm:w-20 sm:h-20 bg-red-100 rounded-full flex items-center justify-center mb-4">
             <Trash2 className="w-6 h-6 sm:w-8 sm:h-8 md:w-[30px] md:h-[34px] text-[#364152]" />
           </div>
@@ -43,7 +43,7 @@ const DeleteAccountModal = ({
               </span>
             </div>
           </ModalDescription>
-        </ModalHeader>
+        </div>
 
         <div className="mt-6">
           <div className="text-[14px] sm:text-[15px] md:text-[17px] font-[400] leading-[16px] sm:leading-[17px] md:leading-[19px] text-center dark:text-dark-text mb-4 sm:mb-5 md:mb-6">

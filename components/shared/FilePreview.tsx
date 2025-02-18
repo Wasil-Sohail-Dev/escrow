@@ -21,6 +21,8 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   onDownload,
   closeModal
 }) => {
+
+  console.log(files, 'files')
   // Function to get file size in readable format
   const getFileSize = (file: File | { size: number }) => {
 
@@ -33,23 +35,44 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   // Function to check if file is an image
   const isImageFile = (file: { type: string }) => {
     const imageTypes = ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"];
-    return imageTypes.includes(file.type.toLowerCase());
+    if (file instanceof File) {
+      return file.type.toLowerCase().startsWith('image/');
+    }
+    // For server files, check if type contains 'image' or extension is an image type
+    if (typeof file.type === 'string') {
+      if (file.type.toLowerCase().startsWith('image/')) return true;
+      if (file.type.toLowerCase().includes('image/')) return true;
+      // Check file extension from type if it's in format like "image/jpeg"
+      const extension = file.type.split('/').pop()?.toLowerCase();
+      return imageTypes.includes(extension || '');
+    }
+    return false;
   };
 
   // Function to get file icon based on type
-  const getFileIcon = (file: File | { type: string; preview?: string; url?: string }) => {
-    if ('preview' in file && file.preview) return file.preview;
+  const getFileIcon = (file: File | { type: string; url?: string }) => {
     if (isImageFile(file)) {
-      return 'url' in file ? file.url : URL.createObjectURL(file as File);
+      if (file instanceof File) {
+        return URL.createObjectURL(file);
+      }
+      if ('url' in file && file.url) {
+        return file.url;
+      }
     }
-    return '/assets/PDF.svg';
+    return null;
   };
 
   // Function to get file type display text
   const getFileType = (file: File | { type: string }): string => {
-    if (isImageFile(file)) return 'Image';
-    if (file.type === 'application/pdf') return 'PDF';
-    return file.type.split('/')[1]?.toUpperCase() || 'File';
+    if (file instanceof File) {
+      if (file.type.startsWith('image/')) return 'Image';
+      if (file.type === 'application/pdf') return 'PDF';
+      return file.type.split('/')[1]?.toUpperCase() || 'File';
+    }
+    // For server files
+    if (file.type.includes('image')) return 'Image';
+    if (file.type.includes('pdf')) return 'PDF';
+    return file.type.split('/').pop()?.toUpperCase() || 'File';
   };
 
   // Function to handle file preview
@@ -106,20 +129,14 @@ const FilePreview: React.FC<FilePreviewProps> = ({
             <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-dark-2/20">
               {isImageFile(file) ? (
                 <Image
-                  src={getFileIcon(file) || ''}
+                  src={file instanceof File ? URL.createObjectURL(file) : file.url}
                   alt={file.name}
                   fill
                   className="object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <Image
-                    src={getFileIcon(file) || ''}
-                    alt={file.name}
-                    width={24}
-                    height={24}
-                    className="w-8 h-8 bg-white dark:bg-transparent"
-                  />
+                  <span className="font-bold text-4xl bg-white dark:bg-transparent">📄</span>
                 </div>
               )}
             </div>

@@ -313,7 +313,13 @@ const Page = () => {
                     onCheckedChange={field.onChange}
                     className="border-[#D1D5DB] dark:border-dark-border data-[state=checked]:bg-primary"
                   />
-                  <label className="text-sm text-paragraph dark:text-dark-text">
+                  <label
+                    className="text-sm text-paragraph dark:text-dark-text cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      field.onChange(!field.value);
+                    }}
+                  >
                     I agree to the terms and conditions
                   </label>
                 </div>

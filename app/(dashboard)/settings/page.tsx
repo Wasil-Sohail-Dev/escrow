@@ -326,19 +326,18 @@ const Settings = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row justify-end items-center gap-4 pt-6">
-            <Button
-              onClick={() => setIsDeleteModalOpen(true)}
-              className="w-full sm:w-auto h-[42px] px-4 bg-[#E71D1D] hover:bg-[#E71D1D]/90 text-base1-semibold text-white rounded-lg transition-colors"
-            >
-              Delete Account
-            </Button>
-            {/* <Button
-              disabled={saving}
-              className="w-full sm:w-auto h-[42px] px-6 md:px-10 border bg-transparent border-primary text-base1-semibold hover:text-primary hover:bg-transparent rounded-lg transition-colors dark:text-dark-text dark:bg-dark-input-bg"
-            >
-              Cancel
-            </Button> */}
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6">
+            <div className="w-full sm:w-auto flex flex-col items-start">
+              <p className="text-[#64748B] dark:text-dark-text/60 text-sm mb-1">
+                Do you want to delete your account?
+              </p>
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="text-[#E71D1D] hover:text-[#E71D1D]/90 text-sm font-medium transition-colors"
+              >
+                Click here to delete your account
+              </button>
+            </div>
             <Button
               onClick={handleSubmit}
               disabled={saving || isFormUnchanged()}

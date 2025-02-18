@@ -14,6 +14,7 @@ const PUBLIC_ROUTES = [
     "/reset-password",
     "/reset-success",
     "/forgot-password",
+    "/term-condition",
 ];
 
 // API routes that are public

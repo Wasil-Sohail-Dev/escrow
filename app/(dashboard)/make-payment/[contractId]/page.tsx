@@ -197,7 +197,7 @@ function PaymentPage() {
                   </span>
                   <span className="text-[16px] font-semibold text-[#474747] dark:text-dark-text">
                     ${" "}
-                    {(contract?.budget ?? 0 + escrowTax + bankFee)?.toFixed(2)}
+                    {(contract?.budget! + escrowTax + bankFee)?.toFixed(2)}
                   </span>
                 </div>
               </div>

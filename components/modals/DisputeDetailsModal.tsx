@@ -160,14 +160,14 @@ const DisputeDetailsModal = ({ isOpen, onClose, contractId }: DisputeDetailsModa
 
                 <div>
                   <p className="text-sm text-gray-500 dark:text-dark-text/60">Dispute Title</p>
-                  <p className="font-medium mt-1 text-paragraph dark:text-dark-text">
+                  <p className="font-medium mt-1 text-paragraph dark:text-dark-text break-all">
                     {disputeDetails.title}
                   </p>
                 </div>
 
                 <div>
                   <p className="text-sm text-gray-500 dark:text-dark-text/60">Reason</p>
-                  <p className="mt-1 text-paragraph dark:text-dark-text whitespace-pre-wrap">
+                  <p className="mt-1 text-paragraph dark:text-dark-text break-all">
                     {disputeDetails.reason}
                   </p>
                 </div>

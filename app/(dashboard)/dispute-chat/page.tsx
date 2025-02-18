@@ -114,7 +114,6 @@ const DisputeChat = () => {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
   };
 
-  const [chatData, setChatData] = useState<ChatData | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [selectedDisputeTitle, setSelectedDisputeTitle] = useState("");
@@ -139,7 +138,7 @@ const DisputeChat = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const fetchChat = async (page = 1, append = false) => {
-    if (!userId) return;
+    if (!userId || !disputeId) return;
 
     try {
       if (page === 1) {
@@ -149,37 +148,41 @@ const DisputeChat = () => {
       }
 
       const response = await fetch(`/api/chat/${disputeId}?page=${page}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 400) {
+          toast({
+            title: "Error",
+            description: "Invalid chat ID. Please try again.",
+            variant: "destructive",
+          });
+          router.push("/dispute-chat");
+          return;
+        }
+        throw new Error(errorData.error || "Failed to fetch chat");
+      }
+
       const data = await response.json();
 
+      if (data.messages.length > 0) {
+        setLoading(false);
+      }
+
       if (!data.messages) {
+        setLoading(false);
         throw new Error("No messages received");
       }
 
-      setChatData(data);
       setHasMore(data.hasMore);
       setCurrentPage(page);
 
-      const chatContainer = chatContainerRef.current;
-
       if (append) {
-        // Store the current scroll position before adding new messages
-        const oldScrollHeight = chatContainer?.scrollHeight || 0;
-        const oldScrollTop = chatContainer?.scrollTop || 0;
-
         setMessages((prev) => [...data.messages, ...prev]);
-
-        requestAnimationFrame(() => {
-          if (chatContainer) {
-            const newScrollHeight = chatContainer.scrollHeight;
-            chatContainer.scrollTop =
-              oldScrollTop + (newScrollHeight - oldScrollHeight);
-          }
-        });
       } else {
         setMessages(data.messages);
-
-        // Ensure first load scrolls to bottom
+        // Scroll to bottom after setting messages
         requestAnimationFrame(() => {
+          const chatContainer = chatContainerRef.current;
           if (chatContainer) {
             chatContainer.scrollTop = chatContainer.scrollHeight;
           }
@@ -190,7 +193,12 @@ const DisputeChat = () => {
         markMessagesAsRead();
       }
     } catch (error) {
-      console.error("Error fetching chat:", error);
+      setLoading(false);
+      toast({
+        title: "Error",
+        description: "Failed to load chat messages. Please try again.",
+        variant: "destructive",
+      });
       if (!append) setMessages([]);
     } finally {
       setLoading(false);
@@ -434,12 +442,21 @@ const DisputeChat = () => {
   };
 
   const handleDisputeClick = (dispute: Dispute) => {
+    if (!dispute._id) {
+      toast({
+        title: "Error",
+        description: "Invalid dispute selected. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
     setSelectedDispute(dispute);
-    setSelectedDisputeTitle(dispute.title);
     setShowMobileChat(true);
     setLoading(true);
     router.push(`?disputeId=${dispute._id}`);
-    fetchChat(1, false);
+    setCurrentPage(1);
+      setHasMore(true);
+      fetchChat(1, false);
   };
 
   const handleBackToDisputes = () => {
@@ -501,7 +518,6 @@ const DisputeChat = () => {
         toast
       );
     } catch (error) {
-      console.error("Error downloading file:", error);
       toast({
         title: "Error",
         description: "Failed to download file. Please try again.",
@@ -513,12 +529,10 @@ const DisputeChat = () => {
   if (userLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <Loader size="lg" text="Loading user data..." fullHeight={true} />
+        <Loader size="lg" text="Loading disputes..." fullHeight={true} />
       </div>
     );
   }
-
-  console.log(messages, "messages");
 
   return (
     <div className="flex flex-col h-screen">
@@ -676,7 +690,7 @@ const DisputeChat = () => {
                       />
                     </div>
                   )}
-                  {loading ? (
+                  {(loading) ? (
                     <div className="flex justify-center items-center h-full min-h-[400px]">
                       <Loader
                         size="md"

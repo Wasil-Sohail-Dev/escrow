@@ -17,11 +17,13 @@ interface RequestBody {
 }
 
 export async function POST(req: Request) {
+
+  console.log("Creating dispute");
   await dbConnect();
 
   try {
     const formData = await req.formData();
-
+    console.log(formData, "formData");
     // Extract JSON fields from FormData
     const jsonData = formData.get("data") as string;
     if (!jsonData) {
