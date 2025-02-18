@@ -11,31 +11,39 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const sendForgotPasswordEmail = async (email: string, resetLink: string): Promise<void> => {
+export const sendForgotPasswordEmail = async (
+  email: string,
+  resetCode: string,
+  resetLink: string
+): Promise<void> => {
   console.log("Sending forgot-password email to:", email);
 
   try {
     await transporter.sendMail({
-      from: `"LTS" <${process.env.SMTP_USER}>`,
+      from: `"Support Team" <${process.env.SMTP_USER}>`,
       to: email,
       subject: "Reset Your Password",
-      text: `We received a request to reset your password. If you did not make this request, please ignore this email. 
+      text: `We received a request to reset your password. 
       
-        To reset your password, click the link below or paste it into your browser:
-        ${resetLink}
+      Your 6-digit verification code: ${resetCode}
+              
+      To reset your password using the web, click the link below:
+      ${resetLink}
 
-        This link will expire in 15 minutes.
+      This code and link will expire in 1 Day.
 
-        If you need further assistance, contact our support team.
+      If you did not request this reset, please ignore this email.
 
-        Best regards,`,
+      Best regards,`,
       html: `
         <p>We received a request to reset your password. If you did not make this request, you can safely ignore this email.</p>
-        <p>To reset your password, click the button below or copy and paste the link into your browser:</p>
+        <h2 style="text-align: center;">Your 6-digit verification code:</h2>
+        <h1 style="text-align: center; background: #f4f4f4; padding: 10px; border-radius: 5px; display: inline-block;">${resetCode}</h1>
+        <p>Or, reset your password using the link below:</p>
         <p><a href="${resetLink}" style="color: white; background: #007bff; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p>
         <p>Or, copy this link into your browser:</p>
         <p>${resetLink}</p>
-        <p>This link will expire in 15 minutes.</p>
+        <p>This code and link will expire in 15 minutes.</p>
         <p>If you need further assistance, contact our support team.</p>
         <p>Best regards,</p>
       `,
@@ -44,9 +52,10 @@ export const sendForgotPasswordEmail = async (email: string, resetLink: string):
     console.log("Forgot-password email sent successfully to:", email);
   } catch (error) {
     console.error("Error sending forgot-password email:", error);
-    throw error; // Propagate the error to the calling function
+    throw error;
   }
 };
+
 
 
 export const verifyMail = async (email: string, validationCode: number): Promise<void> => {

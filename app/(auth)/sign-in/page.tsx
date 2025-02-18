@@ -18,6 +18,7 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
+import { rule } from "postcss";
 
 // Validation Schema
 const signInSchema = z.object({
@@ -32,7 +33,7 @@ const Page = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-  const { refreshUser } = useUser();
+  const { refreshUser, user } = useUser();
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -50,15 +51,26 @@ const Page = () => {
       email: data.email,
       password: data.password,
     });
+    
     if (result?.error) {
       setError(
         result.error === "CredentialsSignin"
-          ? "Credentials are not valid"
+          ? "Invalid email or password"
+          : result.error === "Please verify your email before signing in."
+          ? "Please verify your email before signing in"
           : result.error
       );
     } else if (result?.ok) {
       await refreshUser();
-      router.push("/home");
+      if (user?.userStatus === "active") {
+        router.push("/home");
+      }
+      else if (user?.userStatus === "verified") {
+        router.push("/on-boarding");
+      }
+      else {
+        router.push("/mail-verify");
+      }
     } else {
       setError("An unexpected error occurred.");
     }

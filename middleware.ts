@@ -24,15 +24,16 @@ const PUBLIC_API_ROUTES = [
     "/api/auth/**", // Allow all NextAuth authentication routes
     "/api/user-login",
     "/api/register",
-    "/api/forgot-password-link",
+    "/api/forget-password-link",
     "/api/reset-password-link",
     "/api/reset-password",
     "/api/save-onboarding",
     "/api/send-mail-code",
     "/api/verify-mail-code",
+    "/api/verify-reset-code",
 ];
 
-
+const MAIL_VERIFY_PAGE = "/mail-verify";
 const ONBOARDING_PAGE = "/on-boarding";
 const HOME_PAGE = "/home";
 
@@ -68,7 +69,6 @@ export async function middleware(req: NextRequest) {
     const token = webToken || tokenPayload;
     const isPublicPage = PUBLIC_ROUTES.includes(pathname);
     const isPublicApiRoute = PUBLIC_API_ROUTES.some(route => pathname.startsWith(route));
-    const isOnboardingPage = pathname === ONBOARDING_PAGE;
 
     // Allow public API routes without authentication
     if (isPublicApiRoute) {
@@ -88,45 +88,31 @@ export async function middleware(req: NextRequest) {
 
     // If user is authenticated
     if (token) {
-        // Check if user needs onboarding (based on userStatus in token)
-        const needsOnboarding = token.userStatus === "verified" || !token.userStatus;
+        const userStatus = token.userStatus;
 
-        if (token.userStatus === "active" && isOnboardingPage) {
-            const url = req.nextUrl.clone();
-            url.pathname = HOME_PAGE;
-            return NextResponse.redirect(url);
+        // Redirect users based on their status
+        if (userStatus === "pendingVerification" && pathname !== MAIL_VERIFY_PAGE) {
+            console.log("Redirecting to Mail Verification Page");
+            return NextResponse.redirect(new URL(MAIL_VERIFY_PAGE, req.url));
         }
 
-        if (needsOnboarding && !isOnboardingPage) {
-            const url = req.nextUrl.clone();
-            url.pathname = ONBOARDING_PAGE;
-
-            const tokenData = {
-                email: token.email,
-                userType: token.userType,
-                userStatus: token.userStatus,
-            };
-
-            const response = NextResponse.redirect(url);
-            response.cookies.set("TpAuthToken", JSON.stringify(tokenData), {
-                httpOnly: false,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "lax",
-                maxAge: 60 * 60, // 1 hour
-            });
-
-            return response;
+        if (userStatus === "verified" && pathname !== ONBOARDING_PAGE) {
+            console.log("Redirecting to Onboarding Page");
+            return NextResponse.redirect(new URL(ONBOARDING_PAGE, req.url));
         }
 
-        // If user is verified and trying to access auth pages or onboarding
-        if (!needsOnboarding && (isPublicPage || isOnboardingPage)) {
-            const url = req.nextUrl.clone();
-            url.pathname = HOME_PAGE;
-            return NextResponse.redirect(url);
+        if (userStatus === "active" && pathname !== HOME_PAGE && isPublicPage) {
+            console.log("Redirecting to Home Page");
+            return NextResponse.redirect(new URL(HOME_PAGE, req.url));
+        }
+
+        if (userStatus === "adminInactive" || userStatus === "userInactive") {
+            console.log("Access blocked for inactive users");
+            return NextResponse.json({ message: "Access Denied: Your account is inactive" }, { status: 403 });
         }
     }
 
-    // Redirect root "/" to home
+    // Redirect root "/" to home if authenticated
     if (pathname === "/") {
         const url = req.nextUrl.clone();
         url.pathname = HOME_PAGE;

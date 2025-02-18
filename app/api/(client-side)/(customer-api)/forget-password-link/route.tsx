@@ -17,6 +17,12 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json({ error: "Email not found" }, { status: 404 });
     }
+    // Check if the user is not inactive
+    if (user.status === "adminInactive" || user.status === "userInactive") {
+      return NextResponse.json({ error: "User is inactive" }, { status: 403 });
+    }
+    // Generate a unique 6-digit code
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Generate a unique token
     const resetToken = uuidv4();
@@ -25,20 +31,21 @@ export async function POST(req: Request) {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-    // Save the token and expiration in the database
-    const passwordRest = new PasswordReset({
+    // Save the reset details in the database
+    const passwordReset = new PasswordReset({
       email,
       token: resetToken,
+      code: resetCode,
       expiresAt,
     });
-    const savedPasswordReset = await passwordRest.save();
+    await passwordReset.save();
 
     // Generate reset link
     const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password?token=${resetToken}`;
 
     // Send reset email
     try {
-      await sendForgotPasswordEmail(email, resetLink);
+      await sendForgotPasswordEmail(email, resetCode, resetLink);
     } catch (error: any) {
       return NextResponse.json(
         { error: error.message || "Failed to send reset email" },
