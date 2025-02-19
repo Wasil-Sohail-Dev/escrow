@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { SignJWT } from "jose"; // ✅ Use jose instead of jsonwebtoken
 import dbConnect from "@/lib/dbConnect";
 import argon2 from "argon2";
 import { Customer } from "@/models/CustomerSchema";
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Generate JWT for mobile authentication
+    // Generate JWT for mobile authentication (7 days expiration)
     const tokenPayload = {
       id: user._id.toString(),
       email: user.email,
@@ -76,24 +76,37 @@ export async function POST(req: NextRequest) {
       userStatus: user.userStatus,
     };
 
-    const token = jwt.sign(tokenPayload, process.env.NEXTAUTH_SECRET!, {
-      expiresIn: "24h",
-    });
+    const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET!);
+    const token = await new SignJWT(tokenPayload)
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("7d") // ✅ Token now expires in one week
+      .sign(secret);
+
+    console.log("token", token);
 
     if (user.userStatus === "pendingVerification") {
-      
-      await sendMailCode(email); 
-      return NextResponse.json({message: "Verification email has been sent to your email address.", token: null, user: tokenPayload }, { status: 200 });
+      await sendMailCode(email);
+      return NextResponse.json(
+        {
+          message: "Verification email has been sent to your email address.",
+          token: null,
+          user: tokenPayload,
+        },
+        { status: 200 }
+      );
     }
 
     if (user.userStatus === "verified") {
-      return NextResponse.json({ token:null, user: tokenPayload }, { status: 200 });
+      return NextResponse.json(
+        { token: null, user: tokenPayload },
+        { status: 200 }
+      );
     }
+
     if (user.userStatus === "active") {
       return NextResponse.json({ token, user: tokenPayload }, { status: 200 });
     }
-
-    // return NextResponse.json({ token, user: tokenPayload }, { status: 200 });
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(

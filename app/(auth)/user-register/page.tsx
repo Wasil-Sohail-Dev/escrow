@@ -19,11 +19,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
+import PasswordRequirements from "@/models/PasswordRequirements";
 
 // Validation Schema
 const signUpSchema = z
   .object({
-    email: z.string().email("Invalid email address"),
+    email: z.string()
+      .min(1, "Email is required")
+      .email("Invalid email address"),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters long")
@@ -50,6 +53,7 @@ const Page = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -136,7 +140,7 @@ const Page = () => {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem className="space-y-2">
+              <FormItem className="space-y-2 relative">
                 <FormLabel className="text-sm text-paragraph dark:text-dark-text">
                   Password
                 </FormLabel>
@@ -147,6 +151,8 @@ const Page = () => {
                     placeholder="••••••••"
                     className="h-11 pr-10 dark:bg-dark-input-bg border border-[#D1D5DB] dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
                     disabled={loading}
+                    onFocus={() => setShowPasswordRequirements(true)}
+                    onBlur={() => setShowPasswordRequirements(false)}
                   />
                   <button
                     type="button"
@@ -156,6 +162,10 @@ const Page = () => {
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
+                <PasswordRequirements 
+                  password={field.value}
+                  showRequirements={showPasswordRequirements}
+                />
                 <FormMessage />
               </FormItem>
             )}

@@ -1,6 +1,10 @@
 import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { jwtVerify } from "jose"; // ✅ Use jose
+
+export const config = {
+    matcher: ["/((?!api/escrow-stripe-webhook|_next/static|favicon.ico|assets/).*)"],
+};
 
 // Public routes (accessible without authentication)
 const PUBLIC_ROUTES = [
@@ -22,7 +26,7 @@ const PUBLIC_API_ROUTES = [
     "/api/auth/login",
     "/api/auth",
     "/api/auth/",
-    "/api/auth/**", // Allow all NextAuth authentication routes
+    "/api/auth/**",
     "/api/user-login",
     "/api/register",
     "/api/forget-password-link",
@@ -38,45 +42,62 @@ const MAIL_VERIFY_PAGE = "/mail-verify";
 const ONBOARDING_PAGE = "/on-boarding";
 const HOME_PAGE = "/home";
 
+// ✅ Function to verify JWT using jose
+async function verifyToken(token: string) {
+    try {
+        const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
+        const { payload } = await jwtVerify(token, secret);
+        return payload;
+    } catch (error: any) {
+        console.error("JWT Verification Error:", error.message);
+        return null;
+    }
+}
+
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
-    // Skip middleware for the Stripe webhook
     if (pathname === "/api/escrow-stripe-webhook") {
         console.log("Skipping middleware for webhook.");
         return NextResponse.next();
     }
 
-    // Handle CORS preflight (OPTIONS method)
     if (req.method === "OPTIONS") {
         const response = new NextResponse(null, { status: 204 });
         setCorsHeaders(response);
         return response;
     }
 
-    // Extract token for authentication
-    const webToken = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    const mobileToken = req.headers.get("Authorization")?.replace("Bearer ", "");
-    let tokenPayload: any = null;
+    const webToken = await getToken({ req, secret: process.env.NEXTAUTH_SECRET! });
 
+    const authHeader = req.headers.get("Authorization");
+    console.log("Raw Authorization Header:", authHeader);
+    const mobileToken = authHeader && authHeader.startsWith("Bearer ")
+        ? authHeader.split(" ")[1]
+        : null;
+
+    console.log("webToken", webToken);
+    console.log("mobileToken", mobileToken);
+
+    let tokenPayload: any = null;
     if (mobileToken) {
-        try {
-            tokenPayload = jwt.verify(mobileToken, process.env.NEXTAUTH_SECRET!);
-        } catch (error) {
-            return NextResponse.json({ message: error || "Invalid Token" }, { status: 403 });
+        tokenPayload = await verifyToken(mobileToken);
+        if (!tokenPayload) {
+            return NextResponse.json({ message: "Invalid or expired token." }, { status: 403 });
         }
     }
 
+    console.log("tokenPayload", tokenPayload);
     const token = webToken || tokenPayload;
+    console.log("Token", token);
+
     const isPublicPage = PUBLIC_ROUTES.includes(pathname);
     const isPublicApiRoute = PUBLIC_API_ROUTES.some(route => pathname.startsWith(route));
 
-    // Allow public API routes without authentication
     if (isPublicApiRoute) {
         return NextResponse.next();
     }
 
-    // If user is not authenticated and trying to access protected routes
     if (!token && !isPublicPage) {
         if (pathname.startsWith("/api")) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -87,11 +108,9 @@ export async function middleware(req: NextRequest) {
         }
     }
 
-    // If user is authenticated
     if (token) {
         const userStatus = token.userStatus;
 
-        // Redirect users based on their status
         if (userStatus === "pendingVerification" && pathname !== MAIL_VERIFY_PAGE) {
             console.log("Redirecting to Mail Verification Page");
             return NextResponse.redirect(new URL(MAIL_VERIFY_PAGE, req.url));
@@ -113,34 +132,26 @@ export async function middleware(req: NextRequest) {
         }
     }
 
-    // Redirect root "/" to home if authenticated
     if (pathname === "/") {
         const url = req.nextUrl.clone();
         url.pathname = HOME_PAGE;
         return NextResponse.redirect(url);
     }
 
-    // Role-based route restriction (Example: Prevent vendors from accessing create-contract)
     if (token?.userType === "vendor" && pathname === "/create-contract") {
         const url = req.nextUrl.clone();
         url.pathname = "/";
         return NextResponse.redirect(url);
     }
 
-    // Create response with CORS headers
     const response = NextResponse.next();
     setCorsHeaders(response);
     return response;
 }
 
-// Function to set CORS headers
 function setCorsHeaders(response: NextResponse) {
     response.headers.set("Access-Control-Allow-Credentials", "true");
     response.headers.set("Access-Control-Allow-Origin", "*");
     response.headers.set("Access-Control-Allow-Methods", "GET,OPTIONS,POST,PUT");
     response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
 }
-
-export const config = {
-    matcher: ["/((?!api/escrow-stripe-webhook|_next/static|favicon.ico|assets/).*)"],
-};

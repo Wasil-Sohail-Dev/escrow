@@ -56,6 +56,14 @@ export async function POST(req: Request) {
       );
     }
 
+    // Ensure onboarding
+    if (user.userStatus === "active") {
+      return NextResponse.json(
+        { error: "User Already onBoard and Active" },
+        { status: 200 }
+      );
+    }
+
     // Ensure email is verified before onboarding
     if (user.userStatus !== "verified") {
       return NextResponse.json(
@@ -109,8 +117,20 @@ export async function POST(req: Request) {
       },
       { status: 200 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error handling onboarding data:", error);
+
+    // Handle MongoDB duplicate key error (error code 11000)
+    if (error.code === 11000) {
+      const duplicateKey = Object.keys(error.keyValue)[0]; // Get which field caused the duplication
+      return NextResponse.json(
+        {
+          error: `${duplicateKey} already exists. Please use a different one.`,
+        },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Internal server error." },
       { status: 500 }

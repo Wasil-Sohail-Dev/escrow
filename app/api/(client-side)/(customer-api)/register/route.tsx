@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     const existingCustomer = await Customer.findOne({ email });
     if (existingCustomer) {
       return NextResponse.json(
-        { error: "Email already in use." },
+        { error: "Oops! It seems like this email is already linked to an account. You can log in instead!" },
         { status: 409 }
       );
     }

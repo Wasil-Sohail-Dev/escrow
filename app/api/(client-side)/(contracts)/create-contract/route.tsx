@@ -48,14 +48,19 @@ export async function POST(req: Request) {
       );
     }
 
+    // Ensure contractId is unique
     const existingContract = await Contract.findOne({ contractId });
     if (existingContract) {
       return NextResponse.json(
-        { error: `Contract ${contractId} already exists.` },
+        {
+          error:
+            "contractId must be unique. A contract with this ID already exists.",
+        },
         { status: 422 }
       );
     }
 
+    // Ensure startDate is before endDate
     if (new Date(startDate) >= new Date(endDate)) {
       return NextResponse.json(
         { error: "Start date must be before end date." },
@@ -107,27 +112,13 @@ export async function POST(req: Request) {
       );
     }
 
-    // Handle multiple file uploads
-    let contractFileUrls: string[] = [];
-    const fileEntries = formData.getAll("contractFile") as File[];
+    // Upload files to S3 and get URLs
+    const contractFiles = formData.getAll("contractFiles") as File[];
+    const contractFileUrls = await Promise.all(
+      contractFiles.map((file) => uploadFileToS3(file))
+    );
 
-    if (fileEntries.length > 0) {
-      try {
-        const uploadPromises = fileEntries.map((file) =>
-          uploadFileToS3(file, "contracts")
-        );
-        const uploadResults = await Promise.all(uploadPromises);
-        contractFileUrls = uploadResults.map(({ fileUrl }) => fileUrl);
-      } catch (uploadError) {
-        console.error("File upload failed:", uploadError);
-        return NextResponse.json(
-          { error: "Failed to upload contract files." },
-          { status: 500 }
-        );
-      }
-    }
-    console.log(contractType, 'contractType');
-    // Create and save contract
+    // Create a new contract record
     const newContract = new Contract({
       contractId,
       contractType,
@@ -176,7 +167,10 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(
-      { message: "Contract created successfully.", data: savedContract },
+      {
+        message: "Contract created successfully and invitation sent.",
+        data: savedContract,
+      },
       { status: 200 }
     );
   } catch (error: any) {

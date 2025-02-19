@@ -18,12 +18,13 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
-import { rule } from "postcss";
 
 // Validation Schema
 const signInSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(5, "Password must be at least 5 characters long"),
+  email: z.string()
+      .min(1, "Email is required")
+      .email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters long"),
 });
 
 type SignInFormValues = z.infer<typeof signInSchema>;
@@ -40,6 +41,7 @@ const Page = () => {
       email: "",
       password: "",
     },
+    mode: "onBlur",
   });
 
   const handleSignIn = async (data: SignInFormValues) => {

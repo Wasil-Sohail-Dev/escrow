@@ -17,10 +17,12 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json({ error: "Email not found" }, { status: 404 });
     }
-    // Check if the user is not inactive
+
+    // Check if the user is inactive
     if (user.status === "adminInactive" || user.status === "userInactive") {
       return NextResponse.json({ error: "User is inactive" }, { status: 403 });
     }
+
     // Generate a unique 6-digit code
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -28,17 +30,27 @@ export async function POST(req: Request) {
     const resetToken = uuidv4();
 
     // Calculate expiration time (1 day from now)
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    // Save the reset details in the database
-    const passwordReset = new PasswordReset({
-      email,
-      token: resetToken,
-      code: resetCode,
-      expiresAt,
-    });
-    await passwordReset.save();
+    // Check if a reset record already exists for this email
+    const existingReset = await PasswordReset.findOne({ email });
+
+    if (existingReset) {
+      // Update existing reset record
+      existingReset.token = resetToken;
+      existingReset.code = resetCode;
+      existingReset.expiresAt = expiresAt;
+      await existingReset.save();
+    } else {
+      // Create a new reset record
+      const passwordReset = new PasswordReset({
+        email,
+        token: resetToken,
+        code: resetCode,
+        expiresAt,
+      });
+      await passwordReset.save();
+    }
 
     // Generate reset link
     const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password?token=${resetToken}`;
