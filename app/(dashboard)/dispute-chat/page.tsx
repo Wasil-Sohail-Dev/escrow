@@ -1164,7 +1164,7 @@ const DisputeChat = () => {
                     ref={fileInputRef}
                     type="file"
                     multiple
-                    accept="image/*,.pdf,.doc,.docx"
+                    accept="image/*,.pdf,.doc,.docx,.zip"
                     className="hidden"
                     onChange={handleFileSelect}
                   />

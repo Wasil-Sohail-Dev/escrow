@@ -163,9 +163,9 @@ const Page = () => {
                 onFileSelect={(files: File[]) => {
                   handleFileUpload({ target: { files } } as any);
                 }}
-                acceptedFileTypes="image/*,.pdf,.doc,.docx"
-                maxFiles={5}
-                maxSize={10}
+                acceptedFileTypes="image/*,.pdf,.doc,.docx,.zip"
+                // maxFiles={5}
+                // maxSize={10}
               />
 
               {/* File Preview Button */}
@@ -222,7 +222,7 @@ const Page = () => {
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={isLoading}
+                disabled={isLoading || !editor?.getText().trim()}
                 className="h-[42px] px-6 md:px-10 bg-primary hover:bg-primary/90 text-[16px] font-[700] leading-[19.6px] text-white dark:text-dark-text rounded-lg transition-colors"
               >
                 {isLoading ? (

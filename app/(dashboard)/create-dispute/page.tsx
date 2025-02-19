@@ -451,9 +451,9 @@ const CreateDispute = () => {
               </p>
               <DragDropFile
                 onFileSelect={handleFileUpload}
-                acceptedFileTypes="image/*,.pdf,.doc,.docx"
-                maxFiles={5}
-                maxSize={10}
+                acceptedFileTypes="image/*,.pdf,.doc,.docx,.zip"
+                // maxFiles={5}
+                // maxSize={10}
               />
 
               {/* File Preview Button */}

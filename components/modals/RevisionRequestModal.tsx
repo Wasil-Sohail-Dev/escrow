@@ -99,9 +99,9 @@ const RevisionRequestModal = ({ isOpen, onClose, mileStoneData, fetchContract }:
                 onFileSelect={(files: File[]) => {
                   setDocuments(prev => [...prev, ...files]);
                 }}
-                acceptedFileTypes="image/*,.pdf,.doc,.docx"
-                maxFiles={5}
-                maxSize={10}
+                acceptedFileTypes="image/*,.pdf,.doc,.docx,.zip"
+                // maxFiles={5}
+                // maxSize={10}
               />
 
               {/* File Preview Button */}
