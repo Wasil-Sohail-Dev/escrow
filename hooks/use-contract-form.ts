@@ -45,6 +45,7 @@ export const useContractForm = () => {
   const [milestoneErrors, setMilestoneErrors] = useState<Array<{[key: string]: string}>>([]);
   const [thirdPartyFee, setThirdPartyFee] = useState({ fee: 0, percentage: 0 });
 
+
   // Initialize contract ID
   useEffect(() => {
     const initiateContract = async () => {
@@ -333,13 +334,10 @@ export const useContractForm = () => {
         endDate: new Date(formData.endDate).toISOString(),
       };
       formDataToSend.append('data', JSON.stringify(jsonData));
-
-      console.log(jsonData, 'jsonData');
-
       // Add files if they exist
       if (formData.documents && formData.documents.length > 0) {
         formData.documents.forEach((file: File) => {
-          formDataToSend.append('contractFile', file);
+          formDataToSend.append('contractFiles', file);
         });
       }
 

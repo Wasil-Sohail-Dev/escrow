@@ -207,12 +207,33 @@ const DragDropFile: React.FC<DragDropFileProps> = ({
           className="w-full h-full cursor-pointer"
         >
           <div className="flex justify-center mb-2">
-            <Image
-              src={icon}
-              alt="upload"
-              width={40}
-              height={30}
-            />
+            {icon ? (
+              <Image
+                src={icon}
+                alt="upload"
+                width={40}
+                height={30}
+                priority
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/assets/download2.svg';
+                }}
+              />
+            ) : (
+              <svg
+                className="w-10 h-8 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+            )}
           </div>
           <p className="text-subtle-medium text-[#64748B] dark:text-dark-text/60">
             {text}{" "}

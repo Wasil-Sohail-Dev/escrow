@@ -20,6 +20,7 @@ import {
   FilePreviewType,
   convertContractFilesToPreviewFiles,
   handleFileDownload,
+  convertS3FilesToPreviewFiles,
 } from "@/lib/helpers/fileHelpers";
 
 const ContactDetails = () => {
@@ -463,8 +464,8 @@ const ContactDetails = () => {
         isOpen={isFilePreviewOpen}
         onClose={() => setIsFilePreviewOpen(false)}
         files={
-          contract?.contractFile
-            ? convertContractFilesToPreviewFiles(contract.contractFile)
+          contract?.contractFile && Array.isArray(contract.contractFile)
+            ? convertS3FilesToPreviewFiles(contract.contractFile as unknown as any)
             : []
         }
         isDownloadable={true}

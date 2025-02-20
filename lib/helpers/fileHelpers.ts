@@ -36,47 +36,39 @@ export const convertS3FilesToPreviewFiles = (files: S3File[]): FilePreviewType[]
 };
 
 // Convert contract files (URLs) to preview format
-export const convertContractFilesToPreviewFiles = (files: string[]): FilePreviewType[] => {
-  return files.map((fileUrl) => {
-    // Extract original file name from S3 URL
-    const fileName = fileUrl.split('/').pop() || '';
-    const decodedFileName = decodeURIComponent(fileName.split('-').slice(1).join('-'));
-    
-    // Determine file type and icon
-    const fileType = decodedFileName.split('.').pop()?.toLowerCase() || '';
-    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileType);
-
-    return {
-      name: decodedFileName,
-      type: fileType,
-      url: fileUrl,
-      size: 0,
-      preview: isImage ? fileUrl : `/assets/${fileType.toUpperCase()}.svg`,
-    };
-  });
+export const convertContractFilesToPreviewFiles = (files: S3File[]): FilePreviewType[] => {
+  return files.map(file => ({
+    name: file.fileName,
+    type: file.fileType || file.fileName.split('.').pop() || 'unknown',
+    url: file.fileUrl,
+    size: 0 // Since we don't have the size from S3, we'll set it to 0
+  }));
 };
 
 // Handle file download
-export const handleFileDownload = async (file: FilePreviewType, toast: any) => {
+export const handleFileDownload = async (file: FilePreviewType | S3File, toast: any) => {
   try {
-    const response = await fetch(file.url);
-    if (!response.ok) throw new Error('Network response was not ok');
+    const url = 'url' in file ? file.url : file.fileUrl;
+    const fileName = 'name' in file ? file.name : file.fileName;
 
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Network response was not ok');
+    
     const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = file.name;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
   } catch (error) {
     console.error('Error downloading file:', error);
     toast({
-      title: 'Error',
-      description: 'Failed to download file. Please try again.',
-      variant: 'destructive',
+      title: "Error",
+      description: "Failed to download file. Please try again.",
+      variant: "destructive",
     });
   }
 }; 

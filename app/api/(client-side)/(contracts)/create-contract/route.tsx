@@ -13,6 +13,7 @@ export async function POST(req: Request) {
 
   try {
     const formData = await req.formData();
+console.log(formData,"jsonData");
 
     // Extract JSON fields from FormData
     const jsonData = formData.get("data") as string;
@@ -114,8 +115,15 @@ export async function POST(req: Request) {
 
     // Upload files to S3 and get URLs
     const contractFiles = formData.getAll("contractFiles") as File[];
-    const contractFileUrls = await Promise.all(
-      contractFiles.map((file) => uploadFileToS3(file))
+    const uploadedFiles = await Promise.all(
+      contractFiles.map(async (file) => {
+        const { fileUrl, fileName } = await uploadFileToS3(file);
+        return {
+          fileUrl,
+          fileName,
+          fileType: fileName.split('.').pop() || 'unknown'
+        };
+      })
     );
 
     // Create a new contract record
@@ -134,7 +142,7 @@ export async function POST(req: Request) {
       endDate,
       status: "onboarding",
       contractTemplate,
-      contractFile: contractFileUrls, // Store multiple uploaded file URLs
+      contractFile: uploadedFiles, // Store file objects with URLs and names
     });
 
     const savedContract = await newContract.save();

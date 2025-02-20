@@ -30,7 +30,7 @@ export const contractSchema = z.object({
 
     contractTemplate: z.string().nullable().optional(),
 
-    contractFile: z.union([z.string().url("Invalid contract file URL"), z.instanceof(File)]).optional(),
+    // contractFile: z.union([z.string().url("Invalid contract file URL"), z.instanceof(File)]).optional(),
 })
     .refine((data) => new Date(data.startDate) < new Date(data.endDate), {
         message: "Start date must be before end date.",

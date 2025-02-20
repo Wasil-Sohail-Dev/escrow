@@ -48,6 +48,7 @@ const Page = () => {
       email: data.email,
       password: data.password,
     });
+    
 
     if (result?.error) {
       setError(result.error);

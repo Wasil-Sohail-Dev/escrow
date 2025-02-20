@@ -58,7 +58,6 @@ export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
     if (pathname === "/api/escrow-stripe-webhook") {
-        console.log("Skipping middleware for webhook.");
         return NextResponse.next();
     }
 
@@ -71,13 +70,10 @@ export async function middleware(req: NextRequest) {
     const webToken = await getToken({ req, secret: process.env.NEXTAUTH_SECRET! });
 
     const authHeader = req.headers.get("Authorization");
-    console.log("Raw Authorization Header:", authHeader);
     const mobileToken = authHeader && authHeader.startsWith("Bearer ")
         ? authHeader.split(" ")[1]
         : null;
 
-    console.log("webToken", webToken);
-    console.log("mobileToken", mobileToken);
 
     let tokenPayload: any = null;
     if (mobileToken) {
@@ -87,9 +83,7 @@ export async function middleware(req: NextRequest) {
         }
     }
 
-    console.log("tokenPayload", tokenPayload);
     const token = webToken || tokenPayload;
-    console.log("Token", token);
 
     const isPublicPage = PUBLIC_ROUTES.includes(pathname);
     const isPublicApiRoute = PUBLIC_API_ROUTES.some(route => pathname.startsWith(route));
@@ -109,25 +103,22 @@ export async function middleware(req: NextRequest) {
     }
 
     if (token) {
+        console.log(authHeader,"token");
         const userStatus = token.userStatus;
 
         if (userStatus === "pendingVerification" && pathname !== MAIL_VERIFY_PAGE) {
-            console.log("Redirecting to Mail Verification Page");
             return NextResponse.redirect(new URL(MAIL_VERIFY_PAGE, req.url));
         }
 
         if (userStatus === "verified" && pathname !== ONBOARDING_PAGE) {
-            console.log("Redirecting to Onboarding Page");
             return NextResponse.redirect(new URL(ONBOARDING_PAGE, req.url));
         }
 
         if (userStatus === "active" && pathname !== HOME_PAGE && isPublicPage) {
-            console.log("Redirecting to Home Page");
             return NextResponse.redirect(new URL(HOME_PAGE, req.url));
         }
 
         if (userStatus === "adminInactive" || userStatus === "userInactive") {
-            console.log("Access blocked for inactive users");
             return NextResponse.json({ message: "Access Denied: Your account is inactive" }, { status: 403 });
         }
     }

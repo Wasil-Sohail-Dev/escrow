@@ -128,15 +128,36 @@ const FilePreview: React.FC<FilePreviewProps> = ({
           <div className="flex-shrink-0">
             <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-dark-2/20">
               {isImageFile(file) ? (
-                <Image
-                  src={file instanceof File ? URL.createObjectURL(file) : file.url}
-                  alt={file.name}
-                  fill
-                  className="object-cover"
-                />
+                <div className="relative w-full h-full">
+                  {file instanceof File ? (
+                    <Image
+                      src={URL.createObjectURL(file)}
+                      alt={file.name}
+                      fill
+                      className="object-cover"
+                      priority
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/assets/file-image.svg';
+                      }}
+                    />
+                  ) : (
+                    <Image
+                      src={file.url || '/assets/file-image.svg'}
+                      alt={file.name}
+                      fill
+                      className="object-cover"
+                      priority
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/assets/file-image.svg';
+                      }}
+                    />
+                  )}
+                </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <span className="font-bold text-4xl bg-white dark:bg-transparent">📄</span>
+                  <FileText className="h-8 w-8 text-gray-400 dark:text-dark-text/40" />
                 </div>
               )}
             </div>

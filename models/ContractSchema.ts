@@ -140,8 +140,18 @@ const contractSchema = new mongoose.Schema(
             required: false,
         },
         contractFile: [{
-            type: String,
-            required: false,
+            fileUrl: {
+                type: String,
+                required: true
+            },
+            fileName: {
+                type: String,
+                required: true
+            },
+            fileType: {
+                type: String,
+                required: false
+            }
         }],
         contractType: {
             type: String,

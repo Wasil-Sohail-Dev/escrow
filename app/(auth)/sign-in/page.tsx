@@ -53,6 +53,8 @@ const Page = () => {
       email: data.email,
       password: data.password,
     });
+
+    console.log(result,"resultsssssssss");
     
     if (result?.error) {
       setError(
