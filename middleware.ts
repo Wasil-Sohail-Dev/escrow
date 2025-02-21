@@ -106,9 +106,9 @@ export async function middleware(req: NextRequest) {
         console.log(authHeader,"token");
         const userStatus = token.userStatus;
 
-        if (userStatus === "pendingVerification" && pathname !== MAIL_VERIFY_PAGE) {
-            return NextResponse.redirect(new URL(MAIL_VERIFY_PAGE, req.url));
-        }
+        // if (userStatus === "pendingVerification" && pathname !== MAIL_VERIFY_PAGE) {
+        //     return NextResponse.redirect(new URL(MAIL_VERIFY_PAGE, req.url));
+        // }
 
         if (userStatus === "verified" && pathname !== ONBOARDING_PAGE) {
             return NextResponse.redirect(new URL(ONBOARDING_PAGE, req.url));

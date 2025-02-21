@@ -74,6 +74,7 @@ const Page = () => {
       }
       else {
         router.push("/mail-verify");
+        // localStorage.setItem("TpAuthToken", JSON.stringify(result.data.data));
       }
     } else {
       setError("An unexpected error occurred.");

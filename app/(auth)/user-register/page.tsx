@@ -256,7 +256,7 @@ const Page = () => {
       </Form>
       <p className="text-sm text-paragraph dark:text-dark-text text-center">
         Already have an account?{" "}
-        <Link href="/login" className="text-primary hover:text-primary-500">
+        <Link href="/sign-in" className="text-primary hover:text-primary-500">
           Sign in
         </Link>
       </p>

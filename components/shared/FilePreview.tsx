@@ -1,10 +1,20 @@
-import React from 'react';
-import Image from 'next/image';
-import { X, FileText, Download, Eye } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import Image from "next/image";
+import { X, FileText, Download, Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import FileIcon from "@/lib/helpers/fIleIcon";
 
 interface FilePreviewProps {
-  files: Array<File | { name: string; type: string; url: string; size: number; preview?: string }>;
+  files: Array<
+    | File
+    | {
+        name: string;
+        type: string;
+        url: string;
+        size: number;
+        preview?: string;
+      }
+  >;
   onRemove?: (index: number) => void;
   className?: string;
   isDownloadable?: boolean;
@@ -12,89 +22,65 @@ interface FilePreviewProps {
   closeModal: () => void;
 }
 
-
 const FilePreview: React.FC<FilePreviewProps> = ({
   files,
   onRemove,
-  className = '',
+  className = "",
   isDownloadable = true,
   onDownload,
-  closeModal
+  closeModal,
 }) => {
-
-  console.log(files, 'files')
-  // Function to get file size in readable format
   const getFileSize = (file: File | { size: number }) => {
-
     const size = file.size;
-    if (size < 1024) return size + ' B';
-    else if (size < 1024 * 1024) return (size / 1024).toFixed(1) + ' KB';
-    else return (size / (1024 * 1024)).toFixed(1) + ' MB';
+    if (size < 1024) return size + " B";
+    else if (size < 1024 * 1024) return (size / 1024).toFixed(1) + " KB";
+    else return (size / (1024 * 1024)).toFixed(1) + " MB";
   };
-
-  // Function to check if file is an image
   const isImageFile = (file: { type: string }) => {
     const imageTypes = ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"];
     if (file instanceof File) {
-      return file.type.toLowerCase().startsWith('image/');
+      return file.type.toLowerCase().startsWith("image/");
     }
-    // For server files, check if type contains 'image' or extension is an image type
-    if (typeof file.type === 'string') {
-      if (file.type.toLowerCase().startsWith('image/')) return true;
-      if (file.type.toLowerCase().includes('image/')) return true;
-      // Check file extension from type if it's in format like "image/jpeg"
-      const extension = file.type.split('/').pop()?.toLowerCase();
-      return imageTypes.includes(extension || '');
+    if (typeof file.type === "string") {
+      if (file.type.toLowerCase().startsWith("image/")) return true;
+      if (file.type.toLowerCase().includes("image/")) return true;
+      const extension = file.type.split("/").pop()?.toLowerCase();
+      return imageTypes.includes(extension || "");
     }
     return false;
   };
 
-  // Function to get file icon based on type
-  const getFileIcon = (file: File | { type: string; url?: string }) => {
-    if (isImageFile(file)) {
-      if (file instanceof File) {
-        return URL.createObjectURL(file);
-      }
-      if ('url' in file && file.url) {
-        return file.url;
-      }
-    }
-    return null;
-  };
-
-  // Function to get file type display text
   const getFileType = (file: File | { type: string }): string => {
     if (file instanceof File) {
-      if (file.type.startsWith('image/')) return 'Image';
-      if (file.type === 'application/pdf') return 'PDF';
-      return file.type.split('/')[1]?.toUpperCase() || 'File';
+      if (file.type.startsWith("image/")) return "Image";
+      if (file.type === "application/pdf") return "PDF";
+      return file.type.split("/")[1]?.toUpperCase() || "File";
     }
-    // For server files
-    if (file.type.includes('image')) return 'Image';
-    if (file.type.includes('pdf')) return 'PDF';
-    return file.type.split('/').pop()?.toUpperCase() || 'File';
+    if (file.type.includes("image")) return "Image";
+    if (file.type.includes("pdf")) return "PDF";
+    return file.type.split("/").pop()?.toUpperCase() || "File";
   };
 
-  // Function to handle file preview
   const handlePreviewFile = (file: File | { url: string; name: string }) => {
-    if ('url' in file) {
-      window.open(file.url, '_blank');
+    if ("url" in file) {
+      window.open(file.url, "_blank");
     } else {
       const url = URL.createObjectURL(file as File);
-      window.open(url, '_blank');
+      window.open(url, "_blank");
       URL.revokeObjectURL(url);
     }
   };
 
-  // Function to handle file download
-  const handleDownloadFile = async (file: File | { url: string; name: string }) => {
+  const handleDownloadFile = async (
+    file: File | { url: string; name: string }
+  ) => {
     try {
-      if ('url' in file) {
+      if ("url" in file) {
         const response = await fetch(file.url);
-        if (!response.ok) throw new Error('Network response was not ok');
+        if (!response.ok) throw new Error("Network response was not ok");
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         a.download = file.name;
         document.body.appendChild(a);
@@ -103,7 +89,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
         window.URL.revokeObjectURL(url);
       } else {
         const url = URL.createObjectURL(file as File);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         a.download = file.name;
         document.body.appendChild(a);
@@ -112,11 +98,11 @@ const FilePreview: React.FC<FilePreviewProps> = ({
         URL.revokeObjectURL(url);
       }
     } catch (error) {
-      console.error('Error downloading file:', error);
+      console.error("Error downloading file:", error);
     }
   };
 
-  console.log(files, 'files')
+  console.log(files, "files");
 
   return (
     <div className={`w-full ${className}`}>
@@ -138,26 +124,26 @@ const FilePreview: React.FC<FilePreviewProps> = ({
                       priority
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = '/assets/file-image.svg';
+                        target.src = "/assets/file-image.svg";
                       }}
                     />
                   ) : (
                     <Image
-                      src={file.url || '/assets/file-image.svg'}
+                      src={file.url || "/assets/file-image.svg"}
                       alt={file.name}
                       fill
                       className="object-cover"
                       priority
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = '/assets/file-image.svg';
+                        target.src = "/assets/file-image.svg";
                       }}
                     />
                   )}
                 </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <FileText className="h-8 w-8 text-gray-400 dark:text-dark-text/40" />
+                  <FileIcon fileType={file.type} />
                 </div>
               )}
             </div>
@@ -169,7 +155,8 @@ const FilePreview: React.FC<FilePreviewProps> = ({
                 {file.name}
               </p>
               <p className="text-xs text-gray-500 dark:text-dark-text/60">
-                {getFileType(file)}{file.size > 0 && ` • ${getFileSize(file)}`}
+                {getFileType(file)}
+                {file.size > 0 && ` • ${getFileSize(file)}`}
               </p>
             </div>
           </div>
@@ -187,7 +174,9 @@ const FilePreview: React.FC<FilePreviewProps> = ({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => onDownload ? onDownload(file) : handleDownloadFile(file)}
+                onClick={() =>
+                  onDownload ? onDownload(file) : handleDownloadFile(file)
+                }
                 className="h-8 w-8 text-gray-500 hover:text-gray-700 dark:text-dark-text/60 dark:hover:text-dark-text"
               >
                 <Download className="h-4 w-4" />
@@ -198,10 +187,10 @@ const FilePreview: React.FC<FilePreviewProps> = ({
                 variant="ghost"
                 size="icon"
                 onClick={() => {
-                  if ((files.length-1)===index) {
-                    closeModal()
+                  if (files.length - 1 === index) {
+                    closeModal();
                   }
-                  onRemove(index)
+                  onRemove(index);
                 }}
                 className="h-8 w-8 text-gray-500 hover:text-red-600 dark:text-dark-text/60 dark:hover:text-red-500"
               >
@@ -215,4 +204,4 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   );
 };
 
-export default FilePreview; 
+export default FilePreview;

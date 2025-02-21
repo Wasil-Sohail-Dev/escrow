@@ -53,16 +53,13 @@ const Page = () => {
       }
     } catch (error) {
       console.error("Failed to parse JWT from localStorage:", error);
-      router.push("/user-register");
+      // router.push("/user-register");
     }
   }, [router]);
   const form = useForm<VerifyCodeFormValues>();
 
   const handleVerifyCode = async () => {
     setError("");
-
-    console.log(jwt);
-
     if (otp.trim().length < 6) {
       setError("Please enter the 6-digit OTP.");
       return;

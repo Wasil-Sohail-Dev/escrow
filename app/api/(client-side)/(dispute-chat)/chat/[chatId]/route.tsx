@@ -3,22 +3,6 @@ import dbConnect from "@/lib/dbConnect";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 
-interface ChatMessage {
-  sender: {
-    _id: string;
-    name: string;
-    email: string;
-  };
-  content: string;
-  type: string;
-  createdAt: Date;
-  files: {
-    fileUrl: string;
-    fileName: string;
-    fileType: string;
-  }[];
-}
-
 export async function GET(
   request: Request,
   context: { params: Promise<{ chatId: string }> }
@@ -42,7 +26,6 @@ export async function GET(
     if (!chat) {
       return NextResponse.json({ error: "Chat not found" }, { status: 404 });
     }
-
     const totalMessages = chat.messages.length;
     const skip = Math.max(0, totalMessages - (page * limit));
     const actualLimit = Math.min(limit, totalMessages - ((page - 1) * limit));
@@ -59,7 +42,6 @@ export async function GET(
         options: { 
           skip: skip,
           limit: actualLimit,
-          sort: { createdAt: -1 }
         },
       });
 
@@ -68,7 +50,7 @@ export async function GET(
     }
 
     // Sort messages in chronological order (oldest to newest)
-    const messages = [...populatedChat.messages].reverse();
+    const messages = [...populatedChat.messages];
 
     return NextResponse.json({
       ...populatedChat.toObject(),

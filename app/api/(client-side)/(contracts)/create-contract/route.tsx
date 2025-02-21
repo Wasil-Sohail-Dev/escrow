@@ -13,7 +13,6 @@ export async function POST(req: Request) {
 
   try {
     const formData = await req.formData();
-console.log(formData,"jsonData");
 
     // Extract JSON fields from FormData
     const jsonData = formData.get("data") as string;

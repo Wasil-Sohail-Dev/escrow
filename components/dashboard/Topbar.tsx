@@ -5,7 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, Moon, Sun, LogOut, HelpCircle } from "lucide-react";
+import { Settings, Moon, Sun, HelpCircle } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useUser } from "@/contexts/UserContext";
@@ -31,7 +31,7 @@ export default function Topbar({
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
-  const { user, loading: userLoading } = useUser();
+  const { user } = useUser();
   const { notifications, setNotifications, markAsRead } = useNotification();
 
   const formatTitle = (title: string) => {
@@ -82,7 +82,6 @@ export default function Topbar({
     }
   };
 
-  // Add useEffect to fetch notifications on mount
   useEffect(() => {
     if (user?._id) {
       fetchNotifications();
@@ -91,7 +90,7 @@ export default function Topbar({
 
   const handleNotificationClick = async (notificationId: string) => {
     await markAsRead(notificationId);
-    fetchNotifications(); // Refetch to update the list
+    fetchNotifications(); 
   };
 
   return (
@@ -233,10 +232,6 @@ export default function Topbar({
                   >
                     {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
                     {theme === "dark" ? "Light Mode" : "Dark Mode"}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="gap-2 cursor-pointer text-subtle-medium dark:text-dark-text dark:hover:bg-white/5 border-t dark:border-dark-text/10">
-                    <LogOut size={14} />
-                    Log Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

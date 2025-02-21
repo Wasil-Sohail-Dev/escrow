@@ -10,6 +10,7 @@ import Loader from "@/components/ui/loader";
 import { toast } from "@/hooks/use-toast";
 import { handleFileDownload } from "@/lib/helpers/fileHelpers";
 import ChatMediaModal from "@/components/modals/ChatMediaModal";
+import FileIcon from "@/lib/helpers/fIleIcon";
 
 interface Sender {
   _id: string;
@@ -116,13 +117,11 @@ const DisputeChat = () => {
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [selectedDisputeTitle, setSelectedDisputeTitle] = useState("");
   const [loading, setLoading] = useState(true);
   const [showMobileChat, setShowMobileChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
-  const [unreadCounts, setUnreadCounts] = useState<UnreadCount>({});
   const [disputesLoading, setDisputesLoading] = useState(true);
   const [selectedFiles, setSelectedFiles] = useState<FilePreview[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -137,9 +136,10 @@ const DisputeChat = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const fetchChat = async (page = 1, append = false) => {
-    if (!userId || !disputeId) return;
-
+  const fetchChat = async (page = 1, append = false,disputeId:string|null) => {
+    if (!userId) return;
+    console.log("ma cla ma cla");
+    
     try {
       if (page === 1) {
         setLoading(true);
@@ -392,29 +392,27 @@ const DisputeChat = () => {
     }
   };
 
-  const fetchUnreadCounts = async (disputes: Dispute[]) => {
-    const counts: UnreadCount = {};
+  // const fetchUnreadCounts = async (disputes: Dispute[]) => {
+  //   const counts: UnreadCount = {};
 
-    for (const dispute of disputes) {
-      try {
-        const response = await fetch(`/api/chat/${dispute._id}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const chatData: ChatData = await response.json();
+  //   for (const dispute of disputes) {
+  //     try {
+  //       const response = await fetch(`/api/chat/${dispute._id}`);
+  //       if (!response.ok) {
+  //         throw new Error(`HTTP error! status: ${response.status}`);
+  //       }
+  //       const chatData: ChatData = await response.json();
 
-        const unreadCount = chatData.messages.filter(
-          (msg) => !msg.isRead && msg.sender._id !== userId
-        ).length;
+  //       const unreadCount = chatData.messages.filter(
+  //         (msg) => !msg.isRead && msg.sender._id !== userId
+  //       ).length;
 
-        counts[dispute._id] = unreadCount;
-      } catch (error) {
-        console.error(`Error fetching chat for dispute ${dispute._id}:`, error);
-      }
-    }
-
-    setUnreadCounts(counts);
-  };
+  //       counts[dispute._id] = unreadCount;
+  //     } catch (error) {
+  //       console.error(`Error fetching chat for dispute ${dispute._id}:`, error);
+  //     }
+  //   }
+  // };
 
   const fetchDisputes = async () => {
     if (!user?._id) return;
@@ -428,11 +426,7 @@ const DisputeChat = () => {
 
       if (data.success) {
         setDisputes(data.data.disputes);
-        fetchUnreadCounts(data.data.disputes);
-
-        if (!selectedDispute && data.data.latestDispute) {
-          setSelectedDisputeTitle(data.data.latestDispute.title);
-        }
+        // fetchUnreadCounts(data.data.disputes);
       }
     } catch (error) {
       console.error("Error fetching disputes:", error);
@@ -450,27 +444,40 @@ const DisputeChat = () => {
       });
       return;
     }
+    
+    // Update state first
     setSelectedDispute(dispute);
     setShowMobileChat(true);
-    setLoading(true);
+    
+    // Use useEffect to handle side effects
     router.push(`?disputeId=${dispute._id}`);
-    setCurrentPage(1);
-      setHasMore(true);
-      fetchChat(1, false);
   };
+
+  console.log(selectedDispute,"selectedDispute");
+  
+
+  // Add useEffect to handle chat fetching when dispute changes
+  useEffect(() => {
+    if (selectedDispute?._id||disputeId||user) {
+      let disputedId=selectedDispute?selectedDispute._id:disputeId;
+      setCurrentPage(1);
+      setHasMore(true);
+      fetchChat(1, false, disputedId);
+    }
+  }, [selectedDispute?._id,disputeId,user]);
 
   const handleBackToDisputes = () => {
     setShowMobileChat(false);
     router.push("?");
   };
 
-  useEffect(() => {
-    if (userId && disputeId) {
-      setCurrentPage(1);
-      setHasMore(true);
-      fetchChat(1, false);
-    }
-  }, [userId, disputeId]);
+  // useEffect(() => {
+  //   if (userId && disputeId) {
+  //     setCurrentPage(1);
+  //     setHasMore(true);
+  //     fetchChat(1, false);
+  //   }
+  // }, [userId, disputeId]);
 
   useEffect(() => {
     return () => {
@@ -490,16 +497,6 @@ const DisputeChat = () => {
     if (event.key === "Enter") {
       handleSendMessage();
     }
-  };
-
-  const FileIcon = ({ fileType }: { fileType: string }) => {
-    if (fileType.includes("pdf")) return <span className="font-bold text-4xl bg-white dark:bg-transparent">📄</span>;
-    if (fileType.includes("doc")) return <span className="font-bold text-4xl bg-white dark:bg-transparent">📝</span>;
-    if (fileType.includes("xls")) return <span className="font-bold text-4xl bg-white dark:bg-transparent">📊</span>;
-    if (fileType.includes("ppt")) return <span className="font-bold text-4xl bg-white dark:bg-transparent">📑</span>;
-    if (fileType.includes("zip") || fileType.includes("rar"))
-      return <span className="font-bold text-4xl bg-white dark:bg-transparent">🗂️</span>;
-    return <span className="font-bold text-4xl bg-white dark:bg-transparent">📎</span>;
   };
 
   const handleDownloadFile = async (file: {
@@ -690,7 +687,7 @@ const DisputeChat = () => {
                       />
                     </div>
                   )}
-                  {(loading) ? (
+                  {loading ? (
                     <div className="flex justify-center items-center h-full min-h-[400px]">
                       <Loader
                         size="md"
