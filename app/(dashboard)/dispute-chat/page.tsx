@@ -458,8 +458,8 @@ const DisputeChat = () => {
 
   // Add useEffect to handle chat fetching when dispute changes
   useEffect(() => {
-    if (selectedDispute?._id||disputeId||user) {
-      let disputedId=selectedDispute?selectedDispute._id:disputeId;
+    let disputedId=selectedDispute?selectedDispute._id:disputeId;
+    if (disputedId&&user) {
       setCurrentPage(1);
       setHasMore(true);
       fetchChat(1, false, disputedId);
