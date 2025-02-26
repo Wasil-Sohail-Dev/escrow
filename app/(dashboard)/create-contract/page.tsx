@@ -20,8 +20,9 @@ import {
   TooltipTrigger,
   TooltipProvider,
 } from "@/components/ui/tooltip";
-
+import { useUser } from "@/contexts/UserContext";
 const CreateContract = () => {
+  const { user } = useUser();
   const router = useRouter();
   const [isFilePreviewOpen, setIsFilePreviewOpen] = useState(false);
   const {
@@ -74,6 +75,7 @@ const CreateContract = () => {
               Create Contract
             </h1>
             <Button
+              disabled={user?.isButtonDisabled}
               onClick={() => router.push("/pre-built-contracts")}
               className="h-[38px] lg:h-[42px] bg-primary hover:bg-primary/90 text-white dark:text-dark-text"
             >
@@ -145,7 +147,7 @@ const CreateContract = () => {
                 </label>
                 <div className="relative">
                   <Input
-                    disabled={isLoading}
+                    disabled={isLoading || user?.isButtonDisabled}
                     type="email"
                     value={formData.vendorEmail}
                     onChange={(e) =>
@@ -181,7 +183,7 @@ const CreateContract = () => {
                 Contract Title <span className="text-red-500">*</span>
               </label>
               <Input
-                disabled={isLoading}
+                disabled={isLoading || user?.isButtonDisabled}
                 type="text"
                 value={formData.title}
                 onChange={(e) => handleInputChange("title", e.target.value)}
@@ -267,6 +269,7 @@ const CreateContract = () => {
                 Contract Description <span className="text-red-500">*</span>
               </label>
               <Textarea
+                disabled={isLoading || user?.isButtonDisabled}
                 value={formData.description}
                 onChange={(e) =>
                   handleInputChange("description", e.target.value)
@@ -320,7 +323,7 @@ const CreateContract = () => {
                   Total Project Payment <span className="text-red-500">*</span>
                 </label>
                 <Input
-                  disabled={isLoading}
+                  disabled={isLoading || user?.isButtonDisabled}
                   type="number"
                   value={formData.totalPayment}
                   onChange={(e) =>
@@ -329,6 +332,8 @@ const CreateContract = () => {
                   onBlur={() => handleBlur("totalPayment")}
                   placeholder="$2500"
                   onWheel={(e) => e.currentTarget.blur()}
+                  step="any"
+                  min="0"
                   className={`h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
                     fieldErrors.totalPayment
                       ? "border-red-500 focus-visible:ring-red-500"
@@ -403,7 +408,7 @@ const CreateContract = () => {
                         Milestone Name <span className="text-red-500">*</span>
                       </label>
                       <Input
-                        disabled={isLoading}
+                        disabled={isLoading || user?.isButtonDisabled}
                         type="text"
                         value={milestone.name}
                         onChange={(e) =>
@@ -429,7 +434,7 @@ const CreateContract = () => {
                         Milestone Amount <span className="text-red-500">*</span>
                       </label>
                       <Input
-                        disabled={isLoading}
+                        disabled={isLoading || user?.isButtonDisabled}
                         type="number"
                         value={milestone.amount}
                         onChange={(e) =>
@@ -438,6 +443,8 @@ const CreateContract = () => {
                         onBlur={() => handleBlur(`milestone${index}.amount`)}
                         placeholder="$500"
                         onWheel={(e) => e.currentTarget.blur()}
+                        step="any"
+                        min="0"
                         className={`h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
                           milestoneErrors[index]?.amount
                             ? "border-red-500 focus-visible:ring-red-500"
@@ -624,7 +631,8 @@ const CreateContract = () => {
               isLoading ||
               !formData.title ||
               !formData.description ||
-              !formData.totalPayment
+              !formData.totalPayment ||
+              user?.isButtonDisabled
             }
           >
             {isLoading ? (

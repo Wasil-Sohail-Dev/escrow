@@ -30,33 +30,31 @@ export interface Contract {
   updatedAt: string;
 }
 
-interface PaginationInfo {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
 const Projects = () => {
   const { user } = useUser();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
-  const [paginationInfo, setPaginationInfo] = useState<PaginationInfo | null>(null);
   const observer = useRef<IntersectionObserver | null>(null);
-  const lastContractElementRef = useCallback((node: HTMLDivElement) => {
-    if (loading) return;
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        setPage(prevPage => prevPage + 1);
-      }
-    });
-    if (node) observer.current.observe(node);
-  }, [loading, hasMore]);
+  const lastContractElementRef = useCallback(
+    (node: HTMLDivElement) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setPage((prevPage) => prevPage + 1);
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore]
+  );
 
-  const fetchContractStatus = async (pageNum: number, isInitialLoad = false) => {
+  const fetchContractStatus = async (
+    pageNum: number,
+    isInitialLoad = false
+  ) => {
     const customerId = user?._id;
     if (!customerId) return;
 
@@ -66,14 +64,18 @@ const Projects = () => {
         `/api/get-customer-contracts?customerId=${customerId}&role=${user?.userType}&page=${pageNum}&limit=10`
       );
       const { data, pagination } = await response.json();
-      
+
       if (isInitialLoad) {
-        setContracts([...data].filter((contract) => contract.status !== "cancelled"));
+        setContracts(
+          [...data].filter((contract) => contract.status !== "cancelled")
+        );
       } else {
-        setContracts(prev => [...prev, ...[...data].filter((contract) => contract.status !== "cancelled")]);
+        setContracts((prev) => [
+          ...prev,
+          ...[...data].filter((contract) => contract.status !== "cancelled"),
+        ]);
       }
-      
-      setPaginationInfo(pagination);
+
       setHasMore(pagination.page < pagination.totalPages);
     } catch (error) {
       console.error("Error fetching contracts:", error);
@@ -96,7 +98,10 @@ const Projects = () => {
 
   return (
     <>
-      <Topbar title="Projects" description="Detailed information about your Contracts" />
+      <Topbar
+        title="Projects"
+        description="Detailed information about your Contracts"
+      />
       <div className="flex flex-col gap-2 lg:px-10 mt-[85px]">
         {/* <h1 className="text-2xl font-bold dark:text-dark-text">All Projects</h1> */}
         {contracts && contracts.length > 0 ? (
@@ -105,25 +110,31 @@ const Projects = () => {
               if (contracts.length === index + 1) {
                 return (
                   <div ref={lastContractElementRef} key={contract._id}>
-                    <ContractCard 
-                      contract={contract} 
-                      fetchContractStatus={() => fetchContractStatus(1, true)} 
+                    <ContractCard
+                      contract={contract}
+                      fetchContractStatus={() =>
+                        fetchContractStatus(page, true)
+                      }
                     />
                   </div>
                 );
               } else {
                 return (
-                  <ContractCard 
-                    key={contract._id} 
-                    contract={contract} 
-                    fetchContractStatus={() => fetchContractStatus(1, true)} 
+                  <ContractCard
+                    key={contract._id}
+                    contract={contract}
+                    fetchContractStatus={() => fetchContractStatus(page, true)}
                   />
                 );
               }
             })}
             {loading && (
               <div className="py-4">
-                <Loader size="md" text="Loading more contracts..." fullHeight={false} />
+                <Loader
+                  size="md"
+                  text="Loading more contracts..."
+                  fullHeight={false}
+                />
                 {/* <div className="w-full h-[10px] bg-gray-200 animate-pulse">Loading more contracts...</div> */}
               </div>
             )}

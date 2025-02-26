@@ -17,7 +17,6 @@ import { useState, useEffect } from "react";
 import { formatDate } from "@/lib/helpers/fromatDate";
 import Loader from "../ui/loader";
 
-
 export default function Topbar({
   title,
   description,
@@ -55,16 +54,16 @@ export default function Topbar({
       const res = await fetch("/api/fetch-notifications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           receiverId: user._id,
           status: "unread",
-          limit: 4
-        })
+          limit: 4,
+        }),
       });
 
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error || 'Failed to fetch notifications');
+        throw new Error(error.error || "Failed to fetch notifications");
       }
 
       const data = await res.json();
@@ -90,7 +89,7 @@ export default function Topbar({
 
   const handleNotificationClick = async (notificationId: string) => {
     await markAsRead(notificationId);
-    fetchNotifications(); 
+    fetchNotifications();
   };
 
   return (
@@ -103,8 +102,10 @@ export default function Topbar({
               <h2 className="text-primary font-bold text-lg">Third Party</h2>
               <span className="text-gray-400 dark:text-dark-text/60">|</span>
               <h2 className="text-main-heading dark:text-dark-text text-[26px] font-bold leading-[33px] lg:text-[26px] md:text-[24px] max-md:text-[18px]">
-               <span className="lg:hidden inline text-sm">{formatTitle(title)}</span> 
-               <span className="hidden lg:inline">{title}</span>
+                <span className="lg:hidden inline text-sm">
+                  {formatTitle(title)}
+                </span>
+                <span className="hidden lg:inline">{title}</span>
               </h2>
             </div>
             <p className="text-body-normal text-[#64748B] dark:text-dark-text/60 lg:text-body-normal md:text-base-regular max-md:hidden">
@@ -113,11 +114,13 @@ export default function Topbar({
           </div>
           <div className="flex items-center lg:gap-8 md:gap-6 max-md:gap-4">
             <div className="relative">
-              <DropdownMenu onOpenChange={(open) => {
-                if (open) {
-                  fetchNotifications();
-                }
-              }}>
+              <DropdownMenu
+                onOpenChange={(open) => {
+                  if (open) {
+                    fetchNotifications();
+                  }
+                }}
+              >
                 <DropdownMenuTrigger className="outline-none">
                   <div className="relative mt-2">
                     <Bell
@@ -126,10 +129,10 @@ export default function Topbar({
                     />
                     {notifications.length > 0 && (
                       <div
-                      className="absolute top-0 right-0 
+                        className="absolute top-0 right-0 
                       lg:w-2 lg:h-2 md:w-1.5 md:h-1.5 max-md:w-1.5 max-md:h-1.5 
                       bg-[#ED4F9D] rounded-full"
-                    />
+                      />
                     )}
                   </div>
                 </DropdownMenuTrigger>
@@ -158,7 +161,9 @@ export default function Topbar({
                           <div
                             key={notification._id}
                             className="flex items-start gap-3 p-2 hover:bg-gray-50 dark:hover:bg-dark-input-bg rounded-lg cursor-pointer"
-                            onClick={() => handleNotificationClick(notification._id || "")}
+                            onClick={() =>
+                              handleNotificationClick(notification._id || "")
+                            }
                           >
                             <div className="flex-shrink-0 flex items-center justify-center rounded-lg w-10 h-10 mt-1 bg-gray-100 dark:bg-dark-input-bg">
                               <Image
@@ -174,7 +179,10 @@ export default function Topbar({
                                   {notification.title}
                                 </h4>
                                 <span className="text-xs text-gray-500 dark:text-dark-text/60 flex-shrink-0">
-                                  {formatDate((notification?.createdAt||""), true)}
+                                  {formatDate(
+                                    notification?.createdAt || "",
+                                    true
+                                  )}
                                 </span>
                               </div>
                               <p className="text-xs text-gray-600 dark:text-dark-text/80 mt-1 line-clamp-2 break-words">
@@ -184,7 +192,9 @@ export default function Topbar({
                           </div>
                         ))
                       ) : (
-                        <p className="text-center text-gray-500 dark:text-dark-text/60 py-4">No notifications</p>
+                        <p className="text-center text-gray-500 dark:text-dark-text/60 py-4">
+                          No notifications
+                        </p>
                       )}
                     </div>
                   </div>
@@ -193,10 +203,20 @@ export default function Topbar({
             </div>
 
             <div className="flex items-center gap-4">
-              <div
-                className="rounded-full bg-secondary dark:bg-dark-text/10
+              {!user?.profileImage ? (
+                <div
+                  className="rounded-full bg-secondary dark:bg-dark-text/10
                 lg:h-8 lg:w-8 md:h-7 md:w-7 max-md:h-6 max-md:w-6"
-              />
+                />
+              ) : (
+                <Image
+                  src={user?.profileImage || "/assets/default-profile.png"}
+                  alt="profile"
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
+              )}
               <DropdownMenu>
                 <DropdownMenuTrigger className="outline-none">
                   <ChevronDown

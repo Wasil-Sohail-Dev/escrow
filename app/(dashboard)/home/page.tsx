@@ -37,7 +37,8 @@ export default function Home() {
         description="Detailed information about your work"
       />
       <div className="md:px-10 mt-[85px]">
-        {user?.userType === "vendor" &&
+        {!user?.isButtonDisabled &&
+          user?.userType === "vendor" &&
           user?.verificationStatus !== "verified" && <MakeAccount />}
         <Overview
           activeTab={activeTab}

@@ -53,8 +53,6 @@ const Page = () => {
       email: data.email,
       password: data.password,
     });
-
-    console.log(result,"resultsssssssss");
     
     if (result?.error) {
       setError(
@@ -74,7 +72,6 @@ const Page = () => {
       }
       else {
         router.push("/mail-verify");
-        // localStorage.setItem("TpAuthToken", JSON.stringify(result.data.data));
       }
     } else {
       setError("An unexpected error occurred.");

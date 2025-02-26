@@ -58,7 +58,89 @@ export async function PATCH(req: Request) {
       );
     }
 
-    // Validate contract state
+    // Handle contract completion
+    if (newStatus === "completed" && body.contractStatus === "completed") {
+      // Check if there are any active disputes
+      const hasActiveDisputes = contract.disputes?.some(
+        (dispute: any) =>
+          dispute.status === "pending" || dispute.status === "in_process"
+      );
+
+      if (hasActiveDisputes) {
+        return NextResponse.json(
+          {
+            error:
+              "Cannot complete contract with active disputes. Please resolve all disputes first.",
+          },
+          { status: 400 }
+        );
+      }
+
+      // Check if all milestones are completed and payments released
+      const allMilestonesCompleted = contract.milestones.every(
+        (milestone: any) => milestone.status === "payment_released"
+      );
+
+      if (!allMilestonesCompleted) {
+        return NextResponse.json(
+          {
+            error:
+              "Cannot complete contract. All milestones must be completed and payments released.",
+          },
+          { status: 400 }
+        );
+      }
+
+      // Update contract status to completed
+      contract.status = "completed";
+      contract.completedAt = new Date();
+      await contract.save();
+
+      // Send notifications to both parties
+      try {
+        const clientId = contract.clientId.toString();
+        const vendorId = contract.vendorId.toString();
+
+        // Notify client
+        await sendNotification({
+          receiverId: clientId,
+          senderId: vendorId,
+          title: "Contract Completed",
+          message: `The contract "${contract.title}" has been marked as completed.`,
+          type: "user",
+          severity: "success",
+          link: `/contact-details/${contractId}`,
+          meta: { contractId, status: "completed" },
+        });
+
+        // Notify vendor
+        await sendNotification({
+          receiverId: vendorId,
+          senderId: clientId,
+          title: "Contract Completed",
+          message: `The contract "${contract.title}" has been marked as completed.`,
+          type: "user",
+          severity: "success",
+          link: `/contact-details/${contractId}`,
+          meta: { contractId, status: "completed" },
+        });
+      } catch (notificationError) {
+        console.error(
+          "Error sending completion notifications:",
+          notificationError
+        );
+      }
+
+      return NextResponse.json(
+        {
+          message: "Contract completed successfully.",
+          contractStatus: contract.status,
+        },
+        { status: 200 }
+      );
+    }
+
+    // Validate contract state for other operations
     if (contract.status === "cancelled") {
       return NextResponse.json(
         { error: "Cannot update milestones for a canceled contract." },

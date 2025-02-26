@@ -224,7 +224,7 @@ console.log(response.data.success,"successssssssss");
                       Payment Status:
                     </span>
                     <span className="text-[12px] sm:text-[14px] md:text-[16px] font-[400] text-paragraph dark:text-dark-text/60">
-                      Withheld
+                      With held
                     </span>
                     <Image
                       src="/assets/worksubmition.svg"

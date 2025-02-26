@@ -201,7 +201,7 @@ const PAYMENT_CARDS = [
     percentage: totalPercentage,
   },
   {
-    title: "Amount Withheld",
+    title: "Amount With held",
     amount: `$${escrowAmount.toFixed(2)}`,
     description: "In Escrow",
     progressColor: "#EB2E2E",

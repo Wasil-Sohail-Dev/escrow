@@ -96,10 +96,6 @@ interface DisputeResponse {
   };
 }
 
-interface UnreadCount {
-  [key: string]: number;
-}
-
 const DisputeChat = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -135,11 +131,16 @@ const DisputeChat = () => {
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [sendingMessageId, setSendingMessageId] = useState<string | null>(null);
 
-  const fetchChat = async (page = 1, append = false,disputeId:string|null) => {
+  const fetchChat = async (
+    page = 1,
+    append = false,
+    disputeId: string | null
+  ) => {
     if (!userId) return;
     console.log("ma cla ma cla");
-    
+
     try {
       if (page === 1) {
         setLoading(true);
@@ -180,7 +181,6 @@ const DisputeChat = () => {
         setMessages((prev) => [...data.messages, ...prev]);
       } else {
         setMessages(data.messages);
-        // Scroll to bottom after setting messages
         requestAnimationFrame(() => {
           const chatContainer = chatContainerRef.current;
           if (chatContainer) {
@@ -224,16 +224,11 @@ const DisputeChat = () => {
 
         setHasMore(data.hasMore);
         setCurrentPage((prev) => prev + 1);
-
-        // Store scroll position before adding new messages
         const oldScrollHeight = chatContainer.scrollHeight;
         const oldScrollTop = chatContainer.scrollTop;
-
         setMessages((prev) => [...data.messages, ...prev]);
-
         requestAnimationFrame(() => {
           if (chatContainer) {
-            // Maintain scroll position instead of jumping to bottom
             const newScrollHeight = chatContainer.scrollHeight;
             chatContainer.scrollTop =
               oldScrollTop + (newScrollHeight - oldScrollHeight);
@@ -318,9 +313,11 @@ const DisputeChat = () => {
       return;
 
     setIsSending(true);
+    const tempMessageId = `temp-${Date.now()}`;
+    setSendingMessageId(tempMessageId);
 
     const optimisticMessage: Message = {
-      _id: `temp-${Date.now()}`,
+      _id: tempMessageId,
       content: newMessage.trim(),
       type: selectedFiles.length > 0 ? "file" : "text",
       isRead: false,
@@ -389,30 +386,9 @@ const DisputeChat = () => {
       );
     } finally {
       setIsSending(false);
+      setSendingMessageId(null);
     }
   };
-
-  // const fetchUnreadCounts = async (disputes: Dispute[]) => {
-  //   const counts: UnreadCount = {};
-
-  //   for (const dispute of disputes) {
-  //     try {
-  //       const response = await fetch(`/api/chat/${dispute._id}`);
-  //       if (!response.ok) {
-  //         throw new Error(`HTTP error! status: ${response.status}`);
-  //       }
-  //       const chatData: ChatData = await response.json();
-
-  //       const unreadCount = chatData.messages.filter(
-  //         (msg) => !msg.isRead && msg.sender._id !== userId
-  //       ).length;
-
-  //       counts[dispute._id] = unreadCount;
-  //     } catch (error) {
-  //       console.error(`Error fetching chat for dispute ${dispute._id}:`, error);
-  //     }
-  //   }
-  // };
 
   const fetchDisputes = async () => {
     if (!user?._id) return;
@@ -426,7 +402,6 @@ const DisputeChat = () => {
 
       if (data.success) {
         setDisputes(data.data.disputes);
-        // fetchUnreadCounts(data.data.disputes);
       }
     } catch (error) {
       console.error("Error fetching disputes:", error);
@@ -444,40 +419,31 @@ const DisputeChat = () => {
       });
       return;
     }
-    
+
     // Update state first
     setSelectedDispute(dispute);
     setShowMobileChat(true);
-    
+
     // Use useEffect to handle side effects
     router.push(`?disputeId=${dispute._id}`);
   };
 
-  console.log(selectedDispute,"selectedDispute");
-  
+  console.log(selectedDispute, "selectedDispute");
 
   // Add useEffect to handle chat fetching when dispute changes
   useEffect(() => {
-    let disputedId=selectedDispute?selectedDispute._id:disputeId;
-    if (disputedId&&user) {
+    let disputedId = selectedDispute ? selectedDispute._id : disputeId;
+    if (disputedId && user) {
       setCurrentPage(1);
       setHasMore(true);
       fetchChat(1, false, disputedId);
     }
-  }, [selectedDispute?._id,disputeId,user]);
+  }, [selectedDispute?._id, disputeId, user]);
 
   const handleBackToDisputes = () => {
     setShowMobileChat(false);
     router.push("?");
   };
-
-  // useEffect(() => {
-  //   if (userId && disputeId) {
-  //     setCurrentPage(1);
-  //     setHasMore(true);
-  //     fetchChat(1, false);
-  //   }
-  // }, [userId, disputeId]);
 
   useEffect(() => {
     return () => {
@@ -1100,7 +1066,11 @@ const DisputeChat = () => {
                                   </div>
                                   {message.sender._id === userId && (
                                     <span className="text-xs text-gray-500 dark:text-dark-text/60 mt-1">
-                                      {message.isRead ? "Seen" : "Sent"}
+                                      {message._id === sendingMessageId
+                                        ? "Sending..."
+                                        : message.isRead
+                                        ? "Seen"
+                                        : "Sent"}
                                     </span>
                                   )}
                                 </div>

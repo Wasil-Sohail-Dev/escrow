@@ -22,6 +22,7 @@ const ContractCard = ({
   const { handleContractAction } = useContractAction();
   const { toast } = useToast();
   const [startingWork, setStartingWork] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
   const handlePayment = () => {
     router.push(`/make-payment/${contract.contractId}`);
@@ -33,6 +34,60 @@ const ContractCard = ({
       router.refresh();
     });
   };
+
+  const handleCompleteProject = async () => {
+    setCompleting(true);
+    try {
+      const response = await fetch("/api/manage-milestone-status", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contractId: contract?.contractId,
+          milestoneId:
+            contract?.milestones[contract.milestones.length - 1].milestoneId,
+          newStatus: "completed",
+          contractStatus: "completed",
+          customerId: user?._id,
+          userType: user?.userType,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to complete contract");
+      }
+
+      toast({
+        title: "Project Completed Successfully",
+        description: "The project has been marked as completed.",
+        variant: "default",
+      });
+      fetchContractStatus();
+      router.refresh();
+    } catch (error) {
+      toast({
+        title: "Failed to complete project",
+        description:
+          "Please ensure all milestones are completed and there are no active disputes",
+        variant: "destructive",
+      });
+      console.error("Error completing project:", error);
+    } finally {
+      setCompleting(false);
+    }
+  };
+
+  // Check if all milestones are completed
+  const allMilestonesCompleted = contract.milestones.every(
+    (milestone) => milestone.status === "payment_released"
+  );
+
+  // Show complete button only for active contracts with all milestones completed
+  const showCompleteButton =
+    contract.status === "active" &&
+    allMilestonesCompleted &&
+    !user?.isButtonDisabled;
 
   const handleStartWorking = async () => {
     setStartingWork(true);
@@ -105,62 +160,83 @@ const ContractCard = ({
             {formatDate(contract.endDate)}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2 mt-6">
-          <Button
-            variant="default"
-            onClick={() =>
-              router.push(`/contact-details/${contract.contractId}`)
-            }
-            className="bg-primary hover:bg-primary/90 text-subtle-medium text-white rounded-[9px] px-4 py-2 hover:underline transition-colors duration-200"
-          >
-            View Details
-          </Button>
+        {!user?.isButtonDisabled && (
+          <div className="flex flex-wrap items-center gap-2 mt-6">
+            <Button
+              variant="default"
+              onClick={() =>
+                router.push(`/contact-details/${contract.contractId}`)
+              }
+              className="bg-primary hover:bg-primary/90 text-subtle-medium text-white rounded-[9px] px-4 py-2 hover:underline transition-colors duration-200"
+            >
+              View Details
+            </Button>
 
-          {user?.userType === "client" &&
-            (contract.status === "funding_pending" ||
-              contract.status === "funding_processing") && (
+            {user?.userType === "client" &&
+              (contract.status === "funding_pending" ||
+                contract.status === "funding_processing") && (
+                <Button
+                  variant="default"
+                  onClick={handlePayment}
+                  className="bg-secondary hover:bg-secondary/90 text-white rounded-[9px] px-4 py-2 hover:underline transition-colors duration-200"
+                >
+                  Make Payment
+                </Button>
+              )}
+
+            {user?.userType === "vendor" &&
+              contract?.status === "funding_onhold" && (
+                <Button
+                  variant="default"
+                  className="bg-primary hover:bg-primary/90 text-white rounded-[9px] px-4 py-2 hover:underline transition-colors duration-200"
+                  onClick={handleStartWorking}
+                  disabled={startingWork}
+                >
+                  {startingWork ? "Starting..." : "Start Working"}
+                </Button>
+              )}
+
+            {user?.userType === "vendor" &&
+              contract?.status === "onboarding" && (
+                <>
+                  <Button
+                    variant="secondary"
+                    className="text-base-medium text-white rounded-[9px] px-4 py-2 hover:bg-secondary/90 transition-colors duration-200"
+                    onClick={handleReject}
+                  >
+                    Reject
+                  </Button>
+                  <Button
+                    variant="default"
+                    className="text-base-medium text-white rounded-[9px] px-4 py-2 hover:bg-primary/90 transition-colors duration-200"
+                    onClick={() =>
+                      handleContractAction(contract.contractId, "accept")
+                    }
+                  >
+                    Accept
+                  </Button>
+                </>
+              )}
+
+            {showCompleteButton && (
               <Button
                 variant="default"
-                onClick={handlePayment}
-                className="bg-secondary hover:bg-secondary/90 text-white rounded-[9px] px-4 py-2 hover:underline transition-colors duration-200"
+                onClick={handleCompleteProject}
+                disabled={completing}
+                className="bg-success-btn hover:bg-success-btn-hover text-white rounded-[9px] px-4 py-2 transition-colors duration-200 flex items-center gap-2"
               >
-                Make Payment
+                {completing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Completing...
+                  </>
+                ) : (
+                  <>Complete Project</>
+                )}
               </Button>
             )}
-
-          {user?.userType === "vendor" &&
-            contract?.status === "funding_onhold" && (
-              <Button
-                variant="default"
-                className="bg-primary hover:bg-primary/90 text-white rounded-[9px] px-4 py-2 hover:underline transition-colors duration-200"
-                onClick={handleStartWorking}
-                disabled={startingWork}
-              >
-                {startingWork ? "Starting..." : "Start Working"}
-              </Button>
-            )}
-
-          {user?.userType === "vendor" && contract?.status === "onboarding" && (
-            <>
-              <Button
-                variant="secondary"
-                className="text-base-medium text-white rounded-[9px] px-4 py-2 hover:bg-secondary/90 transition-colors duration-200"
-                onClick={handleReject}
-              >
-                Reject
-              </Button>
-              <Button
-                variant="default"
-                className="text-base-medium text-white rounded-[9px] px-4 py-2 hover:bg-primary/90 transition-colors duration-200"
-                onClick={() =>
-                  handleContractAction(contract.contractId, "accept")
-                }
-              >
-                Accept
-              </Button>
-            </>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <div style={{ width: 80, height: 80, marginRight: "30px" }}>

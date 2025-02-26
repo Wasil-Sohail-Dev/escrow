@@ -152,7 +152,9 @@ const Overview = ({
 
   return (
     <>
-      {true ? (
+      {user?.isButtonDisabled || user === null ? (
+        <BlockedAlert user={user} />
+      ) : (
         <div
           className={`mb-4 flex justify-end ${
             dispute ? "justify-end" : "justify-end"
@@ -160,6 +162,7 @@ const Overview = ({
         >
           {(dispute || user?.userType === "client") && (
             <Button
+              disabled={user?.isButtonDisabled}
               className={`bg-primary hover:bg-primary/90 px-6 py-6 rounded-md flex items-center gap-2 text-small-medium text-white ${
                 dispute
                   ? "bg-[#E71D1D] hover:bg-[#E71D1D]/90"
@@ -178,8 +181,6 @@ const Overview = ({
             </Button>
           )}
         </div>
-      ) : (
-        <BlockedAlert />
       )}
       <div
         className={`grid ${
@@ -244,7 +245,7 @@ const Overview = ({
           viewDetailsLink={
             dispute
               ? "/dispute-management-screen/disputed_resolved"
-              : "/projects/disputed"
+              : "/projects/cancelled"
           }
           dispute={dispute}
         />

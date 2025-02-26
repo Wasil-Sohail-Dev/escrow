@@ -2,7 +2,20 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 
-interface User {
+export interface VerificationData {
+  isKycApproved: boolean;
+  kycDescription?: string;
+  isBlocked: boolean;
+  blockReason?: string;
+  verifiedBy: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  verifiedAt: string;
+}
+
+export interface User {
   _id: string;
   email: string;
   profileImage: string | null;
@@ -15,6 +28,8 @@ interface User {
   phone: string;
   userName: string;
   verificationStatus: string;
+  verification?: VerificationData;
+  isButtonDisabled: boolean;
 }
 
 interface UserContextType {
@@ -35,16 +50,42 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUser = async () => {
     try {
-      const response = await fetch("/api/get-user-profile", {
-        // Add cache: no-store to prevent caching
+      // Fetch user profile
+      const userResponse = await fetch("/api/get-user-profile", {
         cache: "no-store",
         headers: {
           "Cache-Control": "no-cache",
         },
       });
-      const data = await response.json();
-      if (data.user) {
-        setUser(data.user);
+      const userData = await userResponse.json();
+
+      if (userData.user) {
+        // Fetch verification data if user exists
+        const verificationResponse = await fetch(
+          `/api/get-user-verification?customerId=${userData.user._id}`,
+          {
+            cache: "no-store",
+            headers: {
+              "Cache-Control": "no-cache",
+            },
+          }
+        );
+        const verificationData = await verificationResponse.json();
+        console.log(verificationData, "verificationData");
+
+        const isButtonDisabled = verificationData?.success
+          ? verificationData.data.isBlocked ||
+            !verificationData.data.isKycApproved
+          : false;
+
+        // Combine user and verification data
+        setUser({
+          ...userData.user,
+          verification: verificationData.success
+            ? verificationData.data
+            : undefined,
+          isButtonDisabled: isButtonDisabled,
+        });
       } else {
         setUser(null);
       }
@@ -65,6 +106,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     fetchUser();
   }, []);
+  console.log(user, "useruseruser");
 
   return (
     <UserContext.Provider value={{ user, loading, refreshUser }}>

@@ -34,7 +34,7 @@ export const authOptions: NextAuthOptions = {
                 password: { label: "Password", type: "password" },
                 onboardingToken: { label: "Onboarding Token", type: "text" },
             },
-            authorize: async (credentials) => {
+            authorize: async (credentials, req) => {
                 if (!credentials) return null;
 
                 const { email, password, onboardingToken } = credentials;
@@ -74,6 +74,7 @@ export const authOptions: NextAuthOptions = {
                         username: user.username,
                         userType: user.userType,
                         userStatus: user.userStatus,
+                        permissions: [] // Add empty permissions array for client users
                     };
                 }
 
@@ -91,6 +92,7 @@ export const authOptions: NextAuthOptions = {
                     username: user.username,
                     userType: user.userType,
                     userStatus: user.userStatus,
+                    permissions: [] // Add empty permissions array for client users
                 };
             },
         }),

@@ -12,6 +12,7 @@ interface DragDropFileProps {
   text?: string;
   buttonText?: string;
   showRequirements?: boolean;
+  disabled?: boolean;
 }
 
 const DragDropFile: React.FC<DragDropFileProps> = ({
@@ -23,7 +24,8 @@ const DragDropFile: React.FC<DragDropFileProps> = ({
   icon = "/assets/download2.svg",
   text = "Drag and drop files here or",
   buttonText = "browse files",
-  showRequirements = true
+  showRequirements = true,
+  disabled = false,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
@@ -195,6 +197,7 @@ const DragDropFile: React.FC<DragDropFileProps> = ({
         onDrop={handleDrop}
       >
         <input
+          disabled={disabled}
           type="file"
           className="hidden"
           id="file-upload"
