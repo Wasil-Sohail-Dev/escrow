@@ -6,6 +6,7 @@ import { Contract } from "@/models/ContractSchema";
 import { ChatSystem } from "@/models/ChatSystem";
 import { sendNotification } from "@/lib/actions/sender.action";
 import { uploadFileToS3 } from "@/lib/s3";
+import { Admin } from "@/models/AdminSchema";
 
 interface RequestBody {
   raisedByEmail: string;
@@ -142,19 +143,24 @@ export async function POST(req: Request) {
     await dispute.save();
 
     // **Find or Assign an Admin**
-    // const admin = await Customer.findOne({ userType: "admin" });
-    // if (!admin) {
-    //   return NextResponse.json(
-    //     { success: false, message: "Admin not found for dispute chat." },
-    //     { status: 500 }
-    //   );
-    // }
+    const admin = await Admin.findOne({ userType: "super_admin" });
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, message: "Admin not found for dispute chat." },
+        { status: 500 }
+      );
+    }
+
+    console.log(admin, "admin");
 
     // **Create a Chat System Entry for Dispute**
     const chat = new ChatSystem({
       disputeId: dispute._id,
-      participants: [raisedBy._id, raisedTo._id], // Both customers + Admin
+      participants: [raisedBy._id, raisedTo._id, admin._id],
+      participantTypes: ['Customer', 'Customer', 'Admin'], // Set types for each participant
       messages: [],
+      lastMessage: "",
+      lastMessageAt: new Date()
     });
 
     await chat.save();

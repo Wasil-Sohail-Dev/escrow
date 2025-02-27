@@ -14,11 +14,13 @@ import { formatDate } from "@/lib/helpers/fromatDate";
 import FilePreviewModal from "./FilePreviewModal";
 import { FilePreviewType, S3File, convertS3FilesToPreviewFiles, handleFileDownload } from "@/lib/helpers/fileHelpers";
 import { useToast } from "@/hooks/use-toast";
+import { getStatusClass } from "@/lib/helpers/getStatusColor";
 
 interface DisputeDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   contractId: string;
+  userId?: string | null;
 }
 
 interface DisputeDetails {
@@ -59,7 +61,7 @@ interface DisputeDetails {
   };
 }
 
-const DisputeDetailsModal = ({ isOpen, onClose, contractId }: DisputeDetailsModalProps) => {
+const DisputeDetailsModal = ({ isOpen, onClose, contractId, userId }: DisputeDetailsModalProps) => {
   const [loading, setLoading] = useState(false);
   const [disputeDetails, setDisputeDetails] = useState<DisputeDetails | null>(null);
   const [isFilePreviewOpen, setIsFilePreviewOpen] = useState(false);
@@ -67,13 +69,15 @@ const DisputeDetailsModal = ({ isOpen, onClose, contractId }: DisputeDetailsModa
   const router = useRouter();
   const { toast } = useToast();
 
+  const customerId=userId ? userId : user?._id;
+
   const fetchDisputeDetails = async () => {
-    if (!contractId || !user?._id) return;
+    if (!contractId || !customerId) return;
     
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/get-dispute-contractId?contractId=${contractId}&customerId=${user._id}`
+        `/api/get-dispute-contractId?contractId=${contractId}&customerId=${customerId}`
       );
       const data = await response.json();
       
@@ -105,7 +109,7 @@ const DisputeDetailsModal = ({ isOpen, onClose, contractId }: DisputeDetailsModa
       // Reset state when modal closes
       setDisputeDetails(null);
     }
-  }, [isOpen, contractId, user?._id]);
+  }, [isOpen, contractId, user?._id,userId]);
 
   const handleGoToChat = () => {
     if (disputeDetails?._id) {
@@ -138,15 +142,9 @@ const DisputeDetailsModal = ({ isOpen, onClose, contractId }: DisputeDetailsModa
                     {disputeDetails.disputeId}
                   </p>
                 </div>
-                <div className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${
-                  disputeDetails.status.toLowerCase() === "pending" 
-                    ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400"
-                    : disputeDetails.status.toLowerCase() === "resolved"
-                    ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400"
-                    : "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400"
-                }`}>
-                  {disputeDetails.status}
-                </div>
+                <span className={`px-3 py-1 text-small-medium rounded-full ${getStatusClass(disputeDetails.status)}`}>
+                    {disputeDetails.status.charAt(0).toUpperCase() + disputeDetails.status.slice(1)}
+                  </span>
               </div>
 
               {/* Project Details */}

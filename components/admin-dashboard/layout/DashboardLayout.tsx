@@ -80,6 +80,9 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const isDisputeChat = pathname.includes("/dashboard/dispute-chat");
+
+  console.log(isDisputeChat, "isDisputeChat");
 
   return (
     <div className="flex h-screen bg-white-1 dark:bg-dark-bg">
@@ -134,7 +137,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden w-full">
-        <header className="bg-white dark:bg-dark-bg border-b border-sidebar-border dark:border-dark-border">
+        <header className={`bg-white dark:bg-dark-bg border-b border-sidebar-border dark:border-dark-border ${isDisputeChat ? "absolute top-0 left-0 right-0" : ""}`}>
           <div className="flex justify-between items-center px-4 lg:px-6 py-4">
             <button
               className="lg:hidden text-paragraph dark:text-dark-text"
@@ -154,7 +157,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-auto p-4 lg:p-6 bg-white dark:bg-dark-bg">
+        <div className={`flex-1 overflow-auto  bg-white dark:bg-dark-bg ${isDisputeChat ? "" : "p-4 lg:p-6"}`}>
           <Suspense fallback={<Loader size="lg" text="Loading..." />}>
             {children}
           </Suspense>

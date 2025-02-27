@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 import Loader from "@/components/ui/loader";
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState } from "react";
 
 export default function DashboardLayoutContent({
   children,

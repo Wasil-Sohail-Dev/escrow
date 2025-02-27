@@ -27,3 +27,16 @@ export  const getStatusBadgeClass = (status: string) => {
         return "bg-gray-100 text-gray-600";
     }
   };
+
+export  const getStatusClass = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400";
+      case "resolved":
+        return "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400";
+      case "process":
+        return "bg-primary-100 text-primary dark:bg-primary/20 dark:text-primary";
+      default:
+        return "bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400";
+    }
+  };

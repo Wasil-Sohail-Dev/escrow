@@ -34,24 +34,30 @@ const chatSystemSchema = new mongoose.Schema(
     {
         disputeId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Dispute", // Links chat to a dispute
+            ref: "Dispute",
             required: true,
         },
         participants: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "Customer", // Users in the chat
+                refPath: 'participantTypes',
                 required: true,
-            },
+            }
         ],
-        messages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Message" }], // References messages
+        participantTypes: [{
+            type: String,
+            required: true,
+            enum: ['Customer', 'Admin'],
+            default: 'Customer'
+        }],
+        messages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Message" }],
         lastMessage: {
             type: String,
-            default: "", // Stores last text message or file info
+            default: "",
         },
         lastMessageAt: {
             type: Date,
-            default: Date.now, // Timestamp of last message
+            default: Date.now,
         },
     },
     {

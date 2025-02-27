@@ -69,7 +69,7 @@ export async function POST(req: Request) {
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             path: '/',
-            maxAge: 24 * 60 * 60 // 24 hours
+            maxAge: 30 * 24 * 60 * 60 // 1 month
         });
 
         // Update last login
