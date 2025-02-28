@@ -59,6 +59,7 @@ const SUPER_ADMIN_ROUTES = [
 
 const ONBOARDING_PAGE = "/on-boarding";
 const HOME_PAGE = "/home";
+const LOGIN_PAGE = "/admin-login";
 
 // ✅ Function to verify JWT using jose
 async function verifyToken(token: string) {
@@ -134,6 +135,7 @@ export async function middleware(req: NextRequest) {
 
     const isPublicPage = PUBLIC_ROUTES.includes(pathname);
     const isPublicApiRoute = PUBLIC_API_ROUTES.some(route => pathname.startsWith(route));
+    const isDashboardRoute = SUPER_ADMIN_ROUTES.some(route => pathname.startsWith(route));
 
     // Allow public routes
     if (isPublicApiRoute) {
@@ -146,7 +148,8 @@ export async function middleware(req: NextRequest) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         } else {
             const url = req.nextUrl.clone();
-            url.pathname = "/sign-in";
+            url.pathname = LOGIN_PAGE;
+            url.search = `?redirect=${encodeURIComponent(pathname)}`;
             return NextResponse.redirect(url);
         }
     }
@@ -164,7 +167,6 @@ export async function middleware(req: NextRequest) {
         }
 
         // For non-super_admin users, check route restrictions
-        const isDashboardRoute = SUPER_ADMIN_ROUTES.some(route => pathname.startsWith(route));
         if (isDashboardRoute) {
             return NextResponse.json(
                 { message: "Access Denied: Only super admins can access this route" },

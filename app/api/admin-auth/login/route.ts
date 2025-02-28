@@ -50,6 +50,10 @@ export async function POST(req: Request) {
             { expiresIn: "1d" }
         );
 
+        // Get the domain from the request
+        const domain = req.headers.get('host') || '';
+        const isLocalhost = domain.includes('localhost') || domain.includes('209.105.243.7');
+
         // Set session cookie
         const response = NextResponse.json({
             success: true,
@@ -64,13 +68,18 @@ export async function POST(req: Request) {
             }
         });
 
-        response.cookies.set('next-auth.session-token', sessionToken, {
+        // Configure cookie options based on environment
+        const cookieOptions = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: !isLocalhost, // Only use HTTPS in production
+            sameSite: "lax" as const,
             path: '/',
-            maxAge: 30 * 24 * 60 * 60 // 1 month
-        });
+            domain: isLocalhost ? undefined : domain, // Set domain in production
+            maxAge: 30 * 24 * 60 * 60 // 30 days
+        };
+
+        // Set the cookie with appropriate options
+        response.cookies.set('next-auth.session-token', sessionToken, cookieOptions);
 
         // Update last login
         await Admin.findByIdAndUpdate(admin._id, {
