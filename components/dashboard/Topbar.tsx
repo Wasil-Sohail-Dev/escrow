@@ -209,13 +209,18 @@ export default function Topbar({
                 lg:h-8 lg:w-8 md:h-7 md:w-7 max-md:h-6 max-md:w-6"
                 />
               ) : (
+                <div
+                  className="rounded-full overflow-hidden dark:bg-dark-text/10
+                lg:h-8 lg:w-8 md:h-7 md:w-7 max-md:h-6 max-md:w-6"
+                >
                 <Image
                   src={user?.profileImage || "/assets/default-profile.png"}
                   alt="profile"
                   width={32}
                   height={32}
-                  className="rounded-full"
+                  className="w-full h-full object-cover rounded-full"
                 />
+                </div>
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger className="outline-none">

@@ -44,13 +44,20 @@ export default function ProjectCard({
         >
           {count}
         </p>
-        <Link
-          href={viewDetailsLink}
-          className="text-subtle-medium font-[400] text-secondary-heading underline
+        {!viewDetailsLink.includes("/disputed_resolved") ? (
+          <Link
+            href={viewDetailsLink}
+            className="text-subtle-medium font-[400] text-secondary-heading underline
             lg:text-subtle-medium md:text-small-regular max-md:text-small-regular dark:text-dark-text/60"
-        >
-          View Details
-        </Link>
+          >
+            View Details
+          </Link>
+        ):(
+          <span className="text-subtle-medium font-[400] text-secondary-heading underline
+            lg:text-subtle-medium md:text-small-regular max-md:text-small-regular dark:text-dark-text/60">
+            Your resolved disputes is now active
+          </span>
+        )}
       </div>
     </div>
   );

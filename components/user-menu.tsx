@@ -74,7 +74,7 @@ export function UserMenu() {
           <p className="font-medium text-paragraph dark:text-dark-text">
             {user?.firstName} {user?.lastName}
           </p>
-          <p className="text-dark-2">{user?.email}</p>
+          {/* <p className="text-dark-2">{user?.email}</p> */}
         </div>
         <svg
           className={`w-4 h-4 text-dark-2 transition-transform ${
@@ -101,14 +101,6 @@ export function UserMenu() {
             </p>
             <p className="text-xs text-dark-2">{user?.email}</p>
           </div>
-
-          <a
-            href="/dashboard/settings"
-            className="block px-4 py-2 text-sm text-paragraph dark:text-dark-text hover:bg-primary-100 dark:hover:bg-dark-input-bg"
-          >
-            Settings
-          </a>
-
           <button
             onClick={handleLogout}
             disabled={isLoading}

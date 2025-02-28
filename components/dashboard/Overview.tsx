@@ -36,6 +36,7 @@ interface ContractStatusCount {
   disputed_in_process: number;
   disputed_resolved: number;
   totalContracts: number;
+  resolvedDisputes: number;
 }
 
 interface OverviewProps {
@@ -67,9 +68,10 @@ const Overview = ({
     disputed_in_process: 0,
     disputed_resolved: 0,
     totalContracts: 0,
+    resolvedDisputes: 0,
   });
   const router = useRouter();
-  const { user } = useUser();
+  const { user,loading:userLoading } = useUser();
 
   const fetchSortedContracts = async () => {
     if (!user?._id) return;
@@ -77,6 +79,8 @@ const Overview = ({
       `/api/get-sorted-contracts?customerId=${user._id}&role=${user?.userType}`
     );
     const { data } = await response.json();
+    console.log(data, "dataresolvedDisputesresolvedDisputes");
+    
     setCounts(data);
   };
 
@@ -142,7 +146,7 @@ const Overview = ({
       case "disputed_in_process":
         return counts.disputed_in_process;
       case "disputed_resolved":
-        return counts.disputed_resolved;
+        return counts.resolvedDisputes;
       default:
         return 0;
     }
@@ -153,7 +157,7 @@ const Overview = ({
   return (
     <>
       {user?.isButtonDisabled || user === null ? (
-        <BlockedAlert user={user} />
+        <BlockedAlert user={user} userLoading={userLoading} />
       ) : (
         <div
           className={`mb-4 flex justify-end ${
@@ -283,7 +287,7 @@ const Overview = ({
         lg:overflow-visible md:overflow-visible max-md:overflow-x-auto 
         max-md:pb-2 max-md:scrollbar-hide"
         >
-          {["Disputes", "Progress", "Resolved"].map((tab) => {
+          {["Disputes", "Progress"].map((tab) => {
             let value: string;
             switch (tab) {
               case "Disputes":

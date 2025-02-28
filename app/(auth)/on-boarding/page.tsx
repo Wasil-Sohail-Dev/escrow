@@ -17,7 +17,6 @@ import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Checkbox } from "@/components/ui/checkbox";
 import { JwtPayload } from "jsonwebtoken";
 import { useUser } from "@/contexts/UserContext";
 
@@ -29,9 +28,7 @@ const vendorSchema = z.object({
   companyName: z.string().min(1, { message: "Company name is required" }),
   companyId: z.string().min(1, { message: "Company ID is required" }),
   companyAddress: z.string().min(1, { message: "Company address is required" }),
-  acceptTerms: z.boolean().refine((val) => val === true, {
-    message: "You must accept the terms and conditions"
-  }),
+
 });
 
 const clientSchema = z.object({
@@ -39,9 +36,7 @@ const clientSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   userName: z.string().min(1, "Username is required"),
   phone: z.string().min(1, "Phone number is required"),
-  acceptTerms: z.boolean().refine((data) => data === true, {
-    message: "You must accept the terms and conditions",
-  }),
+
 });
 
 type VendorFormValues = z.infer<typeof vendorSchema>;
@@ -97,7 +92,6 @@ const Page = () => {
         companyId: "",
         companyAddress: "",
       }),
-      acceptTerms: false,
     },
     mode: "onBlur",
   });
@@ -109,7 +103,6 @@ const Page = () => {
         lastName: data.lastName,
         userName: data.userName,
         phone: data.phone,
-        acceptTerms: data.acceptTerms,
       };
       const response = await axios.post("/api/save-onboarding", {...apiData,email:jwt?.email,userType:jwt?.userType});
       if (response.status === 200) {
@@ -301,33 +294,6 @@ const Page = () => {
               />
             </>
           )}
-
-          <FormField
-            control={form.control}
-            name="acceptTerms"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                    className="border-[#D1D5DB] dark:border-dark-border data-[state=checked]:bg-primary"
-                  />
-                  <label
-                    className="text-sm text-paragraph dark:text-dark-text cursor-pointer"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      field.onChange(!field.value);
-                    }}
-                  >
-                    I agree to the terms and conditions
-                  </label>
-                </div>
-                <FormMessage className="mt-1" />
-              </FormItem>
-            )}
-          />
-
           <Button
             type="submit"
             className="h-11 bg-primary hover:bg-primary/90 text-white rounded-lg"

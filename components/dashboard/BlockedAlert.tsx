@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
-const BlockedAlert = ({ user }: { user: User | null }) => {
+const BlockedAlert = ({ user, userLoading }: { user: User | null, userLoading: boolean }) => {
   console.log(user, "userrr");
 
   // Determine alert states
@@ -12,7 +12,7 @@ const BlockedAlert = ({ user }: { user: User | null }) => {
   const kycDescription = user?.verification?.kycDescription;
   const showAlert = isBlocked || isKycNotApproved;
 
-  if (!showAlert) return null;
+  if (!showAlert||userLoading) return null;
 
   return (
     <div className="space-y-2 mb-4">

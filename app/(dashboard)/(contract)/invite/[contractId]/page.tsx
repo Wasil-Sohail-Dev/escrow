@@ -19,7 +19,7 @@ const Page = () => {
 
   const { contract, loading, fetchContract } = useContract();
   const { handleContractAction } = useContractAction();
-  const { user } = useUser();
+  const { user,loading:userLoading } = useUser();
 
   useEffect(() => {
     if (contractId) {
@@ -41,7 +41,7 @@ const Page = () => {
       />
 
       <main className="mt-[85px] max-w-4xl mx-auto">
-        {user?.isButtonDisabled && <BlockedAlert user={user} />}
+        {user?.isButtonDisabled && <BlockedAlert user={user} userLoading={userLoading} />}
         {loading ? (
           <Loader size="lg" text="Loading contract details..." />
         ) : contract ? (

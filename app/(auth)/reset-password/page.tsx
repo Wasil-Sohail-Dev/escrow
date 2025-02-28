@@ -174,7 +174,7 @@ const NewPassword = () => {
                     )}
                   </Button>
                 </div>
-                <FormMessage />
+                {/* <FormMessage /> */}
               </FormItem>
             )}
           />

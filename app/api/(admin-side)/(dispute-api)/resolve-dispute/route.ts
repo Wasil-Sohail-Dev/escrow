@@ -118,6 +118,18 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
+    } else if (status === "rejected") {
+      // When dispute is rejected, cancel the contract
+      try {
+        // Update contract status to cancelled
+        contract.status = "cancelled";
+        await contract.save();
+      } catch (error: any) {
+        return NextResponse.json(
+          { success: false, error: "Failed to cancel contract: " + error.message },
+          { status: 400 }
+        );
+      }
     }
 
     await dispute.save();
@@ -128,12 +140,14 @@ export async function POST(req: Request) {
       await sendNotification({
         receiverId: dispute.raisedBy._id.toString(),
         senderId: adminId,
-        title: `Dispute ${status === "resolved" ? "Resolved" : "Rejected"}`,
+        title: `Dispute ${status === "resolved" ? "Resolved" : status === "rejected" ? "Rejected" : "In Process"}`,
         message: status === "resolved"
           ? `Your dispute has been resolved. ${winner === "client" ? "You have" : "The other party has"} been declared the winner.`
-          : "Your dispute has been rejected.",
+          : status === "rejected"
+          ? "Your dispute has been rejected and the contract has been cancelled."
+          : "Your dispute is being processed.",
         type: "alert",
-        severity: status === "resolved" ? "success" : "warning",
+        severity: status === "resolved" ? "success" : status === "rejected" ? "error" : "warning",
         link: `/dispute-chat/?disputeId=${disputeId}`,
         meta: {
           disputeId,
@@ -148,12 +162,14 @@ export async function POST(req: Request) {
       await sendNotification({
         receiverId: dispute.raisedTo._id.toString(),
         senderId: adminId,
-        title: `Dispute ${status === "resolved" ? "Resolved" : "Rejected"}`,
+        title: `Dispute ${status === "resolved" ? "Resolved" : status === "rejected" ? "Rejected" : "In Process"}`,
         message: status === "resolved"
           ? `The dispute has been resolved. ${winner === "vendor" ? "You have" : "The other party has"} been declared the winner.`
-          : "The dispute has been rejected.",
+          : status === "rejected"
+          ? "The dispute has been rejected and the contract has been cancelled."
+          : "The dispute is being processed.",
         type: "alert",
-        severity: status === "resolved" ? "success" : "warning",
+        severity: status === "resolved" ? "success" : status === "rejected" ? "error" : "warning",
         link: `/dispute-chat/?disputeId=${disputeId}`,
         meta: {
           disputeId,
@@ -169,7 +185,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `Dispute ${status === "resolved" ? "resolved" : "rejected"} successfully`,
+      message: `Dispute ${status === "resolved" ? "resolved" : status === "rejected" ? "rejected" : "in process"} successfully`,
       dispute,
       contract: {
         status: contract.status,

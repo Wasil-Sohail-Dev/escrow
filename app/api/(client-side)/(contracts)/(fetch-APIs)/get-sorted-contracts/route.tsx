@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import { Contract } from "@/models/ContractSchema";
 import { Customer } from "@/models/CustomerSchema";
+import { Dispute } from "@/models/DisputeSchema";
 import mongoose from "mongoose";
 
 export async function GET(req: Request) {
@@ -93,12 +94,20 @@ export async function GET(req: Request) {
       [queryField]: customerId,
     });
 
+    // Get dispute resolution count
+    const disputeQuery = role === "client" ? { raisedBy: customerId } : { raisedTo: customerId };
+    const resolvedDisputeCount = await Dispute.countDocuments({
+      ...disputeQuery,
+      status: "resolved"
+    });
+
     return NextResponse.json(
       {
         message: "Contract counts retrieved successfully.",
         data: {
           ...counts,
           totalContracts,
+          resolvedDisputes: resolvedDisputeCount
         },
       },
       { status: 200 }

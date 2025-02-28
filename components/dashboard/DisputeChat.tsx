@@ -145,10 +145,7 @@ const DisputeChat = ({ user, userLoading, isAdmin }: { user: any | null, userLoa
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [sendingMessageId, setSendingMessageId] = useState<string | null>(null);
   const [isResolutionModalOpen, setIsResolutionModalOpen] = useState(false);
-  const [resolutionData, setResolutionData] = useState<ResolutionData>({
-    status: "resolved",
-    reason: "",
-  });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchChat = async (
@@ -512,6 +509,7 @@ const DisputeChat = ({ user, userLoading, isAdmin }: { user: any | null, userLoa
 
   const handleResolveDispute = async (resolutionData: ResolutionData) => {
     try {
+      setIsSubmitting(true);
       const response = await fetch("/api/resolve-dispute", {
         method: "POST",
         headers: {
@@ -531,26 +529,26 @@ const DisputeChat = ({ user, userLoading, isAdmin }: { user: any | null, userLoa
           title: "Success",
           description: `Dispute ${resolutionData.status === "resolved" ? "resolved" : "rejected"} successfully`,
         });
+        setIsSubmitting(false);
+        router.refresh();
         setIsResolutionModalOpen(false);
-        // Refresh dispute data
-        if (selectedDispute) {
-          const updatedDispute = await fetch(`/api/get-dispute?disputeId=${selectedDispute._id}`).then(res => res.json());
-          if (updatedDispute.success) {
-            setDisputeData({
-              title: updatedDispute.data.title,
-              status: updatedDispute.data.status,
-            });
-          }
+        if (isAdmin) {
+          fetchChat(1, false, disputeId);
         }
       } else {
-        throw new Error(data.error);
+        setIsSubmitting(false);
+        throw new Error(data.error || "Failed to resolve dispute");
       }
-    } catch (error: any) {
+    } catch (error) {
+      console.error("Error resolving dispute:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to resolve dispute",
+        description: "Failed to resolve dispute. Please try again.",
         variant: "destructive",
       });
+      setIsSubmitting(false);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -609,7 +607,7 @@ const DisputeChat = ({ user, userLoading, isAdmin }: { user: any | null, userLoa
                     </div>
                     <div
                       className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-dark-bg ${
-                        dispute.status === "pending"
+                        (dispute.status === "pending"||dispute.status === "process")
                           ? "bg-yellow-500"
                           : dispute.status === "resolved"
                           ? "bg-green-500"
@@ -1208,7 +1206,7 @@ const DisputeChat = ({ user, userLoading, isAdmin }: { user: any | null, userLoa
                     ))}
                   </div>
                 )}
-                <div className="max-w-7xl mx-auto flex gap-2 md:gap-4 items-center">
+                {disputeData && (disputeData.status !== "rejected"&&disputeData.status !== "resolved")&&<div className="max-w-7xl mx-auto flex gap-2 md:gap-4 items-center">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -1246,7 +1244,7 @@ const DisputeChat = ({ user, userLoading, isAdmin }: { user: any | null, userLoa
                       <Send size={20} />
                     )}
                   </Button>
-                </div>
+                </div>}
               </div>
 
               {selectedDispute && selectedDispute.status === "resolved" && (

@@ -105,18 +105,18 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         }
       `}
       >
-        <div className="p-2 pb-0 flex justify-between items-start">
-          <div className="w-16 h-16  rounded-lg flex items-start">
-          <Image
-            src={"/assets/logo.png"}
-            alt="logo"
-            width={118}
-            height={118}
-            className={""}
-          />
+        <div className="p-2 flex justify-between items-center w-full">
+          <div className="w-full flex justify-center items-center">
+            <Image
+              src={"/assets/logo.png"}
+              alt="logo" 
+              width={118}
+              height={118}
+              className="mx-auto"
+            />
           </div>
           <button
-            className="lg:hidden text-dark-2 hover:text-primary"
+            className="lg:hidden text-dark-2 hover:text-primary absolute right-2"
             onClick={() => setIsSidebarOpen(false)}
           >
             ✕
@@ -134,11 +134,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             items={transactionNavItems}
             currentPath={pathname}
           />
-          <NavSection
+          {/* <NavSection
             title="System"
             items={systemNavItems}
             currentPath={pathname}
-          />
+          /> */}
         </nav>
       </aside>
 

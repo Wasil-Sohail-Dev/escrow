@@ -300,11 +300,6 @@ const DisputesPage = () => {
                         ? formatDate(dispute.chat.lastMessageAt)
                         : "No activity"}
                     </p>
-                    {dispute.chat.unreadCount > 0 && (
-                      <p className="text-small-regular text-error-text">
-                        {dispute.chat.unreadCount} unread messages
-                      </p>
-                    )}
                   </div>
                 </div>
 

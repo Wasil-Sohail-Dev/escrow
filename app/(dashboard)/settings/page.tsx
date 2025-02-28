@@ -373,7 +373,7 @@ const Settings = () => {
       ) : (
         <div className="flex flex-col gap-6 w-full mt-[85px]">
           {/* Blocked Alert */}
-          {user?.isButtonDisabled && <BlockedAlert user={user} />}
+          {user?.isButtonDisabled && <BlockedAlert user={user} userLoading={userLoading} />}
 
           {/* Profile Header */}
           <div>
