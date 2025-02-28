@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
 import Loader from "../../ui/loader";
+import Image from "next/image";
 
 interface NavItem {
   href: string;
@@ -104,10 +105,16 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         }
       `}
       >
-        <div className="p-4 flex justify-between items-center">
-          <h1 className="text-heading3-bold text-main-heading dark:text-dark-text">
-            Escrow Admin
-          </h1>
+        <div className="p-2 pb-0 flex justify-between items-start">
+          <div className="w-16 h-16  rounded-lg flex items-start">
+          <Image
+            src={"/assets/logo.png"}
+            alt="logo"
+            width={118}
+            height={118}
+            className={""}
+          />
+          </div>
           <button
             className="lg:hidden text-dark-2 hover:text-primary"
             onClick={() => setIsSidebarOpen(false)}
@@ -116,7 +123,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </button>
         </div>
 
-        <nav className="mt-8">
+        <nav className="-mt-8">
           <NavSection
             title="Main"
             items={mainNavItems}
@@ -137,7 +144,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden w-full">
-        <header className={`bg-white dark:bg-dark-bg border-b border-sidebar-border dark:border-dark-border ${isDisputeChat ? "absolute top-0 left-0 right-0" : ""}`}>
+        <header
+          className={`bg-white dark:bg-dark-bg border-b border-sidebar-border dark:border-dark-border ${
+            isDisputeChat ? "absolute top-0 left-0 right-0" : ""
+          }`}
+        >
           <div className="flex justify-between items-center px-4 lg:px-6 py-4">
             <button
               className="lg:hidden text-paragraph dark:text-dark-text"
@@ -145,6 +156,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             >
               ☰
             </button>
+
+            {!isDisputeChat&&<div className="flex items-center gap-2">
+            <h2 className="text-primary font-bold text-lg">Third Party |</h2>
+            <h2 className="text-main-heading dark:text-dark-text text-[26px] font-bold leading-[33px] lg:text-[26px] md:text-[24px] max-md:text-[18px]">
+              Escrow Admin
+            </h2>
+            </div>}
 
             <div className="flex items-center space-x-2 sm:space-x-4 ml-auto">
               <button className="p-2 text-paragraph dark:text-dark-text hover:bg-primary-100 dark:hover:bg-dark-input-bg rounded-lg">
@@ -157,7 +175,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
         </header>
 
-        <div className={`flex-1 overflow-auto  bg-white dark:bg-dark-bg ${isDisputeChat ? "" : "p-4 lg:p-6"}`}>
+        <div
+          className={`flex-1 overflow-auto  bg-white dark:bg-dark-bg ${
+            isDisputeChat ? "" : "p-4 lg:p-6"
+          }`}
+        >
           <Suspense fallback={<Loader size="lg" text="Loading..." />}>
             {children}
           </Suspense>

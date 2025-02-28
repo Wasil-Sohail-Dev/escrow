@@ -232,7 +232,7 @@ const DisputeDetailsModal = ({ isOpen, onClose, contractId, userId }: DisputeDet
               </div>
 
               {/* Action Button */}
-              <div className="flex justify-end pt-4 border-t border-[#E3E3E3] dark:border-dark-border mt-6">
+              {!userId&&<div className="flex justify-end pt-4 border-t border-[#E3E3E3] dark:border-dark-border mt-6">
                 <Button
                   onClick={handleGoToChat}
                   className="bg-primary hover:bg-primary/90 text-white dark:text-dark-text flex items-center gap-2 h-11"
@@ -240,7 +240,7 @@ const DisputeDetailsModal = ({ isOpen, onClose, contractId, userId }: DisputeDet
                   <MessageCircle size={18} />
                   Go to Chat
                 </Button>
-              </div>
+              </div>}
             </div>
           ) : (
             <div className="py-8 text-center text-gray-500 dark:text-dark-text/60">

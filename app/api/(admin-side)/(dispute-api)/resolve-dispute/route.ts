@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     }
 
     // Validate status
-    if (!["resolved", "rejected"].includes(status)) {
+    if (!["resolved", "rejected", "process"].includes(status)) {
       return NextResponse.json(
         { success: false, error: "Invalid status" },
         { status: 400 }
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Find the dispute
+    // Find the dispute with populated references
     const dispute = await Dispute.findById(disputeId)
       .populate('raisedBy', 'email firstName lastName userName')
       .populate('raisedTo', 'email firstName lastName userName')
@@ -48,40 +48,84 @@ export async function POST(req: Request) {
       );
     }
 
+    // Get the contract
+    const contract = await Contract.findById(dispute.contractId._id);
+    if (!contract) {
+      return NextResponse.json(
+        { success: false, error: "Associated contract not found" },
+        { status: 404 }
+      );
+    }
+
     // Update dispute status and details
     dispute.status = status;
     dispute.resolutionDetails = reason;
-    await dispute.save();
+    dispute.resolvedBy = adminId;
+    dispute.resolvedAt = new Date();
 
-    // If resolved, update contract and milestone status
+    // Only set winner if status is resolved
     if (status === "resolved") {
-      const contract = await Contract.findById(dispute.contractId._id);
-      if (contract) {
-        // Find the disputed milestone
+      dispute.winner = winner;
+    }
+
+    // Handle contract status updates based on dispute resolution
+    if (status === "resolved") {
+      // When dispute is resolved, update contract status
+      try {
+        // First transition to disputed_resolved
+        contract.status = "disputed_resolved";
+        
+        // Find and update the disputed milestone
         const milestone = contract.milestones.find(
-          (m: any) => m.milestoneId === dispute.milestoneId
+          (m: any) => m.milestoneId.toString() === dispute.milestoneId.toString()
         );
 
         if (milestone) {
           // Update milestone status based on winner
-          if (winner === "client") {
-            milestone.status = "change_requested";
-            contract.status = "active"; // Reactivate contract
-          } else {
-            milestone.status = "approved";
-            contract.status = "active"; // Reactivate contract
-          }
-          await contract.save();
+          milestone.status = winner === "client" ? "change_requested" : "approved";
         }
+
+        // Save the contract with disputed_resolved status
+        await contract.save();
+
+        // Then transition to active
+        contract.status = "active";
+        await contract.save();
+
+      } catch (error: any) {
+        return NextResponse.json(
+          { success: false, error: "Failed to update contract status: " + error.message },
+          { status: 400 }
+        );
+      }
+    } else if (status === "process") {
+      // When dispute is in process, update contract status to disputed_in_process
+      try {
+        contract.status = "disputed_in_process";
+        
+        // Update milestone status if exists
+        const milestone = contract.milestones.find(
+          (m: any) => m.milestoneId.toString() === dispute.milestoneId.toString()
+        );
+
+        if (milestone) {
+          milestone.status = "disputed_in_process";
+        }
+        await contract.save();
+      } catch (error: any) {
+        return NextResponse.json(
+          { success: false, error: "Failed to update contract status: " + error.message },
+          { status: 400 }
+        );
       }
     }
 
-    // Send notifications to all parties
-    const notifications = [];
+    await dispute.save();
 
-    // Notification for the party who raised the dispute
-    notifications.push(
-      sendNotification({
+    // Send notifications to all parties
+    try {
+      // Notification for the party who raised the dispute
+      await sendNotification({
         receiverId: dispute.raisedBy._id.toString(),
         senderId: adminId,
         title: `Dispute ${status === "resolved" ? "Resolved" : "Rejected"}`,
@@ -95,14 +139,13 @@ export async function POST(req: Request) {
           disputeId,
           status,
           winner,
-          reason
+          reason,
+          contractStatus: contract.status
         }
-      })
-    );
+      });
 
-    // Notification for the other party
-    notifications.push(
-      sendNotification({
+      // Notification for the other party
+      await sendNotification({
         receiverId: dispute.raisedTo._id.toString(),
         senderId: adminId,
         title: `Dispute ${status === "resolved" ? "Resolved" : "Rejected"}`,
@@ -116,18 +159,22 @@ export async function POST(req: Request) {
           disputeId,
           status,
           winner,
-          reason
+          reason,
+          contractStatus: contract.status
         }
-      })
-    );
-
-    // Send all notifications
-    await Promise.all(notifications);
+      });
+    } catch (notificationError) {
+      console.error("Error sending dispute notifications:", notificationError);
+    }
 
     return NextResponse.json({
       success: true,
       message: `Dispute ${status === "resolved" ? "resolved" : "rejected"} successfully`,
-      dispute
+      dispute,
+      contract: {
+        status: contract.status,
+        milestoneStatus: contract.milestones.find((m: any) => m.milestoneId.toString() === dispute.milestoneId.toString())?.status
+      }
     });
 
   } catch (error: any) {

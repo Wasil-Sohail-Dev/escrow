@@ -44,7 +44,17 @@ export async function GET(
         },
         {
           path: 'disputeId',
-          select: 'title status',
+          select: 'title status winner resolutionDetails raisedBy raisedTo',
+          populate: [
+            {
+              path: 'raisedBy',
+              select: 'firstName lastName email userName userType'
+            },
+            {
+              path: 'raisedTo',
+              select: 'firstName lastName email userName userType'
+            }
+          ]
         },
         {
           path: 'messages',
@@ -110,7 +120,12 @@ export async function GET(
       messages: sortedMessages,
       hasMore: skip > 0,
       totalMessages,
-      currentPage: page
+      currentPage: page,
+      status: populatedChat.disputeId.status,
+      winner: populatedChat.disputeId.winner,
+      resolutionDetails: populatedChat.disputeId.resolutionDetails,
+      raisedBy: populatedChat.disputeId.raisedBy,
+      raisedTo: populatedChat.disputeId.raisedTo
     }, { status: 200 });
   } catch (error) {
     console.error("Error fetching chat:", error);

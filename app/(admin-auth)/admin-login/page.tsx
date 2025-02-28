@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { toast } from "@/hooks/use-toast";
+import Image from 'next/image';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -93,8 +94,14 @@ export default function LoginPage() {
         <div className="bg-white dark:bg-dark-bg p-8 rounded-lg shadow-lg border border-sidebar-border dark:border-dark-border">
           <div className="text-center mb-8">
             <div className="mb-6">
-              <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center mx-auto">
-                <span className="text-2xl text-white">⚡</span>
+              <div className="w-16 h-16  rounded-lg flex items-center justify-center mx-auto">
+              <Image
+                src={"/assets/logo.png"}
+                alt="logo"
+                width={118}
+                height={118}
+                className={""}
+              />
               </div>
             </div>
             <h1 className="text-heading2-bold text-main-heading dark:text-dark-text">Welcome back</h1>
@@ -175,14 +182,6 @@ export default function LoginPage() {
               )}
             </button>
 
-            <div className="mt-6 text-center">
-              <p className="text-small-regular text-dark-2">
-                Protected by reCAPTCHA and subject to the{' '}
-                <a href="#" className="text-primary hover:text-primary-500">Privacy Policy</a>{' '}
-                and{' '}
-                <a href="#" className="text-primary hover:text-primary-500">Terms of Service</a>
-              </p>
-            </div>
           </form>
         </div>
       </div>

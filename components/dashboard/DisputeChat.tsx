@@ -82,6 +82,8 @@ interface Dispute {
     lastMessageAt: string | null;
     unreadCount: number;
   };
+  winner?: "client" | "vendor";
+  resolutionDetails: string;
 }
 
 interface DisputeResponse {
@@ -1246,6 +1248,47 @@ const DisputeChat = ({ user, userLoading, isAdmin }: { user: any | null, userLoa
                   </Button>
                 </div>
               </div>
+
+              {selectedDispute && selectedDispute.status === "resolved" && (
+                <div className="bg-success-bg/20 dark:bg-success-bg/10 p-4 rounded-lg mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Award className="w-5 h-5 text-success-text" />
+                    <h3 className="text-base-semibold text-success-text">Dispute Resolution</h3>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <p className="text-small-medium text-dark-2 dark:text-dark-text/60">Winner:</p>
+                      <p className="text-base-medium text-paragraph dark:text-dark-text capitalize">
+                        {selectedDispute.winner === "client" ? 
+                          selectedDispute.raisedBy.userName : 
+                          selectedDispute.raisedTo.userName
+                        } ({selectedDispute.winner})
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-small-medium text-dark-2 dark:text-dark-text/60">Resolution Reason:</p>
+                      <p className="text-base-regular text-paragraph dark:text-dark-text mt-1 break-words">
+                        {selectedDispute.resolutionDetails}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedDispute && selectedDispute.status === "rejected" && (
+                <div className="bg-error-bg/20 dark:bg-error-bg/10 p-4 rounded-lg mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <XCircle className="w-5 h-5 text-error-text" />
+                    <h3 className="text-base-semibold text-error-text">Dispute Rejected</h3>
+                  </div>
+                  <div>
+                    <p className="text-small-medium text-dark-2 dark:text-dark-text/60">Rejection Reason:</p>
+                    <p className="text-base-regular text-paragraph dark:text-dark-text mt-1 break-words">
+                      {selectedDispute.resolutionDetails}
+                    </p>
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center bg-white dark:bg-dark-bg">

@@ -7,6 +7,7 @@ import { ChatSystem } from "@/models/ChatSystem";
 import { sendNotification } from "@/lib/actions/sender.action";
 import { uploadFileToS3 } from "@/lib/s3";
 import { Admin } from "@/models/AdminSchema";
+import mongoose from "mongoose";
 
 interface RequestBody {
   raisedByEmail: string;
@@ -18,7 +19,6 @@ interface RequestBody {
 }
 
 export async function POST(req: Request) {
-
   console.log("Creating dispute");
   await dbConnect();
 
@@ -64,8 +64,23 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if a dispute already exists for the milestone
-    const existingDispute = await Dispute.findOne({ milestoneId });
+    // Validate contract and milestone
+    const contract = await Contract.findOne({ contractId });
+    if (!contract) {
+      return NextResponse.json(
+        { success: false, message: "Contract not found." },
+        { status: 404 }
+      );
+    }
+
+    // Check if a dispute already exists for this contract and milestone
+    const existingDispute = await Dispute.findOne({
+      $and: [
+        { contractId: contract._id },
+        { milestoneId: { $regex: new RegExp(milestoneId, 'i') } }
+      ]
+    }).lean();
+
     if (existingDispute) {
       return NextResponse.json(
         {
@@ -76,17 +91,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate contract and milestone
-    const contract = await Contract.findOne({ contractId });
-    if (!contract) {
-      return NextResponse.json(
-        { success: false, message: "Contract not found." },
-        { status: 404 }
-      );
-    }
-
     const milestone = contract.milestones.find(
-      (milestone: any) => milestone.milestoneId.toString() === milestoneId
+      (m: any) => m.milestoneId === milestoneId
     );
     if (!milestone) {
       return NextResponse.json(
@@ -95,7 +101,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // **Handle file uploads (if present)**
+    // Handle file uploads (if present)
     let uploadedFiles: {
       fileUrl: string;
       fileName: string;
@@ -124,25 +130,30 @@ export async function POST(req: Request) {
       }
     }
 
-    // **Update contract and milestone status**
+    // Update contract and milestone status
     contract.status = "disputed";
     milestone.status = "disputed";
     await contract.save();
 
-    // **Create the dispute**
-    const dispute = new Dispute({
+    // Generate dispute ID
+    const count = await Dispute.countDocuments();
+    const generatedDisputeId = `DSP${String(count + 1).padStart(6, "0")}`;
+
+    // Create the dispute
+    const disputeData = {
       contractId: contract._id,
-      milestoneId,
+      milestoneId: milestone.milestoneId,
       raisedBy: raisedBy._id,
       raisedTo: raisedTo._id,
       title,
       reason,
-      files: uploadedFiles, // Store uploaded files in dispute
-    });
+      files: uploadedFiles,
+      disputeId: generatedDisputeId
+    };
 
-    await dispute.save();
+    const dispute = await Dispute.create(disputeData);
 
-    // **Find or Assign an Admin**
+    // Find or Assign an Admin
     const admin = await Admin.findOne({ userType: "super_admin" });
     if (!admin) {
       return NextResponse.json(
@@ -151,21 +162,17 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log(admin, "admin");
-
-    // **Create a Chat System Entry for Dispute**
-    const chat = new ChatSystem({
+    // Create a Chat System Entry for Dispute
+    const chat = await ChatSystem.create({
       disputeId: dispute._id,
       participants: [raisedBy._id, raisedTo._id, admin._id],
-      participantTypes: ['Customer', 'Customer', 'Admin'], // Set types for each participant
+      participantTypes: ['Customer', 'Customer', 'Admin'],
       messages: [],
       lastMessage: "",
       lastMessageAt: new Date()
     });
 
-    await chat.save();
-
-    // **📌 Send Notifications**
+    // Send Notifications
     try {
       // Notify the opposing party
       await sendNotification({
@@ -178,18 +185,6 @@ export async function POST(req: Request) {
         link: `/dispute-management-screen?contractId=${contractId}`,
         meta: { disputeId: dispute._id.toString(), contractId, milestoneId },
       });
-
-      // Notify the admin
-      // await sendNotification({
-      //   receiverId: admin._id.toString(),
-      //   senderId: raisedBy._id.toString(),
-      //   title: "Dispute Requires Attention",
-      //   message: `A dispute has been raised by ${raisedByEmail} for contract ${contractId}.`,
-      //   type: "system",
-      //   severity: "error",
-      //   link: `/admin/disputes/${dispute._id}`,
-      //   meta: { disputeId: dispute._id.toString(), contractId, milestoneId },
-      // });
     } catch (notificationError) {
       console.error("Error sending dispute notifications:", notificationError);
     }
@@ -197,8 +192,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         success: true,
-        message:
-          "Dispute raised successfully. Files uploaded. Chat created. Notifications sent.",
+        message: "Dispute raised successfully. Files uploaded. Chat created. Notifications sent.",
         disputeId: dispute._id,
         chatId: chat._id,
       },

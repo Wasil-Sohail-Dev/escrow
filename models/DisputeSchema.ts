@@ -22,16 +22,6 @@ const evidenceSchema = new mongoose.Schema(
 // Schema for Disputes
 const disputeSchema = new mongoose.Schema(
     {
-        disputeId: {
-            type: String,
-            required: true,
-            unique: true,
-            default: function () {
-                const letters = Math.random().toString(36).substring(2, 4).toUpperCase();
-                const numbers = Math.floor(1000 + Math.random() * 9000).toString();
-                return `DI-${letters}-${numbers}`;
-            },
-        },
         contractId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Contract",
@@ -39,7 +29,9 @@ const disputeSchema = new mongoose.Schema(
         },
         milestoneId: {
             type: String,
-            required: false,
+            required: true,
+            get: (v: string) => v,
+            set: (v: string) => v,
         },
         raisedBy: {
             type: mongoose.Schema.Types.ObjectId,
@@ -48,44 +40,77 @@ const disputeSchema = new mongoose.Schema(
         },
         raisedTo: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Customer", // Assuming raisedTo is a customer (either client or vendor)
+            ref: "Customer",
             required: true,
         },
         title: {
             type: String,
             required: true,
-            trim: true,
         },
         reason: {
             type: String,
             required: true,
-            trim: true,
         },
         status: {
             type: String,
             enum: ["pending", "process", "resolved", "rejected"],
             default: "pending",
         },
+        disputeId: {
+            type: String,
+            unique: true,
+            required: true,
+        },
+        files: [{
+            fileUrl: String,
+            fileName: String,
+            fileType: String,
+        }],
+        winner: {
+            type: String,
+            enum: ["client", "vendor"],
+            validate: {
+                validator: function(this: any, v: string | undefined) {
+                    // Winner is required only when status is "resolved"
+                    if (this.status === "resolved") {
+                        return v === "client" || v === "vendor";
+                    }
+                    return true; // Winner is optional for other statuses
+                },
+                message: "Winner is required when status is resolved"
+            }
+        },
         resolutionDetails: {
             type: String,
-            trim: true,
+            required: function(this: any) {
+                return this.status === "resolved" || this.status === "rejected";
+            }
+        },
+        resolvedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Admin",
+        },
+        resolvedAt: {
+            type: Date,
         },
         clientEvidence: evidenceSchema, // Evidence provided by the client
         vendorEvidence: evidenceSchema, // Evidence provided by the vendor
-        files: [fileSchema], // New field to store dispute-related files
-        createdAt: {
-            type: Date,
-            default: Date.now,
-        },
-        updatedAt: {
-            type: Date,
-            default: Date.now,
-        },
     },
     {
         timestamps: true,
+        toJSON: { getters: true },
+        toObject: { getters: true }
     }
 );
+
+// Auto-generate dispute ID
+disputeSchema.pre("save", async function (next) {
+    if (this.isNew) {
+        const count = await mongoose.model("Dispute").countDocuments();
+        this.disputeId = `DSP${String(count + 1).padStart(6, "0")}`;
+    }
+    next();
+});
 
 const Dispute = mongoose.models.Dispute || mongoose.model("Dispute", disputeSchema);
 
