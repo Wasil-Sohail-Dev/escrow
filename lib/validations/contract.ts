@@ -9,7 +9,7 @@ const milestoneSchema = z.object({
     },
     { message: "Amount must be a valid whole number greater than 0" }
   ),
-  description: z.string().min(200, "Description must be at least 200 characters"),
+  description: z.string().min(50, "Description must be at least 50 characters"),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
 });

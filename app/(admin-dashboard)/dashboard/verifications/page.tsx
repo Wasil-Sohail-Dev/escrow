@@ -240,14 +240,14 @@ export default function VerificationsPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-dark-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border">
+          <div className="bg-white dark:bg-dark-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border dark:bg-dark-input-bg">
             <h3 className="text-small-medium text-dark-2 dark:text-dark-text">Pending Reviews</h3>
             <p className="text-heading3-bold text-main-heading dark:text-dark-text">
             {stats?.[activeTab].pending || 0}
             </p>
             <p className="text-small-regular text-error-text">Requires attention</p>
           </div>
-          <div className="bg-white dark:bg-dark-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border">
+          <div className="bg-white dark:bg-dark-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border dark:bg-dark-input-bg">
             <h3 className="text-small-medium text-dark-2 dark:text-dark-text">Approved Today</h3>
             <p className="text-heading3-bold text-main-heading dark:text-dark-text">
             {stats?.[activeTab].approvedToday || 0}
@@ -256,14 +256,14 @@ export default function VerificationsPage() {
             {((stats?.[activeTab]?.approvedToday ?? 0) - (stats?.[activeTab]?.approvedToday ?? 0))} from yesterday
             </p>
           </div>
-          <div className="bg-white dark:bg-dark-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border">
+          <div className="bg-white dark:bg-dark-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border dark:bg-dark-input-bg">
             <h3 className="text-small-medium text-dark-2 dark:text-dark-text">Rejected Today</h3>
             <p className="text-heading3-bold text-main-heading dark:text-dark-text">
             {stats?.[activeTab].rejectedToday || 0}
             </p>
-            <p className="text-small-regular text-dark-2">Incomplete documents</p>
+            <p className="text-small-regular text-error-text">Incomplete documents</p>
           </div>
-          <div className="bg-white dark:bg-dark-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border">
+          <div className="bg-white dark:bg-dark-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border dark:bg-dark-input-bg">
             <h3 className="text-small-medium text-dark-2 dark:text-dark-text">Average Response Time</h3>
             <p className="text-heading3-bold text-main-heading dark:text-dark-text">
             {stats?.[activeTab].responseTime || 0}h

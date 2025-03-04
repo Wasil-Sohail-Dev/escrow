@@ -20,6 +20,7 @@ const PUBLIC_ROUTES = [
     "/forgot-password",
     "/term-condition",
     "/admin-login",
+    "/"
 ];
 
 // API routes that are public
@@ -197,11 +198,11 @@ export async function middleware(req: NextRequest) {
         }
     }
 
-    if (pathname === "/") {
-        const url = req.nextUrl.clone();
-        url.pathname = HOME_PAGE;
-        return NextResponse.redirect(url);
-    }
+    // if (pathname === "/") {
+    //     const url = req.nextUrl.clone();
+    //     url.pathname = HOME_PAGE;
+    //     return NextResponse.redirect(url);
+    // }
 
     const response = NextResponse.next();
     setCorsHeaders(response);

@@ -327,11 +327,11 @@ export const useContractForm = () => {
           title: m.name,
           amount: parseFloat(m.amount),
           description: m.description,
-          startDate: new Date(m.startDate + 'T00:00:00').toISOString(),
-          endDate: new Date(m.endDate + 'T00:00:00').toISOString(),
+          startDate: new Date(m.startDate).toISOString().split('T')[0] + 'T00:00:00.000Z',
+          endDate: new Date(m.endDate).toISOString().split('T')[0] + 'T00:00:00.000Z',
         })),
-        startDate: new Date(formData.startDate + 'T00:00:00').toISOString(),
-        endDate: new Date(formData.endDate + 'T00:00:00').toISOString(),
+        startDate: new Date(formData.startDate).toISOString().split('T')[0] + 'T00:00:00.000Z',
+        endDate: new Date(formData.endDate).toISOString().split('T')[0] + 'T00:00:00.000Z',
       };
       formDataToSend.append('data', JSON.stringify(jsonData));
       // Add files if they exist

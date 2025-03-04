@@ -326,7 +326,7 @@ function PaymentPage() {
                       },
                     }))
                   }
-                  placeholder="PIN code"
+                  placeholder="Zip Code"
                   className="h-[48px] lg:h-[58px] bg-[#EEEEEE] dark:bg-dark-input-bg border border-[#E8EAEE] dark:border-dark-border rounded-lg text-[16px] lg:text-[19.94px] font-[400] leading-[24.13px] text-[#292929] dark:text-dark-text/80"
                 />
               </div>

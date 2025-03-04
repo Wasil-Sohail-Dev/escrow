@@ -101,7 +101,7 @@ function PaymentPage() {
         <div className="w-full lg:w-[500px]">
           <div className="bg-[#D4F1E9] dark:bg-dark-input-bg border border-[#E8EAEE] dark:border-dark-border rounded-md p-4 lg:p-6">
             <h2 className="text-[18px] lg:text-[22px] text-center font-semibold mb-4 lg:mb-6 text-[#292929] dark:text-dark-text">
-              Order Summary
+            Make Payment
             </h2>
 
             <div className="space-y-4">
@@ -172,7 +172,7 @@ function PaymentPage() {
 
                   <div className="flex justify-between items-center">
                     <span className="text-body-medium text-[#474747] dark:text-dark-text">
-                      Escrow Tax
+                    Third Party Service Fee
                     </span>
                     <span className="text-body-normal text-[#474747] dark:text-dark-text">
                       $ {escrowTax?.toFixed(2)}
@@ -181,7 +181,7 @@ function PaymentPage() {
 
                   <div className="flex justify-between items-center">
                     <span className="text-body-medium text-[#474747] dark:text-dark-text">
-                      Bank Fee
+                    Payment Processing Fee
                     </span>
                     <span className="text-body-normal text-[#474747] dark:text-dark-text">
                       $ {bankFee?.toFixed(2)}

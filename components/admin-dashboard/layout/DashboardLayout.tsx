@@ -7,30 +7,37 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
 import Loader from "../../ui/loader";
 import Image from "next/image";
+import { 
+  LayoutDashboard, 
+  Users, 
+  Handshake,
+  Search,
+  FolderClosed,
+  Wallet,
+  AlertTriangle,
+  Bell,
+  X,
+  Menu
+} from "lucide-react";
 
 interface NavItem {
   href: string;
   label: string;
-  icon: string;
+  icon: React.ReactNode;
   badge?: number;
 }
 
 const mainNavItems: NavItem[] = [
-  { href: "/dashboard", label: "Overview", icon: "📊" },
-  { href: "/dashboard/users/vendors", label: "Vendors", icon: "👥" },
-  { href: "/dashboard/users/clients", label: "Clients", icon: "🤝" },
+  { href: "/dashboard", label: "Overview", icon: <LayoutDashboard className="w-5 h-5 mr-2" /> },
+  { href: "/dashboard/users/vendors", label: "Vendors", icon: <Users className="w-5 h-5 mr-2" /> },
+  { href: "/dashboard/users/clients", label: "Clients", icon: <Handshake className="w-5 h-5 mr-2" /> },
 ];
 
 const transactionNavItems: NavItem[] = [
-  { href: "/dashboard/verifications", label: "Verifications", icon: "🔍" },
-  { href: "/dashboard/projects", label: "Projects", icon: "📁" },
-  { href: "/dashboard/payments", label: "Payments", icon: "💰" },
-  { href: "/dashboard/disputes", label: "Disputes", icon: "⚠️" },
-];
-
-const systemNavItems: NavItem[] = [
-  { href: "/settings", label: "Settings", icon: "⚙️" },
-  { href: "/dashboard/audit-logs", label: "Audit Logs", icon: "📝" },
+  { href: "/dashboard/verifications", label: "Verifications", icon: <Search className="w-5 h-5 mr-2" /> },
+  { href: "/dashboard/projects", label: "Projects", icon: <FolderClosed className="w-5 h-5 mr-2" /> },
+  { href: "/dashboard/payments", label: "Payments", icon: <Wallet className="w-5 h-5 mr-2" /> },
+  { href: "/dashboard/disputes", label: "Disputes", icon: <AlertTriangle className="w-5 h-5 mr-2" /> },
 ];
 
 interface NavSectionProps {
@@ -59,7 +66,7 @@ const NavSection = ({ title, items, currentPath }: NavSectionProps) => (
                   : "text-paragraph dark:text-dark-text hover:bg-primary-100 dark:hover:bg-dark-input-bg"
               }`}
             >
-              <span className="mr-3">{item.icon}</span>
+              <span>{item.icon}</span>
               <span>{item.label}</span>
               {item.badge && (
                 <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-error-bg text-error-text">
@@ -119,7 +126,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             className="lg:hidden text-dark-2 hover:text-primary absolute right-2"
             onClick={() => setIsSidebarOpen(false)}
           >
-            ✕
+            <X className="w-6 h-6" />
           </button>
         </div>
 
@@ -154,7 +161,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               className="lg:hidden text-paragraph dark:text-dark-text"
               onClick={() => setIsSidebarOpen(true)}
             >
-              ☰
+              <Menu className="w-6 h-6" />
             </button>
 
             {!isDisputeChat&&<div className="flex items-center gap-2">
@@ -167,7 +174,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <div className="flex items-center space-x-2 sm:space-x-4 ml-auto">
               <button className="p-2 text-paragraph dark:text-dark-text hover:bg-primary-100 dark:hover:bg-dark-input-bg rounded-lg">
                 <span className="sr-only">Notifications</span>
-                🔔
+                <Bell className="w-6 h-6" />
               </button>
               <ThemeToggle />
               <UserMenu />

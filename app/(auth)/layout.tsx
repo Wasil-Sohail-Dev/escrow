@@ -18,7 +18,7 @@ export default function Layout({
   return (
     <section className="flex flex-col justify-center min-h-screen items-center relative dark:bg-dark-bg">
       {/* Logo */}
-      <Link href={"/sign-in"}>
+      <Link href={"/"}>
         <Image
           src={"/assets/logo.png"}
           alt="logo"

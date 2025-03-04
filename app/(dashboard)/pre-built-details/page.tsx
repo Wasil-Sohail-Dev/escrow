@@ -74,12 +74,10 @@ const PreBuildDetails = () => {
     }
   };
 
-console.log(formData,"formDataformData");
-
   return (
     <>
       <Topbar
-        title={formData?.title || "Pre-Build Details"}
+        title={formData?.title || "Pre-built Details"}
         description="Add the following details in order to create your contract"
       />
       <div className="mt-[85px]">

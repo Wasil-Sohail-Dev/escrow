@@ -100,7 +100,7 @@ const DashboardPage = () => {
     <div className="space-y-6">
       {/* Revenue Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-dark-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
+        <div className="bg-white dark:bg-dark-input-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
           <div className="flex items-center justify-between mb-4">
             <div className="p-2 bg-primary/10 rounded-lg">
               <DollarSign className="w-6 h-6 text-primary" />
@@ -112,10 +112,10 @@ const DashboardPage = () => {
           <h3 className="text-2xl font-bold text-main-heading dark:text-dark-text mb-1">
             ${stats?.revenue.total.toLocaleString()}
           </h3>
-          <p className="text-sm text-dark-2">Total Revenue</p>
+          <p className="text-sm text-dark-2 dark:text-dark-text/60">Total Revenue</p>
         </div>
 
-        <div className="bg-white dark:bg-dark-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
+        <div className="bg-white dark:bg-dark-input-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
           <div className="flex items-center justify-between mb-4">
             <div className="p-2 bg-secondary/10 rounded-lg">
               <FileText className="w-6 h-6 text-secondary" />
@@ -127,10 +127,10 @@ const DashboardPage = () => {
           <h3 className="text-2xl font-bold text-main-heading dark:text-dark-text mb-1">
             {stats?.projects.active}
           </h3>
-          <p className="text-sm text-dark-2">Active Projects</p>
+          <p className="text-sm text-dark-2 dark:text-dark-text/60">Active Projects</p>
         </div>
 
-        <div className="bg-white dark:bg-dark-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
+        <div className="bg-white dark:bg-dark-input-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
           <div className="flex items-center justify-between mb-4">
             <div className="p-2 bg-success-bg rounded-lg">
               <Users className="w-6 h-6 text-success-text" />
@@ -142,10 +142,10 @@ const DashboardPage = () => {
           <h3 className="text-2xl font-bold text-main-heading dark:text-dark-text mb-1">
             {stats?.users.total}
           </h3>
-          <p className="text-sm text-dark-2">Total Users</p>
+          <p className="text-sm text-dark-2 dark:text-dark-text/60">Total Users</p>
         </div>
 
-        <div className="bg-white dark:bg-dark-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
+        <div className="bg-white dark:bg-dark-input-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
           <div className="flex items-center justify-between mb-4">
             <div className="p-2 bg-error-bg rounded-lg">
               <AlertTriangle className="w-6 h-6 text-error-text" />
@@ -157,14 +157,14 @@ const DashboardPage = () => {
           <h3 className="text-2xl font-bold text-main-heading dark:text-dark-text mb-1">
             {stats?.disputes.active}
           </h3>
-          <p className="text-sm text-dark-2">Active Disputes</p>
+          <p className="text-sm text-dark-2 dark:text-dark-text/60">Active Disputes</p>
         </div>
       </div>
 
       {/* Quick Actions and System Status */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Quick Actions */}
-        <div className="bg-white dark:bg-dark-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
+        <div className="bg-white dark:bg-dark-input-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
           <h2 className="text-xl font-semibold text-main-heading dark:text-dark-text mb-4">
             Pending Actions
           </h2>
@@ -177,7 +177,7 @@ const DashboardPage = () => {
                     <p className="text-base-medium text-paragraph dark:text-dark-text">
                       KYC Verifications
                     </p>
-                    <p className="text-sm text-dark-2">
+                    <p className="text-sm text-dark-2 dark:text-dark-text/60">
                       {stats?.kyc?.pending ?? 0} pending verifications
                     </p>
                   </div>
@@ -199,7 +199,7 @@ const DashboardPage = () => {
                     <p className="text-base-medium text-paragraph dark:text-dark-text">
                       Active Disputes
                     </p>
-                    <p className="text-sm text-dark-2">
+                    <p className="text-sm text-dark-2 dark:text-dark-text/60">
                       {stats?.disputes?.active ?? 0} disputes need attention
                     </p>
                   </div>
@@ -216,7 +216,7 @@ const DashboardPage = () => {
         </div>
 
         {/* System Status */}
-        <div className="bg-white dark:bg-dark-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
+        <div className="bg-white dark:bg-dark-input-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
           <h2 className="text-xl font-semibold text-main-heading dark:text-dark-text mb-4">
             System Status
           </h2>
@@ -281,37 +281,37 @@ const DashboardPage = () => {
       {/* Detailed Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* User Stats */}
-        <div className="bg-white dark:bg-dark-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
+        <div className="bg-white dark:bg-dark-input-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
           <h2 className="text-xl font-semibold text-main-heading dark:text-dark-text mb-4">
             User Statistics
           </h2>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2">Total Users</span>
+              <span className="text-sm text-dark-2 dark:text-dark-text/60">Total Users</span>
               <span className="text-base-medium text-paragraph dark:text-dark-text">
                 {stats?.users.total}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2">Active Users</span>
+              <span className="text-sm text-dark-2 dark:text-dark-text/60">Active Users</span>
               <span className="text-base-medium text-paragraph dark:text-dark-text">
                 {stats?.users.active}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2">Clients</span>
+              <span className="text-sm text-dark-2 dark:text-dark-text/60">Clients</span>
               <span className="text-base-medium text-paragraph dark:text-dark-text">
                 {stats?.users.clients}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2">Vendors</span>
+              <span className="text-sm text-dark-2 dark:text-dark-text/60">Vendors</span>
               <span className="text-base-medium text-paragraph dark:text-dark-text">
                 {stats?.users.vendors}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2">New This Month</span>
+              <span className="text-sm text-dark-2 dark:text-dark-text/60">New This Month</span>
               <span className="text-base-medium text-success-text">
                 +{stats?.users.newThisMonth}
               </span>
@@ -320,31 +320,31 @@ const DashboardPage = () => {
         </div>
 
         {/* Project Stats */}
-        <div className="bg-white dark:bg-dark-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
+        <div className="bg-white dark:bg-dark-input-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
           <h2 className="text-xl font-semibold text-main-heading dark:text-dark-text mb-4">
             Project Overview
           </h2>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2">Total Projects</span>
+              <span className="text-sm text-dark-2 dark:text-dark-text/60">Total Projects</span>
               <span className="text-base-medium text-paragraph dark:text-dark-text">
                 {stats?.projects.total}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2">Active Projects</span>
+              <span className="text-sm text-dark-2 dark:text-dark-text/60">Active Projects</span>
               <span className="text-base-medium text-paragraph dark:text-dark-text">
                 {stats?.projects.active}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2">Completed Projects</span>
+              <span className="text-sm text-dark-2 dark:text-dark-text/60">Completed Projects</span>
               <span className="text-base-medium text-paragraph dark:text-dark-text">
                 {stats?.projects.completed}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2">New This Month</span>
+              <span className="text-sm text-dark-2 dark:text-dark-text/60">New This Month</span>
               <span className="text-base-medium text-success-text">
                 +{stats?.projects.newThisMonth}
               </span>
@@ -353,25 +353,25 @@ const DashboardPage = () => {
         </div>
 
         {/* Dispute Stats */}
-        <div className="bg-white dark:bg-dark-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
+        <div className="bg-white dark:bg-dark-input-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
           <h2 className="text-xl font-semibold text-main-heading dark:text-dark-text mb-4">
             Dispute Resolution
           </h2>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2">Active Disputes</span>
+              <span className="text-sm text-dark-2 dark:text-dark-text/60">Active Disputes</span>
               <span className="text-base-medium text-paragraph dark:text-dark-text">
                 {stats?.disputes.active}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2">Resolved Disputes</span>
+              <span className="text-sm text-dark-2 dark:text-dark-text/60">Resolved Disputes</span>
               <span className="text-base-medium text-paragraph dark:text-dark-text">
                 {stats?.disputes.resolved}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2">Resolution Rate</span>
+              <span className="text-sm text-dark-2 dark:text-dark-text/60">Resolution Rate</span>
               <span className="text-base-medium text-success-text">
                 {stats?.disputes.resolutionRate}%
               </span>

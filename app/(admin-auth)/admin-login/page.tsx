@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { toast } from "@/hooks/use-toast";
 import Image from 'next/image';
+import { Mail, Lock } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -91,7 +92,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white-1 dark:bg-dark-bg">
       <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-dark-bg p-8 rounded-lg shadow-lg border border-sidebar-border dark:border-dark-border">
+        <div className="bg-white dark:bg-dark-input-bg p-8 rounded-lg shadow-lg border border-sidebar-border dark:border-dark-border">
           <div className="text-center mb-8">
             <div className="mb-6">
               <div className="w-16 h-16  rounded-lg flex items-center justify-center mx-auto">
@@ -124,7 +125,7 @@ export default function LoginPage() {
                   placeholder="Enter your email"
                   disabled={isLoading}
                 />
-                <span className="absolute left-3 top-2.5">📧</span>
+                <Mail className="absolute left-3 top-2.5 h-5 w-5 dark:text-dark-text" />
               </div>
               {errors.email && (
                 <p className="mt-1 text-small-regular text-error-text">{errors.email}</p>
@@ -146,7 +147,7 @@ export default function LoginPage() {
                   placeholder="Enter your password"
                   disabled={isLoading}
                 />
-                <span className="absolute left-3 top-2.5">🔒</span>
+                <Lock className="absolute left-3 top-2.5 h-5 w-5 dark:text-dark-text" />
               </div>
               {errors.password && (
                 <p className="mt-1 text-small-regular text-error-text">{errors.password}</p>

@@ -171,7 +171,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                         className={`md:hidden text-sm ${
                           isActive
                             ? "text-primary"
-                            : "text-sidebar-icon text-sidebar-foreground dark:text-dark-icon"
+                            : "text-black text-sidebar-foreground dark:text-dark-icon"
                         } `}
                       >
                         {item.label}

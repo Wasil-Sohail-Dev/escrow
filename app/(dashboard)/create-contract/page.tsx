@@ -72,7 +72,7 @@ const CreateContract = () => {
         <div className="w-full">
           <div className="mb-8 flex justify-between items-center">
             <h1 className="text-[22px] lg:text-[24px] font-bold mb-2 text-[#292929] dark:text-dark-text">
-              Create Contract
+            Create Your Contract
             </h1>
             <Button
               disabled={user?.isButtonDisabled}
@@ -207,18 +207,18 @@ const CreateContract = () => {
                   Start Date <span className="text-red-500">*</span>
                 </label>
                 <DatePicker
-                  selected={
-                    formData.startDate
-                      ? new Date(formData.startDate + "T00:00:00")
-                      : null
-                  }
-                  onChange={(date: Date | null) => {
+                  selected={formData.startDate ? new Date(formData.startDate + 'T12:00:00') : null}
+                  onChange={(date) => {
                     if (date) {
-                      const formattedDate = date.toISOString().split("T")[0];
-                      handleInputChange("startDate", formattedDate);
+                      const year = date.getFullYear();
+                      const month = String(date.getMonth() + 1).padStart(2, '0');
+                      const day = String(date.getDate()).padStart(2, '0');
+                      handleInputChange("startDate", `${year}-${month}-${day}`);
+                    } else {
+                      handleInputChange("startDate", "");
                     }
                   }}
-                  dateFormat="MM/dd/yyyy"
+                  dateFormat="yyyy-MM-dd"
                   placeholderText="Select start date"
                   className={`w-full h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
                     contractDateError ? "border-red-500" : "border-[#D1D5DB]"
@@ -232,27 +232,23 @@ const CreateContract = () => {
                   End Date <span className="text-red-500">*</span>
                 </label>
                 <DatePicker
-                  selected={
-                    formData.endDate
-                      ? new Date(formData.endDate + "T00:00:00")
-                      : null
-                  }
-                  onChange={(date: Date | null) => {
+                  selected={formData.endDate ? new Date(formData.endDate + 'T12:00:00') : null}
+                  onChange={(date) => {
                     if (date) {
-                      const formattedDate = date.toISOString().split("T")[0];
-                      handleInputChange("endDate", formattedDate);
+                      const year = date.getFullYear();
+                      const month = String(date.getMonth() + 1).padStart(2, '0');
+                      const day = String(date.getDate()).padStart(2, '0');
+                      handleInputChange("endDate", `${year}-${month}-${day}`);
+                    } else {
+                      handleInputChange("endDate", "");
                     }
                   }}
-                  dateFormat="MM/dd/yyyy"
+                  dateFormat="yyyy-MM-dd"
                   placeholderText="Select end date"
                   className={`w-full h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
                     contractDateError ? "border-red-500" : "border-[#D1D5DB]"
                   } dark:border-dark-border rounded-lg px-3 dark:placeholder:text-dark-text/40 dark:text-dark-text`}
-                  minDate={
-                    formData.startDate
-                      ? new Date(formData.startDate)
-                      : new Date()
-                  }
+                  minDate={formData.startDate ? new Date(formData.startDate + 'T12:00:00') : new Date()}
                 />
               </div>
             </div>
@@ -326,9 +322,10 @@ const CreateContract = () => {
                   disabled={isLoading || user?.isButtonDisabled}
                   type="number"
                   value={formData.totalPayment}
-                  onChange={(e) =>
-                    handleInputChange("totalPayment", e.target.value)
-                  }
+                  onChange={(e) => {
+                    const value = Math.max(0, parseFloat(e.target.value)) as number; // Ensure non-negative value
+                    handleInputChange("totalPayment", value.toString());
+                  }}
                   onBlur={() => handleBlur("totalPayment")}
                   placeholder="$2500"
                   onWheel={(e) => e.currentTarget.blur()}
@@ -496,32 +493,24 @@ const CreateContract = () => {
                         Start Date <span className="text-red-500">*</span>
                       </label>
                       <DatePicker
-                        selected={
-                          milestone.startDate
-                            ? new Date(milestone.startDate + "T00:00:00")
-                            : null
-                        }
-                        onChange={(date: Date | null) => {
+                        selected={milestone.startDate ? new Date(milestone.startDate + 'T12:00:00') : null}
+                        onChange={(date) => {
                           if (date) {
-                            const formattedDate = date
-                              .toISOString()
-                              .split("T")[0];
-                            handleMilestoneChange(
-                              index,
-                              "startDate",
-                              formattedDate
-                            );
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const day = String(date.getDate()).padStart(2, '0');
+                            handleMilestoneChange(index, "startDate", `${year}-${month}-${day}`);
+                          } else {
+                            handleMilestoneChange(index, "startDate", "");
                           }
                         }}
-                        dateFormat="MM/dd/yyyy"
+                        dateFormat="yyyy-MM-dd"
                         placeholderText="Select start date"
                         className={`w-full h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
-                          milestoneDateErrors[index]
-                            ? "border-red-500"
-                            : "border-[#D1D5DB]"
+                          milestoneDateErrors[index] ? "border-red-500" : "border-[#D1D5DB]"
                         } dark:border-dark-border rounded-lg px-3 dark:placeholder:text-dark-text/40 dark:text-dark-text`}
-                        minDate={new Date(formData.startDate)}
-                        maxDate={new Date(formData.endDate)}
+                        minDate={new Date(formData.startDate + 'T12:00:00')}
+                        maxDate={new Date(formData.endDate + 'T12:00:00')}
                       />
                     </div>
 
@@ -530,36 +519,24 @@ const CreateContract = () => {
                         End Date <span className="text-red-500">*</span>
                       </label>
                       <DatePicker
-                        selected={
-                          milestone.endDate
-                            ? new Date(milestone.endDate + "T00:00:00")
-                            : null
-                        }
-                        onChange={(date: Date | null) => {
+                        selected={milestone.endDate ? new Date(milestone.endDate + 'T12:00:00') : null}
+                        onChange={(date) => {
                           if (date) {
-                            const formattedDate = date
-                              .toISOString()
-                              .split("T")[0];
-                            handleMilestoneChange(
-                              index,
-                              "endDate",
-                              formattedDate
-                            );
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const day = String(date.getDate()).padStart(2, '0');
+                            handleMilestoneChange(index, "endDate", `${year}-${month}-${day}`);
+                          } else {
+                            handleMilestoneChange(index, "endDate", "");
                           }
                         }}
-                        dateFormat="MM/dd/yyyy"
+                        dateFormat="yyyy-MM-dd"
                         placeholderText="Select end date"
                         className={`w-full h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
-                          milestoneDateErrors[index]
-                            ? "border-red-500"
-                            : "border-[#D1D5DB]"
+                          milestoneDateErrors[index] ? "border-red-500" : "border-[#D1D5DB]"
                         } dark:border-dark-border rounded-lg px-3 dark:placeholder:text-dark-text/40 dark:text-dark-text`}
-                        minDate={
-                          milestone.startDate
-                            ? new Date(milestone.startDate)
-                            : new Date(formData.startDate)
-                        }
-                        maxDate={new Date(formData.endDate)}
+                        minDate={milestone.startDate ? new Date(milestone.startDate + 'T12:00:00') : new Date(formData.startDate + 'T12:00:00')}
+                        maxDate={new Date(formData.endDate + 'T12:00:00')}
                       />
                     </div>
                   </div>

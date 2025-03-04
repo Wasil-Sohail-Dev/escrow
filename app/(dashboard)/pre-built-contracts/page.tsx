@@ -273,7 +273,7 @@ const PreBuildContracts = () => {
   return (
     <>
       <Topbar
-        title="Pre-Build Contracts"
+        title="Pre-Built Contracts"
         description="Add the following details in order to create your contract"
       />
       <div className="mt-[85px]">

@@ -18,7 +18,7 @@ export default function DisputeManagementScreen() {
   return (
     <>
       <Topbar
-        title="Dispute Management screen"
+        title="Dispute Management Screen"
         description="Here is a Detailed information about your disputes raised related to your work"
       />
       <div className="md:px-10 md:mt-[85px] mt-[95px]">

@@ -373,7 +373,9 @@ const Settings = () => {
       ) : (
         <div className="flex flex-col gap-6 w-full mt-[85px]">
           {/* Blocked Alert */}
-          {user?.isButtonDisabled && <BlockedAlert user={user} userLoading={userLoading} />}
+          {user?.isButtonDisabled && (
+            <BlockedAlert user={user} userLoading={userLoading} />
+          )}
 
           {/* Profile Header */}
           <div>
@@ -434,7 +436,7 @@ const Settings = () => {
                   {user?.userName || ""}
                 </h1>
                 <p className="text-base-regular md:text-[20px] font-[400] leading-[19px] text-[#64748B] dark:text-dark-text/60">
-                  Fill up the details to complete your profile
+                  Fill out details to complete your profile
                 </p>
               </div>
               <button className="p-3 bg-[#E8EAEE80] dark:hover:bg-dark-border/20 transition-colors rounded-full">
@@ -638,12 +640,16 @@ const Settings = () => {
                                   : "border-gray-200 text-gray-500 dark:text-dark-text/60"
                               } dark:border-dark-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary pr-8 [&>option]:bg-white [&>option]:dark:bg-dark-bg [&>option]:dark:text-dark-text`}
                             >
-                              <option value="" disabled className="text-gray-500 dark:text-dark-text/60">
+                              <option
+                                value=""
+                                disabled
+                                className="text-gray-500 dark:text-dark-text/60"
+                              >
                                 Select Type
                               </option>
                               {DOCUMENT_TYPES.map((type) => (
-                                <option 
-                                  key={type.value} 
+                                <option
+                                  key={type.value}
                                   value={type.value}
                                   className="text-paragraph dark:text-dark-text bg-white dark:bg-dark-bg"
                                 >

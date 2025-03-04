@@ -220,7 +220,7 @@ const PaymentHistoryPage = () => {
     <>
       <Topbar
         title="Payment History"
-        description="Here is a list of all your payments made done yet"
+        description="Here is all of your Third Party payment history"
       />
       <div className="flex-1 mt-[85px]">
         <HeadBar 
