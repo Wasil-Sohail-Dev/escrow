@@ -64,6 +64,7 @@ const Projects = () => {
         `/api/get-customer-contracts?customerId=${customerId}&role=${user?.userType}&page=${pageNum}&limit=10`
       );
       const { data, pagination } = await response.json();
+      console.log(data);
 
       if (isInitialLoad) {
         setContracts(

@@ -77,10 +77,26 @@ export async function GET(req: Request) {
     // Get total count for pagination info
     const totalContracts = await Contract.countDocuments(contractQuery);
 
+    // Calculate and transform contracts with completion percentage
+    const contractsWithPercentage = contracts.map((contract) => {
+      const totalMilestones = contract.milestones.length;
+      const completedMilestones = contract.milestones.filter(
+        (milestone: any) => milestone.status === "approved"
+      ).length;
+      const completionPercentage = totalMilestones > 0 
+        ? (completedMilestones / totalMilestones) * 100 
+        : 0;
+
+      return {
+        ...contract.toObject(),
+        completionPercentage: Math.round(completionPercentage)
+      };
+    });
+
     return NextResponse.json(
       {
         message: "Contracts retrieved successfully.",
-        data: contracts,
+        data: contractsWithPercentage,
         pagination: {
           total: totalContracts,
           page,

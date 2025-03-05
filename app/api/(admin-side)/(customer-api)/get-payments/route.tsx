@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import { Payment } from "@/models/paymentSchema";
 import { Contract } from "@/models/ContractSchema";
-import { Customer } from "@/models/CustomerSchema";
+
+export const dynamic = 'force-dynamic';
+export const maxDuration = 300; // 5 minutes timeout
 
 export async function GET(req: Request) {
   try {
@@ -42,21 +44,24 @@ export async function GET(req: Request) {
       .populate({
         path: 'contractId',
         select: 'title milestones currentMilestone',
+        options: { lean: true },
         populate: {
           path: 'milestones',
-          select: 'title amount startDate endDate'
+          select: 'title amount startDate endDate',
+          options: { lean: true }
         }
       })
-      .populate('payerId', 'firstName lastName email')
-      .populate('payeeId', 'firstName lastName email')
+      .populate({ path: 'payerId', select: 'firstName lastName email', options: { lean: true } })
+      .populate({ path: 'payeeId', select: 'firstName lastName email', options: { lean: true } })
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     // Get total count for pagination
     const totalPayments = await Payment.countDocuments(query);
 
-    // Get payment statistics
+    // Get payment statistics with optimized query
     const stats = await Payment.aggregate([
       {
         $facet: {
@@ -109,7 +114,7 @@ export async function GET(req: Request) {
               $match: {
                 status: "fully_released",
                 createdAt: {
-                  $gte: new Date(new Date().setDate(1)) // First day of current month
+                  $gte: new Date(new Date().setDate(1))
                 }
               }
             },
@@ -122,7 +127,7 @@ export async function GET(req: Request) {
           ]
         }
       }
-    ]);
+    ]).allowDiskUse(true);
 
     // Calculate growth percentage
     const currentMonthEarnings = stats[0].totalEarnings[0]?.total || 0;
@@ -149,7 +154,7 @@ export async function GET(req: Request) {
       }
     };
 
-    // Get upcoming payments (milestones due in next 30 days)
+    // Get upcoming payments with optimized query
     const upcomingPayments = await Contract.aggregate([
       {
         $unwind: "$milestones"
@@ -180,7 +185,7 @@ export async function GET(req: Request) {
           }
         }
       }
-    ]);
+    ]).allowDiskUse(true);
 
     return NextResponse.json({
       success: true,
