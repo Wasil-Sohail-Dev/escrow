@@ -174,7 +174,7 @@ const Page = () => {
             )}
           </Button>
 
-          <Link href="/login" className="w-full">
+          <Link href="/sign-in" className="w-full">
             <Button
               variant="outline"
               className="h-11 w-full border border-[#E8EAEE] dark:border-dark-border hover:bg-white/90 dark:hover:bg-dark-input-bg rounded-lg text-paragraph dark:text-dark-text"

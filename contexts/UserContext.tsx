@@ -58,7 +58,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         },
       });
       const userData = await userResponse.json();
-
+      console.log(userData, "userData");
       if (userData.user) {
         // Fetch verification data if user exists
         const verificationResponse = await fetch(

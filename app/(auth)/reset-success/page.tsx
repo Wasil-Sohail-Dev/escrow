@@ -17,7 +17,7 @@ const ResetSuccess = () => {
           <CheckCircle2 className="w-20 h-20 text-[#26BA7F]" />
       </div>
 
-      <Link href="/login" className="w-full">
+      <Link href="/sign-in" className="w-full">
         <Button 
           className="h-11 w-full bg-primary hover:bg-primary/90 text-white rounded-lg"
         >

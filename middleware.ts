@@ -43,6 +43,9 @@ const PUBLIC_API_ROUTES = [
     "/api/admin-auth/logout",
     "/api/admin-auth/user",
     "/api/get-user-profile",
+    "/api/create-notification",
+    "/api/get-user-verification",
+    "/api/fetch-notifications",
     // "/api/manage-profile/upload-photo",
 ];
 
@@ -106,6 +109,7 @@ export async function middleware(req: NextRequest) {
     // First try NextAuth token
     try {
         const nextAuthToken = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+        console.log("nextAuthToken", nextAuthToken);
         if (nextAuthToken) {
             tokenPayload = nextAuthToken;
         }

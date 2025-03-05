@@ -66,7 +66,9 @@ interface UpcomingPayment {
 const PaymentsPage = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
-  const [upcomingPayments, setUpcomingPayments] = useState<UpcomingPayment[]>([]);
+  const [upcomingPayments, setUpcomingPayments] = useState<UpcomingPayment[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -137,19 +139,24 @@ const PaymentsPage = () => {
     setCurrentPage(page);
   };
 
-  console.log(payments[0]?.contractId.milestones.length,"payment");
-  
+  console.log(payments[0]?.contractId.milestones.length, "payment");
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-heading2-bold text-main-heading dark:text-dark-text">Payments</h1>
-          <p className="text-base-regular text-dark-2">Track your payments and transactions</p>
+          <h1 className="text-heading2-bold text-main-heading dark:text-dark-text">
+            Payments
+          </h1>
+          <p className="text-base-regular text-dark-2">
+            Track your payments and transactions
+          </p>
         </div>
-        <button 
-          onClick={()=>handleDownloadStatement(stats,payments,upcomingPayments)}
+        <button
+          onClick={() =>
+            handleDownloadStatement(stats, payments, upcomingPayments)
+          }
           disabled={loading || payments.length === 0}
           className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-base-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -161,7 +168,9 @@ const PaymentsPage = () => {
       {/* Payment Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-dark-input-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border">
-          <h3 className="text-small-medium text-dark-2 dark:text-dark-text">Total Earnings</h3>
+          <h3 className="text-small-medium text-dark-2 dark:text-dark-text">
+            Total Earnings
+          </h3>
           <p className="text-heading3-bold text-main-heading dark:text-dark-text">
             ${stats?.totalEarnings.amount.toLocaleString()}
           </p>
@@ -171,29 +180,37 @@ const PaymentsPage = () => {
           </p>
         </div>
         <div className="bg-white dark:bg-dark-input-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border">
-          <h3 className="text-small-medium text-dark-2 dark:text-dark-text">Pending</h3>
+          <h3 className="text-small-medium text-dark-2 dark:text-dark-text">
+            Pending
+          </h3>
           <p className="text-heading3-bold text-main-heading dark:text-dark-text">
             ${stats?.pending.amount.toLocaleString()}
           </p>
-          <p className="text-small-regular text-dark-2">
+          <p className="text-small-regular text-dark-2 dark:text-dark-text/60">
             {stats?.pending.count} payments pending
           </p>
         </div>
         <div className="bg-white dark:bg-dark-input-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border">
-          <h3 className="text-small-medium text-dark-2 dark:text-dark-text">In Escrow</h3>
+          <h3 className="text-small-medium text-dark-2 dark:text-dark-text">
+            In Escrow
+          </h3>
           <p className="text-heading3-bold text-main-heading dark:text-dark-text">
             ${stats?.inEscrow.amount.toLocaleString()}
           </p>
-          <p className="text-small-regular text-dark-2">
+          <p className="text-small-regular text-dark-2 dark:text-dark-text/60">
             {stats?.inEscrow.count} milestones in progress
           </p>
         </div>
         <div className="bg-white dark:bg-dark-input-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border">
-          <h3 className="text-small-medium text-dark-2 dark:text-dark-text">Released</h3>
+          <h3 className="text-small-medium text-dark-2 dark:text-dark-text">
+            Released
+          </h3>
           <p className="text-heading3-bold text-main-heading dark:text-dark-text">
             ${stats?.released.amount.toLocaleString()}
           </p>
-          <p className="text-small-regular text-dark-2">This month</p>
+          <p className="text-small-regular text-dark-2 dark:text-dark-text/60">
+            This month
+          </p>
         </div>
       </div>
 
@@ -201,26 +218,43 @@ const PaymentsPage = () => {
       <div className="bg-white dark:bg-dark-bg rounded-lg border border-sidebar-border dark:border-dark-border">
         <div className="p-6 border-b border-sidebar-border dark:border-dark-border">
           <div className="flex justify-between items-center">
-            <h2 className="text-heading3-bold text-main-heading dark:text-dark-text">Payment History</h2>
+            <h2 className="text-heading3-bold text-main-heading dark:text-dark-text">
+              Payment History
+            </h2>
             <div className="flex items-center space-x-4">
               <select
                 value={statusFilter}
                 onChange={(e) => handleStatusChange(e.target.value)}
                 className="px-4 py-2 bg-white-2 dark:bg-dark-input-bg border border-sidebar-border dark:border-dark-border rounded-lg text-sm text-paragraph dark:text-dark-text focus:outline-none focus:border-primary dark:focus:border-primary [&>option]:bg-white [&>option]:dark:bg-dark-bg [&>option]:dark:text-dark-text"
               >
-                <option value="all" className="text-paragraph dark:text-dark-text">
+                <option
+                  value="all"
+                  className="text-paragraph dark:text-dark-text"
+                >
                   All Payments
                 </option>
-                <option value="processing" className="text-paragraph dark:text-dark-text">
+                <option
+                  value="processing"
+                  className="text-paragraph dark:text-dark-text"
+                >
                   Processing
                 </option>
-                <option value="funded" className="text-paragraph dark:text-dark-text">
+                <option
+                  value="funded"
+                  className="text-paragraph dark:text-dark-text"
+                >
                   Funded
                 </option>
-                <option value="partially_released" className="text-paragraph dark:text-dark-text">
+                <option
+                  value="partially_released"
+                  className="text-paragraph dark:text-dark-text"
+                >
                   Partially Released
                 </option>
-                <option value="fully_released" className="text-paragraph dark:text-dark-text">
+                <option
+                  value="fully_released"
+                  className="text-paragraph dark:text-dark-text"
+                >
                   Fully Released
                 </option>
               </select>
@@ -239,30 +273,52 @@ const PaymentsPage = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-sidebar-border dark:border-dark-border">
-                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">Transaction ID</th>
-                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">Project</th>
-                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">Client</th>
-                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">Amount</th>
-                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">Status</th>
-                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">Date</th>
+                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">
+                  Transaction ID
+                </th>
+                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">
+                  Project
+                </th>
+                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">
+                  Client
+                </th>
+                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">
+                  Amount
+                </th>
+                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">
+                  Status
+                </th>
+                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">
+                  Date
+                </th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
                   <td colSpan={6} className="py-4">
-                    <Loader size="md" text="Loading payments..." fullHeight={false} />
+                    <Loader
+                      size="md"
+                      text="Loading payments..."
+                      fullHeight={false}
+                    />
                   </td>
                 </tr>
               ) : payments.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-dark-2 dark:text-dark-text/60">
+                  <td
+                    colSpan={6}
+                    className="text-center py-8 text-dark-2 dark:text-dark-text/60"
+                  >
                     No payments found
                   </td>
                 </tr>
               ) : (
                 payments.map((payment) => (
-                  <tr key={payment._id} className="border-b border-sidebar-border dark:border-dark-border">
+                  <tr
+                    key={payment._id}
+                    className="border-b border-sidebar-border dark:border-dark-border"
+                  >
                     <td className="py-4 px-6 text-base-regular text-paragraph dark:text-dark-text">
                       #{payment.stripePaymentIntentId.slice(-8)}
                     </td>
@@ -283,8 +339,14 @@ const PaymentsPage = () => {
                       ${payment.totalAmount.toLocaleString()}
                     </td>
                     <td className="py-4 px-6">
-                      <span className={`px-3 py-1 text-small-medium rounded-full ${getStatusBadgeClass(payment.status)}`}>
-                        {payment.status.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
+                      <span
+                        className={`px-3 py-1 text-small-medium rounded-full ${getStatusBadgeClass(
+                          payment.status
+                        )}`}
+                      >
+                        {payment.status
+                          .replace(/_/g, " ")
+                          .replace(/\b\w/g, (l) => l.toUpperCase())}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-base-regular text-dark-2">
@@ -310,27 +372,38 @@ const PaymentsPage = () => {
 
       {/* Upcoming Payments */}
       <div className="bg-white dark:bg-dark-bg rounded-lg border border-sidebar-border dark:border-dark-border p-6">
-        <h2 className="text-heading3-bold text-main-heading dark:text-dark-text mb-4">Upcoming Payments</h2>
+        <h2 className="text-heading3-bold text-main-heading dark:text-dark-text mb-4">
+          Upcoming Payments
+        </h2>
         <div className="space-y-4">
-          {upcomingPayments.length > 0 ? upcomingPayments.map((payment) => (
-            <div key={payment._id} className="flex items-center justify-between p-4 border border-sidebar-border dark:border-dark-border rounded-lg">
-              <div>
-                <p className="text-base-semibold text-paragraph dark:text-dark-text">
-                  {payment.title} - {payment.milestone.title}
-                </p>
-                <p className="text-small-regular text-dark-2">
-                  Due in {payment.daysUntilDue} days
-                </p>
+          {upcomingPayments.length > 0 ? (
+            upcomingPayments.map((payment) => (
+              <div
+                key={payment._id}
+                className="flex items-center justify-between p-4 border border-sidebar-border dark:border-dark-border rounded-lg"
+              >
+                <div>
+                  <p className="text-base-semibold text-paragraph dark:text-dark-text">
+                    {payment.title} - {payment.milestone.title}
+                  </p>
+                  <p className="text-small-regular text-dark-2">
+                    Due in {payment.daysUntilDue} days
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-base-semibold text-paragraph dark:text-dark-text">
+                    ${payment.milestone.amount.toLocaleString()}
+                  </p>
+                  <button className="text-small-medium text-primary">
+                    View Details
+                  </button>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-base-semibold text-paragraph dark:text-dark-text">
-                  ${payment.milestone.amount.toLocaleString()}
-                </p>
-                <button className="text-small-medium text-primary">View Details</button>
-              </div>
-            </div>
-          )) : (
-            <p className="text-small-regular text-dark-2 text-center dark:text-dark-text">No upcoming payments</p>
+            ))
+          ) : (
+            <p className="text-small-regular text-dark-2 text-center dark:text-dark-text">
+              No upcoming payments
+            </p>
           )}
         </div>
       </div>
@@ -338,4 +411,4 @@ const PaymentsPage = () => {
   );
 };
 
-export default PaymentsPage; 
+export default PaymentsPage;

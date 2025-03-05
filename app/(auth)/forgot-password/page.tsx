@@ -78,7 +78,7 @@ const ForgotPassword = () => {
           <p className="text-green-600 mb-4">
             Password reset instructions have been sent to your email.
           </p>
-          <Link href="/login">
+          <Link href="/sign-in">
             <Button className="h-11 bg-primary hover:bg-primary/90 text-white w-full rounded-lg">
               Back to Login
             </Button>
@@ -130,7 +130,7 @@ const ForgotPassword = () => {
               )}
             </Button>
 
-            <Link href="/login" className="w-full">
+            <Link href="/sign-in" className="w-full">
               <Button 
                 variant="outline" 
                 className="h-11 w-full border border-[#E8EAEE] dark:border-dark-border hover:bg-white/90 dark:hover:bg-dark-input-bg rounded-lg text-paragraph dark:text-dark-text"

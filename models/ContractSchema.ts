@@ -167,6 +167,7 @@ const contractSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: ["services", "products"],
+      default: "services",
     },
     startDate: { type: Date },
     endDate: { type: Date },
