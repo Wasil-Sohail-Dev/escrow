@@ -1,12 +1,32 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import { Customer } from "@/models/CustomerSchema";
+import { uploadFileToS3 } from "@/lib/s3";
 
 export async function PATCH(req: Request) {
   try {
-    const { customerId, ...updateFields } = await req.json();
+    await dbConnect();
+    
+    const contentType = req.headers.get('content-type') || '';
+    let customerId: string;
+    let updateFields: any = {};
+    let profileImage: string | undefined;
 
-    // Validate input
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await req.formData();
+      customerId = formData.get('customerId') as string;
+      const file = formData.get('file') as File;
+      
+      if (file) {
+        const { fileUrl } = await uploadFileToS3(file, 'profile-photos');
+        profileImage = fileUrl;
+      }
+    } else {
+      const data = await req.json();
+      customerId = data.customerId;
+      updateFields = data;
+    }
+
     if (!customerId) {
       return NextResponse.json(
         { error: "customerId is required." },
@@ -34,17 +54,12 @@ export async function PATCH(req: Request) {
       }
     });
 
-    if (Object.keys(sanitizedUpdates).length === 0) {
-      return NextResponse.json(
-        { error: "No valid fields provided for update." },
-        { status: 422 }
-      );
+    // Add profile image if it was uploaded
+    if (profileImage) {
+      sanitizedUpdates.profileImage = profileImage;
     }
 
     // Connect to MongoDB
-    await dbConnect();
-
-    // Find the user by ID
     const user = await Customer.findById(customerId);
     if (!user) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
@@ -56,6 +71,7 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json(
       {
+        success: true,
         message: "Profile updated successfully.",
         data: {
           firstName: user.firstName,
@@ -74,7 +90,7 @@ export async function PATCH(req: Request) {
   } catch (error: any) {
     console.error("Error updating profile:", error);
     return NextResponse.json(
-      { error: `Internal Server Error: ${error.message}` },
+      { error: error.message || "Internal server error." },
       { status: 500 }
     );
   }

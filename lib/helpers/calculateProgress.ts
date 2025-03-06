@@ -4,6 +4,7 @@ export interface Milestone {
   description: string;
   status: string;
   milestoneId: string;
+  completionPercentage?: number;
 }
 
 const CONTRACT_STATUS_WEIGHTS = {

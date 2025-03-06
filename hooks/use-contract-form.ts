@@ -113,7 +113,7 @@ export const useContractForm = () => {
 
   // Validate payments whenever total payment or milestones change
   useEffect(() => {
-    const { isValid, error } = validatePayments(formData.totalPayment, formData.milestones);
+    const { error } = validatePayments(formData.totalPayment, formData.milestones);
     setPaymentError(error);
   }, [formData.totalPayment, formData.milestones]);
 

@@ -7,6 +7,7 @@ export async function POST(req: Request) {
 
   try {
     const { receiverId, status, limit } = await req.json();
+    
     if (!receiverId) {
       return NextResponse.json(
         { error: "Receiver ID is required." },
@@ -19,7 +20,7 @@ export async function POST(req: Request) {
 
     let query = Notification.find(filter).sort({ createdAt: -1 });
     
-    if (limit) {
+    if (limit&&limit !== "all") {
       query = query.limit(limit);
     }
 

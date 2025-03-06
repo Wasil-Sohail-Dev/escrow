@@ -64,6 +64,9 @@ const PaymentHistoryPage = () => {
     search: "",
   });
 
+  console.log(filters,"filters");
+  
+
   const itemsPerPage = 5;
 
   useEffect(() => {

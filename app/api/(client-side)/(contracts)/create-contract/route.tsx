@@ -114,6 +114,7 @@ export async function POST(req: Request) {
 
     // Upload files to S3 and get URLs
     const contractFiles = formData.getAll("contractFiles") as File[];
+
     const uploadedFiles = await Promise.all(
       contractFiles.map(async (file) => {
         const { fileUrl, fileName } = await uploadFileToS3(file);
@@ -181,6 +182,7 @@ export async function POST(req: Request) {
       { status: 200 }
     );
   } catch (error: any) {
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.errors.map((e) => e.message) },
@@ -189,6 +191,7 @@ export async function POST(req: Request) {
     }
 
     console.error("Error creating contract:", error);
+
     return NextResponse.json(
       { error: error.message || "Internal server error." },
       { status: 500 }

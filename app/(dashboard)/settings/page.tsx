@@ -229,8 +229,8 @@ const Settings = () => {
       formData.append("file", file);
       formData.append("customerId", user?._id || "");
 
-      const response = await fetch("/api/manage-profile/upload-photo", {
-        method: "POST",
+      const response = await fetch("/api/manage-profile", {
+        method: "PATCH",
         body: formData,
       });
 
@@ -242,7 +242,7 @@ const Settings = () => {
 
       setFormData((prev) => ({
         ...prev,
-        profileImage: data.profileImage,
+        profileImage: data.data.profileImage,
       }));
 
       await refreshUser();

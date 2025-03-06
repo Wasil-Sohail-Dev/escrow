@@ -12,7 +12,6 @@ export async function POST(
   const formData = await request.formData(); // Extract FormData for text & file
   const sender = formData.get("sender") as string;
   const content = formData.get("content") as string;
-  const type = (formData.get("type") as string) || "text";
   const files = formData.getAll("files") as File[];
 
   await dbConnect();

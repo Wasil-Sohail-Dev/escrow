@@ -32,7 +32,6 @@ const CreateDispute = () => {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
   const [touchedFields, setTouchedFields] = useState({
     contractId: false,
     milestoneId: false,
@@ -66,7 +65,7 @@ const CreateDispute = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/get-customer-contracts?customerId=${user?._id}&role=${user?.userType}&page=${pageNum}&limit=10${searchTerm ? `&search=${encodeURIComponent(searchTerm)}` : ''}`
+        `/api/get-customer-contracts?customerId=${user?._id}&role=${user?.userType}&page=${pageNum}&limit=10&search=${searchTerm}`
       );
       const { data, pagination } = await response.json();
       

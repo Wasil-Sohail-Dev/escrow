@@ -19,7 +19,7 @@ const NotificationsPage = () => {
     try {
       const res = await fetch("/api/fetch-notifications", {
         method: "POST",
-        body: JSON.stringify({ receiverId: user._id, status: "unread" }),
+        body: JSON.stringify({ receiverId: user._id, status: "unread", limit: "all" }),
         headers: { "Content-Type": "application/json" },
       });
 

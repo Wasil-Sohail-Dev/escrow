@@ -216,14 +216,18 @@ const Page = () => {
                     checked={field.value}
                     onCheckedChange={field.onChange}
                     disabled={loading}
+                    id="terms"
                     className="mt-1 h-4 w-4 rounded border-[#D1D5DB] dark:border-dark-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                   />
-                  <div className="flex flex-wrap text-[14px] text-paragraph dark:text-dark-text">
+                  <label 
+                    htmlFor="terms" 
+                    className="flex flex-wrap text-[14px] text-paragraph dark:text-dark-text cursor-pointer"
+                  >
                     <span className="mr-1">I agree to</span>
                     <button
                       type="button"
                       onClick={(e) => {
-                        e.preventDefault();
+                        e.stopPropagation();
                         router.push("/term-condition");
                       }}
                       className="text-primary hover:text-primary/90 font-medium px-0 mr-1"
@@ -231,7 +235,7 @@ const Page = () => {
                       Terms and Conditions
                     </button>
                     <span>of Third Party Escrow</span>
-                  </div>
+                  </label>
                 </div>
                 <FormMessage />
               </FormItem>

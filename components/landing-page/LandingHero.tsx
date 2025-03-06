@@ -1,8 +1,10 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const LandingHero = () => {
+  const router = useRouter();
   return (
     <div className="bg-[#0B0B0B] w-full relative overflow-hidden">
       {/* Background Elements */}
@@ -81,6 +83,7 @@ const LandingHero = () => {
             className="bg-primary hover:bg-primary-500 text-white font-semibold 
             text-sm md:text-base lg:text-[16px] 
             rounded-full px-8 py-3 md:px-10 md:py-4 transition-colors"
+            onClick={() => router.push("/user-register")}
           >
             Get Started
           </button>

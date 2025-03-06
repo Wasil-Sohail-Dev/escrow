@@ -17,6 +17,8 @@ export async function GET(req: Request) {
     const page = parseInt(searchParams.get("page") || "1", 10); // Default page: 1
     const sortOrder = searchParams.get("sort") === "asc" ? 1 : -1; // "asc" or "desc"
     const searchTerm = searchParams.get("search") || ""; // Search term
+    const startDate = searchParams.get("startDate"); // Date range filter
+    const endDate = searchParams.get("endDate"); // Date range filter
 
     // Validate query parameters
     if (!customerId) {
@@ -51,8 +53,22 @@ export async function GET(req: Request) {
 
     // Build the contract query with optional status filter and search
     const contractQuery: any = { [queryField]: customerId };
+    
+    // Add status filter
     if (status !== "all") {
       contractQuery.status = status;
+    }
+
+    // Add date range filter if both dates are provided
+    if (startDate && endDate) {
+      contractQuery.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    } else if (startDate) {
+      contractQuery.createdAt = { $gte: new Date(startDate) };
+    } else if (endDate) {
+      contractQuery.createdAt = { $lte: new Date(endDate) };
     }
 
     // Add search functionality

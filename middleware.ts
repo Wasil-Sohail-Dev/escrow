@@ -109,7 +109,6 @@ export async function middleware(req: NextRequest) {
     // First try NextAuth token
     try {
         const nextAuthToken = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-        console.log("nextAuthToken", nextAuthToken);
         if (nextAuthToken) {
             tokenPayload = nextAuthToken;
         }
