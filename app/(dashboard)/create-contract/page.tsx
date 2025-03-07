@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Check, Plus, Eye } from "lucide-react";
+import { Check, Plus, Eye, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -54,13 +54,19 @@ const CreateContract = () => {
     router.push("/pre-built-details");
   };
 
-  const allMilestonesValid = formData.milestones.every(
+  const allMilestonesValid = Array.isArray(formData.milestones) && formData.milestones.every(
     (milestone) =>
       milestone.name &&
       milestone.amount &&
       milestone.startDate &&
       milestone.endDate
   );
+
+  const removeMilestone = (index: number) => {
+    if (!Array.isArray(formData.milestones)) return;
+    const updatedMilestones = formData.milestones.filter((_, i) => i !== index);
+    handleInputChange("milestones", updatedMilestones as unknown as string);
+  };
 
   return (
     <>
@@ -72,7 +78,7 @@ const CreateContract = () => {
         <div className="w-full">
           <div className="mb-8 flex justify-between items-center">
             <h1 className="text-[22px] lg:text-[24px] font-bold mb-2 text-[#292929] dark:text-dark-text">
-            Create Your Contract
+              Create Your Contract
             </h1>
             <Button
               disabled={user?.isButtonDisabled}
@@ -207,12 +213,19 @@ const CreateContract = () => {
                   Start Date <span className="text-red-500">*</span>
                 </label>
                 <DatePicker
-                  selected={formData.startDate ? new Date(formData.startDate + 'T12:00:00') : null}
+                  selected={
+                    formData.startDate
+                      ? new Date(formData.startDate + "T12:00:00")
+                      : null
+                  }
                   onChange={(date) => {
                     if (date) {
                       const year = date.getFullYear();
-                      const month = String(date.getMonth() + 1).padStart(2, '0');
-                      const day = String(date.getDate()).padStart(2, '0');
+                      const month = String(date.getMonth() + 1).padStart(
+                        2,
+                        "0"
+                      );
+                      const day = String(date.getDate()).padStart(2, "0");
                       handleInputChange("startDate", `${year}-${month}-${day}`);
                     } else {
                       handleInputChange("startDate", "");
@@ -232,12 +245,19 @@ const CreateContract = () => {
                   End Date <span className="text-red-500">*</span>
                 </label>
                 <DatePicker
-                  selected={formData.endDate ? new Date(formData.endDate + 'T12:00:00') : null}
+                  selected={
+                    formData.endDate
+                      ? new Date(formData.endDate + "T12:00:00")
+                      : null
+                  }
                   onChange={(date) => {
                     if (date) {
                       const year = date.getFullYear();
-                      const month = String(date.getMonth() + 1).padStart(2, '0');
-                      const day = String(date.getDate()).padStart(2, '0');
+                      const month = String(date.getMonth() + 1).padStart(
+                        2,
+                        "0"
+                      );
+                      const day = String(date.getDate()).padStart(2, "0");
                       handleInputChange("endDate", `${year}-${month}-${day}`);
                     } else {
                       handleInputChange("endDate", "");
@@ -248,7 +268,11 @@ const CreateContract = () => {
                   className={`w-full h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
                     contractDateError ? "border-red-500" : "border-[#D1D5DB]"
                   } dark:border-dark-border rounded-lg px-3 dark:placeholder:text-dark-text/40 dark:text-dark-text`}
-                  minDate={formData.startDate ? new Date(formData.startDate + 'T12:00:00') : new Date()}
+                  minDate={
+                    formData.startDate
+                      ? new Date(formData.startDate + "T12:00:00")
+                      : new Date()
+                  }
                 />
               </div>
             </div>
@@ -323,7 +347,10 @@ const CreateContract = () => {
                   type="number"
                   value={formData.totalPayment}
                   onChange={(e) => {
-                    const value = Math.max(0, parseFloat(e.target.value)) as number; // Ensure non-negative value
+                    const value = Math.max(
+                      0,
+                      parseFloat(e.target.value)
+                    ) as number; // Ensure non-negative value
                     handleInputChange("totalPayment", value.toString());
                   }}
                   onBlur={() => handleBlur("totalPayment")}
@@ -370,7 +397,7 @@ const CreateContract = () => {
             <div>
               <div
                 className="flex justify-between items-center mb-6 cursor-pointer"
-                onClick={allMilestonesValid ? addNewMilestone : () => {}}
+                onClick={true ? addNewMilestone : () => {}}
               >
                 <TooltipProvider>
                   <Tooltip>
@@ -394,9 +421,21 @@ const CreateContract = () => {
 
               {formData.milestones.map((milestone, index) => (
                 <div key={index} className="space-y-6">
-                  <h2 className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold mt-5">
-                    Milestone {index + 1}
-                  </h2>
+                  <div className="flex items-center justify-between mt-5">
+                    <h2 className="text-[15px] md:text-body-medium text-[#292929] dark:text-dark-text font-semibold">
+                      Milestone {index + 1}
+                    </h2>
+                    {index > 0 && <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        removeMilestone(index);
+                      }}
+                      className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors group"
+                      disabled={isLoading || user?.isButtonDisabled}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500 opacity-70 group-hover:opacity-100 transition-opacity" />
+                    </button>}
+                  </div>
 
                   {/* Milestone Name and Amount */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-20">
@@ -493,13 +532,24 @@ const CreateContract = () => {
                         Start Date <span className="text-red-500">*</span>
                       </label>
                       <DatePicker
-                        selected={milestone.startDate ? new Date(milestone.startDate + 'T12:00:00') : null}
+                        selected={
+                          milestone.startDate
+                            ? new Date(milestone.startDate + "T12:00:00")
+                            : null
+                        }
                         onChange={(date) => {
                           if (date) {
                             const year = date.getFullYear();
-                            const month = String(date.getMonth() + 1).padStart(2, '0');
-                            const day = String(date.getDate()).padStart(2, '0');
-                            handleMilestoneChange(index, "startDate", `${year}-${month}-${day}`);
+                            const month = String(date.getMonth() + 1).padStart(
+                              2,
+                              "0"
+                            );
+                            const day = String(date.getDate()).padStart(2, "0");
+                            handleMilestoneChange(
+                              index,
+                              "startDate",
+                              `${year}-${month}-${day}`
+                            );
                           } else {
                             handleMilestoneChange(index, "startDate", "");
                           }
@@ -507,10 +557,12 @@ const CreateContract = () => {
                         dateFormat="yyyy-MM-dd"
                         placeholderText="Select start date"
                         className={`w-full h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
-                          milestoneDateErrors[index] ? "border-red-500" : "border-[#D1D5DB]"
+                          milestoneDateErrors[index]
+                            ? "border-red-500"
+                            : "border-[#D1D5DB]"
                         } dark:border-dark-border rounded-lg px-3 dark:placeholder:text-dark-text/40 dark:text-dark-text`}
-                        minDate={new Date(formData.startDate + 'T12:00:00')}
-                        maxDate={new Date(formData.endDate + 'T12:00:00')}
+                        minDate={new Date(formData.startDate + "T12:00:00")}
+                        maxDate={new Date(formData.endDate + "T12:00:00")}
                       />
                     </div>
 
@@ -519,13 +571,24 @@ const CreateContract = () => {
                         End Date <span className="text-red-500">*</span>
                       </label>
                       <DatePicker
-                        selected={milestone.endDate ? new Date(milestone.endDate + 'T12:00:00') : null}
+                        selected={
+                          milestone.endDate
+                            ? new Date(milestone.endDate + "T12:00:00")
+                            : null
+                        }
                         onChange={(date) => {
                           if (date) {
                             const year = date.getFullYear();
-                            const month = String(date.getMonth() + 1).padStart(2, '0');
-                            const day = String(date.getDate()).padStart(2, '0');
-                            handleMilestoneChange(index, "endDate", `${year}-${month}-${day}`);
+                            const month = String(date.getMonth() + 1).padStart(
+                              2,
+                              "0"
+                            );
+                            const day = String(date.getDate()).padStart(2, "0");
+                            handleMilestoneChange(
+                              index,
+                              "endDate",
+                              `${year}-${month}-${day}`
+                            );
                           } else {
                             handleMilestoneChange(index, "endDate", "");
                           }
@@ -533,10 +596,16 @@ const CreateContract = () => {
                         dateFormat="yyyy-MM-dd"
                         placeholderText="Select end date"
                         className={`w-full h-[48px] lg:h-[52px] dark:bg-dark-input-bg border ${
-                          milestoneDateErrors[index] ? "border-red-500" : "border-[#D1D5DB]"
+                          milestoneDateErrors[index]
+                            ? "border-red-500"
+                            : "border-[#D1D5DB]"
                         } dark:border-dark-border rounded-lg px-3 dark:placeholder:text-dark-text/40 dark:text-dark-text`}
-                        minDate={milestone.startDate ? new Date(milestone.startDate + 'T12:00:00') : new Date(formData.startDate + 'T12:00:00')}
-                        maxDate={new Date(formData.endDate + 'T12:00:00')}
+                        minDate={
+                          milestone.startDate
+                            ? new Date(milestone.startDate + "T12:00:00")
+                            : new Date(formData.startDate + "T12:00:00")
+                        }
+                        maxDate={new Date(formData.endDate + "T12:00:00")}
                       />
                     </div>
                   </div>

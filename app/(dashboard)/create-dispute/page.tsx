@@ -14,8 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Contract } from "@/contexts/ContractContext";
 import { Eye, Search } from "lucide-react";
 import DragDropFile from "@/components/shared/DragDropFile";
@@ -23,6 +22,10 @@ import FilePreviewModal from "@/components/modals/FilePreviewModal";
 import Loader from "@/components/ui/loader";
 
 const CreateDispute = () => {
+  const searchParams = useSearchParams();
+  const contractId = searchParams.get("contractId");
+  const milestoneId = searchParams.get("milestoneId");
+  console.log(contractId, milestoneId, "contractId, milestoneId");
   const { user } = useUser();
   const { toast } = useToast();
   const router = useRouter();
@@ -40,8 +43,8 @@ const CreateDispute = () => {
   });
 
   const [formData, setFormData] = useState({
-    contractId: "",
-    milestoneId: "",
+    contractId: contractId || "",
+    milestoneId: milestoneId || "",
     title: "",
     reason: "",
     raisedToEmail: "",
@@ -95,6 +98,58 @@ const CreateDispute = () => {
       fetchContracts(1, false);
     }
   }, [user, searchTerm]);
+
+  useEffect(() => {
+    if (contractId && user) {
+      // Fetch the specific contract first
+      const fetchSpecificContract = async () => {
+        try {
+          const response = await fetch(
+            `/api/get-customer-contracts?customerId=${user?._id}&role=${user?.userType}&contractId=${contractId}`
+          );
+          const { data } = await response.json();
+          
+          if (data && data.length > 0) {
+            const contract = data[0];
+            setContracts([contract]);
+            setSelectedContract(contract);
+            
+            // Set the raisedToEmail based on user type
+            const raisedToEmail =
+              user?.userType === "client"
+                ? contract.vendorId.email
+                : contract.clientId.email;
+
+            setFormData(prev => ({
+              ...prev,
+              contractId: contract.contractId,
+              raisedToEmail,
+              // If milestoneId is provided, set it
+              milestoneId: milestoneId || prev.milestoneId
+            }));
+          }
+        } catch (error) {
+          console.error("Error fetching specific contract:", error);
+        }
+      };
+
+      fetchSpecificContract();
+    }
+  }, [contractId, user]);
+
+  useEffect(() => {
+    if (selectedContract && milestoneId) {
+      const milestone = selectedContract.milestones.find(
+        m => m.milestoneId === milestoneId
+      );
+      if (milestone) {
+        setFormData(prev => ({
+          ...prev,
+          milestoneId: milestone.milestoneId
+        }));
+      }
+    }
+  }, [selectedContract, milestoneId]);
 
   const handleSelectScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.target as HTMLDivElement;
@@ -317,6 +372,7 @@ const CreateDispute = () => {
                 <Select
                   onValueChange={handleContractSelect}
                   value={formData.contractId}
+                  defaultValue={contractId || undefined}
                   onOpenChange={() =>
                     !touchedFields.contractId && handleBlur("contractId")
                   }
@@ -376,10 +432,9 @@ const CreateDispute = () => {
                   Select Milestone <span className="text-red-500">*</span>
                 </label>
                 <Select
-                  onValueChange={(value) =>
-                    handleInputChange("milestoneId", value)
-                  }
+                  onValueChange={(value) => handleInputChange("milestoneId", value)}
                   value={formData.milestoneId}
+                  defaultValue={milestoneId || undefined}
                   disabled={!selectedContract}
                   onOpenChange={() =>
                     !touchedFields.milestoneId && handleBlur("milestoneId")

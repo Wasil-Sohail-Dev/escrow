@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/helpers/fromatDate";
 import RevisionRequestModal from "./RevisionRequestModal";
 import FilePreviewModal from "./FilePreviewModal";
-import { FilePreviewType, S3File, convertS3FilesToPreviewFiles, handleFileDownload } from "@/lib/helpers/fileHelpers";
+import { S3File, convertS3FilesToPreviewFiles, handleFileDownload } from "@/lib/helpers/fileHelpers";
 import { useMilestoneTask } from '@/contexts/MilestoneTaskContext';
 
 interface HistoryEntry {
@@ -286,7 +286,8 @@ console.log(response.data.success,"successssssssss");
               )}
 
               {user?.userType !== "vendor" &&
-                mileStoneData?.status !== "approved" && (
+                mileStoneData?.status !== "approved" &&
+                mileStoneData?.status !== "payment_released" && (
                   <div className="flex items-end  justify-end gap-3 mt-6 border-t border-[#E3E3E3] pt-6">
                     <Button
                       onClick={handleRevisionModalOpen}

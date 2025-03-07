@@ -17,7 +17,6 @@ import FilePreviewModal from "@/components/modals/FilePreviewModal";
 import DragDropFile from "@/components/shared/DragDropFile";
 
 const Page = () => {
-  const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [documents, setDocuments] = useState<File[]>([]);
   const [isFilePreviewOpen, setIsFilePreviewOpen] = useState(false);
@@ -46,12 +45,12 @@ const Page = () => {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      setDocuments(prev => [...prev, ...Array.from(files)]);
+      setDocuments((prev) => [...prev, ...Array.from(files)]);
     }
   };
 
   const handleRemoveFile = (index: number) => {
-    setDocuments(prev => prev.filter((_, i) => i !== index));
+    setDocuments((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
@@ -68,23 +67,23 @@ const Page = () => {
     try {
       // Create FormData
       const formData = new FormData();
-      
+
       // Add JSON data
       const jsonData = {
         contractId,
         milestoneId,
         action: "vendor_submitted",
         userId: user?._id,
-        title: decodeURIComponent(title as string),
+        title: safeDecodeTitle(title as string),
         description: editor?.getText(),
         userRole: user?.userType,
       };
-      formData.append('data', JSON.stringify(jsonData));
+      formData.append("data", JSON.stringify(jsonData));
 
       // Add files if they exist
       if (documents.length > 0) {
         documents.forEach((file) => {
-          formData.append('files', file);
+          formData.append("files", file);
         });
       }
 
@@ -94,7 +93,7 @@ const Page = () => {
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
         toast({
           title: "Success",
@@ -115,10 +114,20 @@ const Page = () => {
     }
   };
 
+  const safeDecodeTitle = (encodedTitle: string | string[]) => {
+    try {
+      const decodedTitle = decodeURIComponent(encodedTitle as string);
+      return decodedTitle.length > 20 ? decodedTitle.slice(0, 20) + "..." : decodedTitle;
+    } catch (error) {
+      console.error("Error decoding title:", error);
+      return "Submit Milestone";
+    }
+  };
+
   return (
     <>
       <Topbar
-        title={`Submit ${decodeURIComponent(title as string)}`}
+        title={`Submit ${safeDecodeTitle(title!)}`}
         description="Submit your milestone work"
       />
       <div className="mt-[85px]">
@@ -129,7 +138,9 @@ const Page = () => {
               Task Detail
             </h2>
             <p className="text-[16px] font-[400] leading-[25.6px] text-paragraph dark:text-dark-text/60 mb-6">
-              Please ensure all tasks are completed as per the project requirements. Submitting a milestone marks the completion of a significant phase in the project.
+              Please ensure all tasks are completed as per the project
+              requirements. Submitting a milestone marks the completion of a
+              significant phase in the project.
             </p>
           </div>
 
@@ -137,11 +148,7 @@ const Page = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div className="md:col-span-3 bg-gray-100 dark:bg-dark-input-bg">
               <div
-                className={`w-full border ${
-                  focusedInput === "title"
-                    ? "border-primary"
-                    : "border-[#D1D5DB] dark:border-dark-border"
-                } rounded-lg text-[#334155] dark:text-dark-text py-2 px-4 transition-colors dark:bg-dark-input-bg`}
+                className={`w-full border ${"border-[#D1D5DB] dark:border-dark-border"} rounded-lg text-[#334155] dark:text-dark-text py-2 px-4 transition-colors dark:bg-dark-input-bg`}
               >
                 <label className="text-[14px] text-[#334155] dark:text-dark-text font-[400] mb-2 block leading-[21px]">
                   Title
@@ -154,7 +161,7 @@ const Page = () => {
                 />
               </div>
             </div>
-            
+
             <div className="md:col-span-2">
               <label className="text-[14px] text-[#334155] dark:text-dark-text font-[400] mb-2 block leading-[21px]">
                 Upload File

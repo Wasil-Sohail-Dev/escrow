@@ -48,14 +48,16 @@ export const FILTER_OPTIONS = {
   dateRange: ["Last 7 days", "Last 30 days", "Last 3 months", "Last 6 months", "Last Year"],
   status: [
     { label: "All", color: "#000000" },
+    { label: "Processing", color: "#F29A2E" },
+    { label: "Funded", color: "#68E05E" },
     { label: "On Hold", color: "#EB2E2E" },
-    { label: "Process", color: "#F29A2E" },
-    { label: "Released", color: "#68E05E" },
+    { label: "Partially Released", color: "#3B82F6" },
+    { label: "Fully Released", color: "#68E05E" },
     { label: "Failed", color: "#EB2E2E" },
     { label: "Refunded", color: "#F29A2E" },
     { label: "Disputed", color: "#EB2E2E" }
   ],
-  paymentMethod: ["All", "Stripe", "Bank Transfer"],
+  paymentMethod: ["All", "Stripe"],
   project: ["All Projects"]
 }; 
 

@@ -10,16 +10,57 @@ export async function PATCH(req: Request) {
     const contentType = req.headers.get('content-type') || '';
     let customerId: string;
     let updateFields: any = {};
-    let profileImage: string | undefined;
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await req.formData();
       customerId = formData.get('customerId') as string;
-      const file = formData.get('file') as File;
       
-      if (file) {
-        const { fileUrl } = await uploadFileToS3(file, 'profile-photos');
-        profileImage = fileUrl;
+      // Extract all form fields
+      for (const [key, value] of formData.entries()) {
+        if (key !== 'file') {
+          updateFields[key] = value;
+        }
+      }
+
+      // Handle file upload if present
+      const fileData = formData.get('file');
+      let file: File | null = null;
+console.log(fileData);
+
+      if (fileData) {
+        if (typeof fileData === 'string') {
+          try {
+            // Parse stringified file data
+            const parsedFile = JSON.parse(fileData);
+            // Convert the parsed data into a File object
+            file = new File(
+              [Buffer.from(parsedFile.uri || parsedFile.path || '', 'utf-8')],
+              parsedFile.name,
+              { type: parsedFile.type }
+            );
+          } catch (error) {
+            console.error('Error parsing file data:', error);
+            return NextResponse.json(
+              { error: "Invalid file format received" },
+              { status: 400 }
+            );
+          }
+        } else {
+          file = fileData as File;
+        }
+
+        if (file && file.name) {
+          try {
+            const { fileUrl } = await uploadFileToS3(file, 'profile-photos');
+            updateFields.profileImage = fileUrl;
+          } catch (error) {
+            console.error('Error uploading file:', error);
+            return NextResponse.json(
+              { error: "Failed to upload profile photo." },
+              { status: 500 }
+            );
+          }
+        }
       }
     } else {
       const data = await req.json();
@@ -54,12 +95,7 @@ export async function PATCH(req: Request) {
       }
     });
 
-    // Add profile image if it was uploaded
-    if (profileImage) {
-      sanitizedUpdates.profileImage = profileImage;
-    }
-
-    // Connect to MongoDB
+    // Find and update the user
     const user = await Customer.findById(customerId);
     if (!user) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });

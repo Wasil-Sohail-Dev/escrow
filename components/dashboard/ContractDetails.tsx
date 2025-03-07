@@ -392,12 +392,12 @@ const ContactDetails = ({
                     }`}
                   ></div>
                   <div className="flex items-center gap-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-4">
-                        <span className="text-[16px] font-[600] leading-[19px] text-paragraph dark:text-dark-text">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start gap-4 flex-wrap">
+                        <span className="text-[16px] font-[600] leading-[19px] text-paragraph dark:text-dark-text break-all whitespace-pre-wrap max-w-full">
                           {milestone.title}
                         </span>
-                        <span className="text-paragraph dark:text-dark-2 text-[12px] font-[400] leading-[16px]">
+                        <span className="text-paragraph dark:text-dark-2 text-[12px] font-[400] leading-[16px] shrink-0">
                           (Milestone Payment: ${milestone.amount})
                         </span>
                       </div>
@@ -438,7 +438,7 @@ const ContactDetails = ({
                 </div>
                 {milestone?.status !== "cancelled" &&
                   milestone?.status !== "pending" && (
-                    <div className="mt-4 md:mt-0 flex justify-end">
+                    <div className="mt-4 md:mt-0 flex flex-col gap-2">
                       {contract?.status !== "onboarding" &&
                       user?.userType === "vendor" ? (
                         <>
@@ -498,6 +498,20 @@ const ContactDetails = ({
                               </Button>
                             )}
                         </>
+                      )}
+                      {(milestone.status !== "payment_released" &&
+                        milestone.status !== "working") && (
+                        <Button
+                          variant="default"
+                          className="text-[14px] font-[700] leading-[20px] bg-red-500 text-white dark:bg-red-500 dark:text-dark-text px-2 md:px-6 rounded-lg hover:bg-red-400 dark:hover:bg-red-400 transition-colors md:h-[46px] h-[36px]"
+                          onClick={() => {
+                            router.push(
+                              `/create-dispute?contractId=${contract?.contractId}&milestoneId=${milestone.milestoneId}`
+                            );
+                          }}
+                        >
+                          Dispute
+                        </Button>
                       )}
                     </div>
                   )}

@@ -26,6 +26,7 @@ interface FormData {
   companyName?: string;
   companyAddress?: string;
   profileImage?: string;
+  tempProfileImage?: File;
 }
 
 interface KYCData {
@@ -39,10 +40,6 @@ interface KYCData {
   status: string;
   verifiedAt?: string;
   rejectionReason?: string;
-}
-
-interface KYCFile extends File {
-  documentType?: string;
 }
 
 interface KYCFileWithMeta {
@@ -67,7 +64,6 @@ const Settings = () => {
   const { toast } = useToast();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingKYC, setUploadingKYC] = useState(false);
   const [kycData, setKycData] = useState<KYCData | null>(null);
   const [selectedKYCFiles, setSelectedKYCFiles] = useState<KYCFileWithMeta[]>(
@@ -149,57 +145,6 @@ const Settings = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!validateForm()) {
-      toast({
-        title: "Validation Error",
-        description: "Please check all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const response = await axios.patch("/api/manage-profile", {
-        customerId: user?._id,
-        ...formData,
-      });
-
-      if (response.data) {
-        await refreshUser();
-        toast({
-          title: "Success",
-          description: "Profile updated successfully",
-          variant: "default",
-        });
-      }
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update profile. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const isFormUnchanged = () => {
-    if (!user) return true;
-
-    return (
-      formData.firstName === (user.firstName || "") &&
-      formData.lastName === (user.lastName || "") &&
-      formData.userName === (user.userName || "") &&
-      formData.email === (user.email || "") &&
-      formData.phone === (user.phone || "") &&
-      formData.companyName === (user.companyName || "") &&
-      formData.companyAddress === (user.companyAddress || "")
-    );
-  };
-
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -223,44 +168,100 @@ const Settings = () => {
       return;
     }
 
+    // Just update the local state with file preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData((prev) => ({
+        ...prev,
+        tempProfileImage: file,
+        profileImage: reader.result as string,
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please check all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSaving(true);
     try {
-      setUploadingPhoto(true);
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("customerId", user?._id || "");
+      const formDataToSend = new FormData();
+
+      // Append all form fields
+      Object.keys(formData).forEach((key) => {
+        if (key !== "tempProfileImage" && key !== "profileImage" ) {
+          formDataToSend.append(
+            key,
+            formData[key as keyof typeof formData] as string
+          );
+        }
+      });
+
+      // Append customerId
+      formDataToSend.append("customerId", user?._id || "");
+
+      // Append profile photo if it exists
+      if (formData.tempProfileImage) {
+        formDataToSend.append("file", formData.tempProfileImage);
+      }
 
       const response = await fetch("/api/manage-profile", {
         method: "PATCH",
-        body: formData,
+        body: formDataToSend,
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to upload photo");
+        throw new Error(data.error || "Failed to update profile");
       }
-
-      setFormData((prev) => ({
-        ...prev,
-        profileImage: data.data.profileImage,
-      }));
 
       await refreshUser();
 
+      // Clear temporary image
+      setFormData((prev) => {
+        const newData = { ...prev };
+        delete newData.tempProfileImage;
+        return newData;
+      });
+
       toast({
         title: "Success",
-        description: "Profile photo updated successfully",
+        description: "Profile updated successfully",
+        variant: "default",
       });
     } catch (error) {
-      console.error("Error uploading photo:", error);
+      console.error("Error updating profile:", error);
       toast({
         title: "Error",
-        description: "Failed to upload profile photo",
+        description: "Failed to update profile. Please try again.",
         variant: "destructive",
       });
     } finally {
-      setUploadingPhoto(false);
+      setSaving(false);
     }
+  };
+
+  const isFormUnchanged = () => {
+    if (!user) return true;
+
+    return (
+      formData.firstName === (user.firstName || "") &&
+      formData.lastName === (user.lastName || "") &&
+      formData.userName === (user.userName || "") &&
+      formData.email === (user.email || "") &&
+      formData.phone === (user.phone || "") &&
+      formData.companyName === (user.companyName || "") &&
+      formData.companyAddress === (user.companyAddress || "") &&
+      formData.profileImage === (user.profileImage || "")
+    );
   };
 
   const handleKYCFileSelect = (files: File[]) => {
@@ -314,8 +315,8 @@ const Settings = () => {
       const formData = new FormData();
 
       selectedKYCFiles.forEach((fileData) => {
-        formData.append("files[]", fileData.file);
-        formData.append("documentTypes[]", fileData.documentType);
+        formData.append("files", fileData.file);
+        formData.append("documentTypes", fileData.documentType);
       });
 
       formData.append("customerId", user?._id || "");
@@ -387,14 +388,8 @@ const Settings = () => {
                   accept="image/*"
                   className="absolute inset-0 opacity-0 cursor-pointer z-20"
                   onChange={handlePhotoUpload}
-                  disabled={uploadingPhoto}
+                  // disabled={formData.profileImage !== ""}
                 />
-                {uploadingPhoto ? (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 z-10">
-                    <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mb-2"></div>
-                    <span className="text-xs text-white">Uploading...</span>
-                  </div>
-                ) : (
                   <>
                     <Image
                       src={
@@ -409,26 +404,29 @@ const Settings = () => {
                       }`}
                     />
                     {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
-                      <Camera className="w-6 h-6 text-white mb-2" />
-                      <div className="flex flex-col items-center">
-                        <span className="text-white text-xs font-medium">
-                          {formData.profileImage
-                            ? "Change Photo"
-                            : "Upload Photo"}
-                        </span>
-                        <span className="text-white/80 text-[10px] mt-1">
-                          JPG, PNG, GIF (Max 5MB)
-                        </span>
+                    {!formData.profileImage && (
+                      <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
+                        <Camera className="w-6 h-6 text-white mb-2" />
+                        <div className="flex flex-col items-center">
+                          <span className="text-white text-xs font-medium">
+                            {formData.profileImage
+                              ? "Change Photo"
+                              : "Upload Photo"}
+                          </span>
+                          <span className="text-white/80 text-[10px] mt-1">
+                            JPG, PNG, GIF (Max 5MB)
+                          </span>
+                        </div>
                       </div>
-                    </div>
+                    )}
                     {/* Upload Indicator */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-primary/90 py-1 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center gap-1">
-                      <ImagePlus className="w-3 h-3 text-white" />
-                      <span className="text-[10px] text-white">Upload</span>
-                    </div>
+                    {!formData.profileImage && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-primary/90 py-1 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center gap-1">
+                        <ImagePlus className="w-3 h-3 text-white" />
+                        <span className="text-[10px] text-white">Upload</span>
+                      </div>
+                    )}
                   </>
-                )}
               </div>
 
               <div className="flex-1 flex flex-col gap-1 justify-center">
@@ -439,9 +437,9 @@ const Settings = () => {
                   Fill out details to complete your profile
                 </p>
               </div>
-              <button className="p-3 bg-[#E8EAEE80] dark:hover:bg-dark-border/20 transition-colors rounded-full">
+              {/* <button className="p-3 bg-[#E8EAEE80] dark:hover:bg-dark-border/20 transition-colors rounded-full">
                 <Share2 className="w-5 h-5 md:w-6 md:h-6 text-gray-300 dark:text-dark-text/60" />
-              </button>
+              </button> */}
             </div>
           </div>
 
@@ -488,6 +486,7 @@ const Settings = () => {
                 <FormField
                   label="Email"
                   type="email"
+                  disabled={true}
                   required
                   value={formData.email}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>

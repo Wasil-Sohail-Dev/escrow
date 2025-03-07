@@ -55,37 +55,150 @@ const PaymentHistoryPage = () => {
   const [selectAll, setSelectAll] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [payments, setPayments] = useState<PaymentData[]>([]);
-  const [filteredPayments, setFilteredPayments] = useState<PaymentData[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [filters, setFilters] = useState({
     dateRange: "Last 30 days",
-    status: "All",
-    paymentMethod: "All",
-    project: "All Projects",
+    status: "all",
+    paymentMethod: "all",
     search: "",
   });
 
-  console.log(filters,"filters");
-  
+  const [dateRange, setDateRange] = useState<{
+    startDate: Date | null;
+    endDate: Date | null;
+  }>({
+    startDate: null,
+    endDate: null
+  });
 
-  const itemsPerPage = 5;
+  const [paymentStats, setPaymentStats] = useState({
+    totalAmount: 0,
+    onHoldAmount: 0,
+    releasedAmount: 0
+  });
 
+  // Handle custom date range selection
+  const handleDateRangeChange = (dates: [Date | null, Date | null]) => {
+    const [start, end] = dates;
+    setDateRange({ startDate: start, endDate: end });
+    if (start && end) {
+      setFilters(prev => ({ ...prev, dateRange: "Custom Range" }));
+    }
+  };
+
+  // Calculate dates based on filter
+  useEffect(() => {
+    if (filters.dateRange === "Custom Range") return;
+
+    const today = new Date();
+    let start = null;
+    
+    switch (filters.dateRange) {
+      case "Last 7 days":
+        start = new Date(today);
+        start.setDate(today.getDate() - 7);
+        break;
+      case "Last 30 days":
+        start = new Date(today);
+        start.setDate(today.getDate() - 30);
+        break;
+      case "Last 3 months":
+        start = new Date(today);
+        start.setMonth(today.getMonth() - 3);
+        break;
+      case "Last 6 months":
+        start = new Date(today);
+        start.setMonth(today.getMonth() - 6);
+        break;
+      case "Last Year":
+        start = new Date(today);
+        start.setFullYear(today.getFullYear() - 1);
+        break;
+      default:
+        start = null;
+        break;
+    }
+    
+    setDateRange({
+      startDate: start,
+      endDate: filters.dateRange === "all" ? null : today
+    });
+  }, [filters.dateRange]);
+
+  // Add debounce function
+  const debounce = (func: Function, wait: number) => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    const debouncedFn = (...args: any[]) => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func(...args), wait);
+    };
+    debouncedFn.cleanup = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+    return debouncedFn;
+  };
+
+  // Create debounced fetch
+  const debouncedFetch = React.useCallback(
+    debounce(() => {
+      fetchPayments();
+    }, 500),
+    [filters, currentPage]
+  );
+
+  // Initial fetch on mount
   useEffect(() => {
     if (user) {
       fetchPayments();
     }
   }, [user]);
 
+  // Handle filter changes with debounce
+  useEffect(() => {
+    if (user) {
+      debouncedFetch();
+    }
+    return () => {
+      debouncedFetch.cleanup();
+    };
+  }, [filters, currentPage]);
+
+  // Update search handler
+  const handleSearch = (value: string) => {
+    setCurrentPage(1); // Reset to first page on new search
+    setFilters(prev => ({ ...prev, search: value }));
+  };
+
   const fetchPayments = async () => {
     if (!user?._id) return;
     
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/get-payment-history?customerId=${user._id}&userType=${user.userType}`);
+      // Build query params
+      const params = new URLSearchParams({
+        customerId: user._id,
+        userType: user.userType,
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        status: filters.status.toLocaleLowerCase(),
+        paymentMethod: filters.paymentMethod.toLocaleLowerCase(),
+        search: filters.search,
+      });
+
+      // Add date params only if both dates are present
+      if (dateRange.startDate && dateRange.endDate) {
+        params.append('startDate', dateRange.startDate.toISOString());
+        params.append('endDate', dateRange.endDate.toISOString());
+      }
+
+      const response = await fetch(`/api/get-payment-history?${params}`);
       const data = await response.json();
       
       if (data.success) {
         setPayments(data.data);
-        setFilteredPayments(data.data);
+        setTotalItems(data.pagination.total);
+        setPaymentStats(data.stats);
       } else {
         toast({
           title: "Error",
@@ -105,80 +218,6 @@ const PaymentHistoryPage = () => {
     }
   };
 
-  useEffect(() => {
-    applyFilters();
-  }, [filters, payments]);
-
-  const applyFilters = () => {
-    let filtered = [...payments];
-
-    // Apply date range filter
-    if (filters.dateRange !== "All") {
-      const today = new Date();
-      const filterDate = new Date();
-
-      switch (filters.dateRange) {
-        case "Last 7 days":
-          filterDate.setDate(today.getDate() - 7);
-          break;
-        case "Last 30 days":
-          filterDate.setDate(today.getDate() - 30);
-          break;
-        case "Last 3 months":
-          filterDate.setMonth(today.getMonth() - 3);
-          break;
-        case "Last 6 months":
-          filterDate.setMonth(today.getMonth() - 6);
-          break;
-        case "Last Year":
-          filterDate.setFullYear(today.getFullYear() - 1);
-          break;
-      }
-
-      filtered = filtered.filter(payment => {
-        const paymentDate = new Date(payment.createdAt);
-        return paymentDate >= filterDate && paymentDate <= today;
-      });
-    }
-
-    // Apply status filter
-    if (filters.status !== "All") {
-      filtered = filtered.filter(payment => {
-        // Convert status to match the display format
-        const paymentStatus = payment.status.replace('_', ' ').toLowerCase();
-        return paymentStatus === filters.status.toLowerCase();
-      });
-    }
-
-    // Apply payment method filter
-    if (filters.paymentMethod !== "All") {
-      filtered = filtered.filter(payment => 
-        payment.paymentMethod.toLowerCase() === filters.paymentMethod.toLowerCase()
-      );
-    }
-
-    // Apply search filter
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      filtered = filtered.filter(payment => 
-        payment.stripePaymentIntentId.toLowerCase().includes(searchLower) ||
-        payment.totalAmount.toString().includes(searchLower) ||
-        payment.paymentMethod.toLowerCase().includes(searchLower) ||
-        payment.status.replace('_', ' ').toLowerCase().includes(searchLower)
-
-      );
-    }
-
-    setFilteredPayments(filtered);
-  };
-
-  const totalItems = filteredPayments.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const currentItems = filteredPayments.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
     window.scrollTo(0, 0);
@@ -188,7 +227,7 @@ const PaymentHistoryPage = () => {
     if (selectAll) {
       setSelectedRows([]);
     } else {
-      setSelectedRows(currentItems.map(item => item._id));
+      setSelectedRows(payments.map(item => item._id));
     }
     setSelectAll(!selectAll);
   };
@@ -198,7 +237,7 @@ const PaymentHistoryPage = () => {
       const newSelection = prev.includes(id)
         ? prev.filter(rowId => rowId !== id)
         : [...prev, id];
-      setSelectAll(newSelection.length === currentItems.length);
+      setSelectAll(newSelection.length === payments.length);
       return newSelection;
     });
   };
@@ -229,10 +268,20 @@ const PaymentHistoryPage = () => {
         <HeadBar 
           title="Payment Overview" 
           buttonName="Export" 
-          payments={filteredPayments}
+          payments={payments}
         />
         <div className="px-4 md:px-10 lg:px-20">
-          <PaymentOverview show={true} payments={filteredPayments} />
+          <PaymentOverview 
+            show={true} 
+            showDateFilter={true}
+            payments={payments}
+            startDate={dateRange.startDate}
+            endDate={dateRange.endDate}
+            dateRange={filters.dateRange}
+            onDateRangeChange={handleDateRangeChange}
+            onDateOptionChange={(option) => setFilters(prev => ({ ...prev, dateRange: option }))}
+            stats={paymentStats}
+          />
 
           <div className="flex mt-10 flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
             <div className="flex items-center gap-2 md:gap-4 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
@@ -262,9 +311,9 @@ const PaymentHistoryPage = () => {
             <div className="flex items-center gap-2 border dark:border-dark-border rounded-lg bg-[#FBFBFB] dark:bg-dark-input-bg w-full md:w-[411px] px-4 focus-within:border-primary dark:focus-within:border-primary transition-colors">
               <Search className="text-[#959BA4] dark:text-dark-text" style={{ height: '20px', width: '20px' }} />
               <Input
-                placeholder="Search by amount, payment method..."
+                placeholder="Search by payment ID, amount, method..."
                 value={filters.search}
-                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                onChange={(e) => handleSearch(e.target.value)}
                 className="w-full md:w-[300px] h-[38px] md:h-[42px] border-none bg-transparent dark:text-dark-text text-[12px] md:text-[14px] placeholder:text-[#959BA4] dark:placeholder:text-dark-text/40 focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
@@ -286,14 +335,14 @@ const PaymentHistoryPage = () => {
                       </div>
                     </td>
                   </tr>
-                ) : currentItems.length === 0 ? (
+                ) : payments.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="text-center py-4 text-gray-500 dark:text-dark-text">
                       No payments found
                     </td>
                   </tr>
                 ) : (
-                  currentItems.map((item, index) => (
+                  payments.map((item, index) => (
                     <tr 
                       key={item._id} 
                       className={cn(
@@ -370,7 +419,7 @@ const PaymentHistoryPage = () => {
 
           <Pagination
             currentPage={currentPage}
-            totalPages={totalPages}
+            totalPages={Math.ceil(totalItems / itemsPerPage)}
             onPageChange={handlePageChange}
             itemsPerPage={itemsPerPage}
             totalItems={totalItems}

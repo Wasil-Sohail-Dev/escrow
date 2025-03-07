@@ -19,7 +19,6 @@ export async function GET(req: Request) {
     const searchTerm = searchParams.get("search") || ""; // Search term
     const startDate = searchParams.get("startDate"); // Date range filter
     const endDate = searchParams.get("endDate"); // Date range filter
-
     // Validate query parameters
     if (!customerId) {
       return NextResponse.json(
@@ -51,33 +50,87 @@ export async function GET(req: Request) {
     // Determine the query field based on role
     const queryField = role === "client" ? "clientId" : "vendorId";
 
+    // Define valid contract statuses from schema
+    const validContractStatuses = [
+      "draft",
+      "onboarding",
+      "funding_pending",
+      "funding_processing",
+      "funding_onhold",
+      "active",
+      "in_review",
+      "completed",
+      "cancelled",
+      "disputed",
+      "disputed_in_process",
+      "disputed_resolved"
+    ];
+
     // Build the contract query with optional status filter and search
     const contractQuery: any = { [queryField]: customerId };
     
-    // Add status filter
+    // Add status filter with validation
     if (status !== "all") {
+      if (!validContractStatuses.includes(status)) {
+        return NextResponse.json(
+          { 
+            error: `Invalid status. Status must be one of: ${validContractStatuses.join(', ')} or 'all'` 
+          },
+          { status: 422 }
+        );
+      }
       contractQuery.status = status;
     }
 
     // Add date range filter if both dates are provided
     if (startDate && endDate) {
-      contractQuery.createdAt = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
-      };
+      contractQuery.$or = [
+        // Contract's start date falls within the range
+        {
+          startDate: {
+            $gte: new Date(startDate),
+          }
+        },
+        // Contract's end date falls within the range
+        {
+          endDate: {
+            $lte: new Date(endDate)
+          }
+        },
+        // Contract spans across the entire selected range
+        {
+          $and: [
+            { startDate: { $lte: new Date(startDate) } },
+            { endDate: { $gte: new Date(endDate) } }
+          ]
+        }
+      ];
     } else if (startDate) {
-      contractQuery.createdAt = { $gte: new Date(startDate) };
+      // If only start date is provided, show contracts starting from that date
+      contractQuery.startDate = { $gte: new Date(startDate) };
     } else if (endDate) {
-      contractQuery.createdAt = { $lte: new Date(endDate) };
+      // If only end date is provided, show contracts ending before that date
+      contractQuery.endDate = { $lte: new Date(endDate) };
     }
 
     // Add search functionality
     if (searchTerm) {
-      contractQuery.$or = [
+      // If we already have date filters in $or, we need to use $and to combine with search
+      const searchConditions = [
         { title: { $regex: searchTerm, $options: 'i' } },
         { contractId: { $regex: searchTerm, $options: 'i' } },
         { description: { $regex: searchTerm, $options: 'i' } }
       ];
+
+      if (contractQuery.$or) {
+        contractQuery.$and = [
+          { $or: contractQuery.$or },
+          { $or: searchConditions }
+        ];
+        delete contractQuery.$or;
+      } else {
+        contractQuery.$or = searchConditions;
+      }
     }
 
     // Fetch paginated contracts
@@ -89,6 +142,13 @@ export async function GET(req: Request) {
       .sort({ createdAt: sortOrder }) // Sort by createdAt (latest or oldest)
       .skip((page - 1) * limit) // Skip for pagination
       .limit(limit); // Apply limit
+
+      if(!contracts){
+        return NextResponse.json(
+          { error: "No contracts found." },
+          { status: 404 }
+        );
+      }
 
     // Get total count for pagination info
     const totalContracts = await Contract.countDocuments(contractQuery);

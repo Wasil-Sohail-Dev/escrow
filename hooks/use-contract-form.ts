@@ -45,6 +45,7 @@ export const useContractForm = () => {
   const [milestoneErrors, setMilestoneErrors] = useState<Array<{[key: string]: string}>>([]);
   const [thirdPartyFee, setThirdPartyFee] = useState({ fee: 0, percentage: 0 });
 
+console.log(formData,"formData");
 
   // Initialize contract ID
   useEffect(() => {

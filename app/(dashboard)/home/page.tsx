@@ -45,7 +45,11 @@ export default function Home() {
           setActiveTab={setActiveTab}
           onDataFetched={setContractData}
         />
-        <PaymentOverview show={true} payments={contractData?.payments || []} />
+        <PaymentOverview 
+          show={true} 
+          payments={contractData?.payments || []} 
+          showDateFilter={false}
+        />
         <ProjectTable
           showFilter={true}
           transactions={

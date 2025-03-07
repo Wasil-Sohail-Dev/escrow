@@ -1,22 +1,7 @@
-import { ChevronDown } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useState, useEffect } from "react";
-
-const DATE_OPTIONS = [
-  "Last 7 days",
-  "Last 30 days",
-  "Last 3 months",
-  "Last 6 months",
-  "Last Year",
-];
 
 interface Payment {
   _id: string;
@@ -86,25 +71,35 @@ const PaymentCard = ({
 interface PaymentOverviewProps {
   show: boolean;
   payments?: any[];
+  startDate?: Date | null;
+  endDate?: Date | null;
+  dateRange?: string;
+  onDateRangeChange?: (dates: [Date | null, Date | null]) => void;
+  onDateOptionChange?: (option: string) => void;
+  showDateFilter?: boolean;
+  stats?: {
+    totalAmount: number;
+    onHoldAmount: number;
+    releasedAmount: number;
+  };
 }
 
 export default function PaymentOverview({
   show,
   payments = [],
+  startDate,
+  endDate,
+  dateRange,
+  onDateRangeChange,
+  onDateOptionChange,
+  showDateFilter = false,
+  stats
 }: PaymentOverviewProps) {
-  console.log(payments, "payments");
-  
-  const [selectedDateOption, setSelectedDateOption] = useState("Last 30 days");
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
-    null,
-    null,
-  ]);
-  const [startDate, endDate] = dateRange;
   const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
 
   useEffect(() => {
     filterPayments();
-  }, [selectedDateOption, dateRange, payments]);
+  }, [startDate, endDate, payments]);
 
   const filterPayments = () => {
     if (!payments.length) {
@@ -119,41 +114,24 @@ export default function PaymentOverview({
         const paymentDate = new Date(payment.createdAt);
         return paymentDate >= startDate && paymentDate <= endDate;
       });
-    } else {
-      const today = new Date();
-      const filterDate = new Date();
-
-      switch (selectedDateOption) {
-        case "Last 7 days":
-          filterDate.setDate(today.getDate() - 7);
-          break;
-        case "Last 30 days":
-          filterDate.setDate(today.getDate() - 30);
-          break;
-        case "Last 3 months":
-          filterDate.setMonth(today.getMonth() - 3);
-          break;
-        case "Last 6 months":
-          filterDate.setMonth(today.getMonth() - 6);
-          break;
-        case "Last Year":
-          filterDate.setFullYear(today.getFullYear() - 1);
-          break;
-        default:
-          filterDate.setDate(today.getDate() - 30);
-      }
-
-      filtered = filtered.filter((payment) => {
-        const paymentDate = new Date(payment.createdAt);
-        return paymentDate >= filterDate && paymentDate <= today;
-      });
     }
 
     setFilteredPayments(filtered);
   };
 
-  const calculatePayments = (payments: Payment[]) => {
-    if (!payments.length) {
+  const calculatePayments = () => {
+    if (stats) {
+      return {
+        totalAmount: stats.totalAmount,
+        escrowAmount: stats.onHoldAmount,
+        releasedAmount: stats.releasedAmount,
+        totalPercentage: 100,
+        escrowPercentage: stats.totalAmount > 0 ? (stats.onHoldAmount / stats.totalAmount) * 100 : 0,
+        releasedPercentage: stats.totalAmount > 0 ? (stats.releasedAmount / stats.totalAmount) * 100 : 0,
+      };
+    }
+
+    if (!filteredPayments.length) {
       return {
         totalAmount: 0,
         escrowAmount: 0,
@@ -164,15 +142,15 @@ export default function PaymentOverview({
       };
     }
   
-    const totalAmount = payments.reduce((sum, payment) => sum + payment.totalAmount, 0);
+    const totalAmount = filteredPayments.reduce((sum, payment) => sum + payment.totalAmount, 0);
     
-    const escrowAmount = payments.reduce((sum, payment) => {
+    const escrowAmount = filteredPayments.reduce((sum, payment) => {
       return ["process", "on_hold", "funded", "partially_released", "fully_released"].includes(payment.status)
         ? sum + payment.escrowAmount
         : sum;
     }, 0);
   
-    const releasedAmount = payments.reduce((sum, payment) => sum + payment.releasedAmount, 0);
+    const releasedAmount = filteredPayments.reduce((sum, payment) => sum + payment.releasedAmount, 0);
   
     // Avoid division by zero
     const totalPercentage = totalAmount > 0 ? 100 : 0;
@@ -190,7 +168,7 @@ export default function PaymentOverview({
   };
 
   const { totalAmount, escrowAmount, releasedAmount, totalPercentage, escrowPercentage, releasedPercentage } =
-  calculatePayments(filteredPayments);
+    calculatePayments();
 
 const PAYMENT_CARDS = [
   {
@@ -220,67 +198,31 @@ const PAYMENT_CARDS = [
     <div className="mt-8">
       {show && (
         <div className="flex items-center md:justify-between flex-col md:flex-row mb-4 md:gap-0 gap-2">
-          <h2
-            className="text-[22px] font-bold leading-[28.5px] dark:text-dark-text
-            lg:text-[22px] md:text-[20px] max-md:text-[18px] "
-          >
+          <h2 className="text-[22px] font-bold leading-[28.5px] dark:text-dark-text lg:text-[22px] md:text-[20px] max-md:text-[18px]">
             Payment Overview
           </h2>
-          <div
-            className="flex gap-4 text-[#676767] dark:text-dark-text/60
-            lg:gap-4 md:gap-3 max-md:gap-2"
-          >
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className="flex items-center gap-2 text-small-medium px-3 py-1.5 rounded-md 
-                dark:bg-dark-bg dark:text-dark-text"
-              >
-                {selectedDateOption}
-                <ChevronDown size={16} />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="dark:bg-dark-bg dark:border-dark-border"
-              >
-                {DATE_OPTIONS.map((option) => (
-                  <DropdownMenuItem
-                    key={option}
-                    onClick={() => {
-                      setSelectedDateOption(option);
-                      setDateRange([null, null]);
-                    }}
-                    className="text-small-medium dark:text-dark-text dark:hover:bg-white/5"
-                  >
-                    {option}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DatePicker
-              selectsRange={true}
-              startDate={startDate}
-              endDate={endDate}
-              onChange={(update) => {
-                setDateRange(update);
-                if (update[0] && update[1]) {
-                  setSelectedDateOption("Custom Range");
-                }
-              }}
-              isClearable={true}
-              placeholderText="Select date range"
-              className="flex items-center gap-2 text-small-medium px-3 py-1.5 rounded-md 
-                dark:bg-dark-bg dark:text-dark-text border border-input"
-            />
-          </div>
+          {showDateFilter && (
+            <div className="flex gap-4 text-[#676767] dark:text-dark-text/60 lg:gap-4 md:gap-3 max-md:gap-2">
+              <DatePicker
+                selectsRange={true}
+                startDate={startDate}
+                endDate={endDate}
+                onChange={onDateRangeChange}
+                isClearable={true}
+                placeholderText="Select date range"
+                dateFormat="yyyy-MM-dd"
+                className="flex items-center gap-2 text-small-medium px-3 py-1.5 rounded-md dark:bg-dark-bg dark:text-dark-text border border-input min-w-[200px]"
+                wrapperClassName="w-full"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+              />
+            </div>
+          )}
         </div>
       )}
 
-      <div
-        className="grid grid-cols-3 gap-4
-        lg:grid-cols-3 md:grid-cols-2 max-md:grid-cols-1
-        lg:gap-4 md:gap-3 max-md:gap-3"
-      >
+      <div className="grid grid-cols-3 gap-4 lg:grid-cols-3 md:grid-cols-2 max-md:grid-cols-1 lg:gap-4 md:gap-3 max-md:gap-3">
         {PAYMENT_CARDS.map((card, index) => (
           <PaymentCard key={index} {...card} />
         ))}

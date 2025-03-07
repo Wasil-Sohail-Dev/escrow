@@ -17,8 +17,29 @@ export async function POST(req: Request) {
     }
 
     // Get files and document types
-    const files = formData.getAll("files[]") as File[];
-    const documentTypes = formData.getAll("documentTypes[]") as string[];
+    const testFiles = formData.getAll("files");
+    const files = testFiles.map(file => {
+      if (typeof file === 'string') {
+        try {
+          // Parse stringified file data
+          const parsedFile = JSON.parse(file);
+          // Convert the parsed data into a File object
+          return new File(
+            [Buffer.from(parsedFile.uri || parsedFile.path || '', 'utf-8')],
+            parsedFile.name,
+            { type: parsedFile.type }
+          );
+        } catch (error) {
+          console.error('Error parsing file data:', error);
+          throw new Error('Invalid file format received');
+        }
+      }
+      return file as File;
+    });
+
+    const documentTypes = formData.getAll("documentTypes") as string[];
+
+    console.log("files", files, documentTypes, files.length, documentTypes.length);
 
     if (!files.length) {
       return NextResponse.json(
@@ -27,15 +48,23 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate files and document types
+    // Validate each file
+    for (const file of files) {
+      if (!file || !file.name) {
+        return NextResponse.json(
+          { error: "Invalid file format received" },
+          { status: 400 }
+        );
+      }
+    }
+
     if (files.length !== documentTypes.length) {
       return NextResponse.json(
         { error: "Each file must have a corresponding document type." },
         { status: 400 }
       );
     }
-
-    // Validate document types
+    
     const validDocumentTypes = [
       "government_id",
       "passport",
@@ -62,8 +91,10 @@ export async function POST(req: Request) {
     }
 
     try {
+      console.log(files,"filesssssss");
       // Upload files to S3 and add to documents array
       const uploadPromises = files.map(async (file, index) => {
+        
         if (!file || !file.name) {
           throw new Error(`Invalid file at index ${index}`);
         }
