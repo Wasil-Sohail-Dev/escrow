@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import { useState } from 'react';
-import { z } from 'zod';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { z } from "zod";
+import { useRouter } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
-import Image from 'next/image';
-import { Mail, Lock } from 'lucide-react';
+import Image from "next/image";
+import { Mail, Lock } from "lucide-react";
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 export default function LoginPage() {
@@ -17,24 +17,24 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setErrors({});
-    
+
     try {
       // Validate form data
       loginSchema.parse(formData);
 
       // Direct API call to admin auth endpoint
-      const response = await fetch('/api/admin-auth/login', {
-        method: 'POST',
+      const response = await fetch("/api/admin-auth/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email: formData.email,
@@ -58,7 +58,7 @@ export default function LoginPage() {
         title: "Success",
         description: "Admin logged in successfully",
       });
-      router.push('/dashboard');
+      router.push("/dashboard");
     } catch (error) {
       if (error instanceof z.ZodError) {
         const formattedErrors: { [key: string]: string } = {};
@@ -82,36 +82,43 @@ export default function LoginPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white-1 dark:bg-dark-bg">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-lg">
         <div className="bg-white dark:bg-dark-input-bg p-8 rounded-lg shadow-lg border border-sidebar-border dark:border-dark-border">
           <div className="text-center mb-8">
             <div className="mb-6">
               <div className="w-16 h-16  rounded-lg flex items-center justify-center mx-auto">
-              <Image
-                src={"/assets/logo.png"}
-                alt="logo"
-                width={118}
-                height={118}
-                className={""}
-              />
+                <Image
+                  src={"/assets/logo.png"}
+                  alt="logo"
+                  width={118}
+                  height={118}
+                  className={""}
+                />
               </div>
             </div>
-            <h1 className="text-heading2-bold text-main-heading dark:text-dark-text">Welcome back</h1>
-            <p className="text-base-regular text-dark-2">Sign in to your admin account</p>
+            <h1 className="text-heading2-bold text-main-heading dark:text-dark-text">
+              Welcome back
+            </h1>
+            <p className="text-base-regular text-dark-2">
+              Sign in to your admin account
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-base-medium text-paragraph dark:text-dark-text mb-2">
+              <label
+                htmlFor="email"
+                className="block text-base-medium text-paragraph dark:text-dark-text mb-2"
+              >
                 Email
               </label>
               <div className="relative">
@@ -121,20 +128,25 @@ export default function LoginPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-2 bg-white-2 dark:bg-dark-input-bg border border-sidebar-border dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text focus:outline-none focus:border-primary"
+                  className="w-full pl-10 pr-4 py-3 bg-white-2 dark:bg-dark-input-bg border border-sidebar-border dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text focus:outline-none focus:border-primary"
                   placeholder="Enter your email"
                   disabled={isLoading}
                 />
-                <Mail className="absolute left-3 top-2.5 h-5 w-5 dark:text-dark-text" />
+                <Mail className="absolute left-3 top-3.5 h-5 w-5 dark:text-dark-text" />
               </div>
               {errors.email && (
-                <p className="mt-1 text-small-regular text-error-text">{errors.email}</p>
+                <p className="mt-1 text-small-regular text-error-text">
+                  {errors.email}
+                </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-base-medium text-paragraph dark:text-dark-text mb-2">
-                Password
+              <label
+                htmlFor="password"
+                className="block text-base-medium text-paragraph dark:text-dark-text mb-2"
+              >
+                Password 
               </label>
               <div className="relative">
                 <input
@@ -143,14 +155,16 @@ export default function LoginPage() {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-2 bg-white-2 dark:bg-dark-input-bg border border-sidebar-border dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text focus:outline-none focus:border-primary"
+                  className="w-full pl-10 pr-4 py-3 bg-white-2 dark:bg-dark-input-bg border border-sidebar-border dark:border-dark-border rounded-lg text-paragraph dark:text-dark-text focus:outline-none focus:border-primary"
                   placeholder="Enter your password"
                   disabled={isLoading}
                 />
-                <Lock className="absolute left-3 top-2.5 h-5 w-5 dark:text-dark-text" />
+                <Lock className="absolute left-3 top-3.5 h-5 w-5 dark:text-dark-text" />
               </div>
               {errors.password && (
-                <p className="mt-1 text-small-regular text-error-text">{errors.password}</p>
+                <p className="mt-1 text-small-regular text-error-text">
+                  {errors.password}
+                </p>
               )}
             </div>
 
@@ -161,7 +175,10 @@ export default function LoginPage() {
                   id="remember"
                   className="h-4 w-4 text-primary border-sidebar-border dark:border-dark-border rounded focus:ring-primary"
                 />
-                <label htmlFor="remember" className="ml-2 text-small-regular text-paragraph dark:text-dark-text">
+                <label
+                  htmlFor="remember"
+                  className="ml-2 text-small-regular text-paragraph dark:text-dark-text"
+                >
                   Remember me
                 </label>
               </div>
@@ -171,7 +188,11 @@ export default function LoginPage() {
               type="submit"
               disabled={isLoading}
               className={`w-full bg-primary text-primary-foreground rounded-lg py-3 text-base-medium transition-all
-                ${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-primary-500'}`}
+                ${
+                  isLoading
+                    ? "opacity-70 cursor-not-allowed"
+                    : "hover:bg-primary-500"
+                }`}
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">
@@ -179,10 +200,9 @@ export default function LoginPage() {
                   Signing in...
                 </div>
               ) : (
-                'Sign in'
+                "Sign in"
               )}
             </button>
-
           </form>
         </div>
       </div>

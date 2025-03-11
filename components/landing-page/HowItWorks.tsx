@@ -42,7 +42,7 @@ const HowItWorks = () => {
                 1
               </div>
               <span className='text-white text-base md:text-lg'>Register Your Account</span>
-              <div className='absolute left-[12px] md:left-[16px] -translate-x-1/2 top-[110%] w-[2px] h-full bg-primary hidden md:block' />
+              <div className='absolute left-[12px] md:left-[16px] -translate-x-1/2 top-[110%] w-[2px] h-full border-dashed border-l-2 border-primary hidden md:block' />
             </div>
 
             {/* Step 2 */}
@@ -51,7 +51,7 @@ const HowItWorks = () => {
                 2
               </div>
               <span className='text-white text-base md:text-lg'>Set Up Your Project & Expenses</span>
-              <div className='absolute left-[12px] md:left-[16px] -translate-x-1/2 top-[110%] w-[2px] h-full bg-[#E7DEFE] border-dotted border-l-2 border-[#E7DEFE] hidden md:block' />
+              <div className='absolute left-[12px] md:left-[16px] -translate-x-1/2 top-[110%] w-[2px] h-full border-dashed border-l-2 border-[#E7DEFE] hidden md:block' />
             </div>
 
             {/* Step 3 */}
@@ -68,4 +68,4 @@ const HowItWorks = () => {
   )
 }
 
-export default HowItWorks
+export default HowItWorks;

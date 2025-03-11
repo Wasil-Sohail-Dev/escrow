@@ -111,8 +111,12 @@ const ProjectsPage = () => {
       {/* Projects Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-heading2-bold text-main-heading dark:text-dark-text">Projects</h1>
-          <p className="text-base-regular text-dark-2">Manage your active and completed projects</p>
+          <h1 className="text-heading2-bold text-main-heading dark:text-dark-text">
+            Projects
+          </h1>
+          <p className="text-base-regular text-dark-2">
+            Manage your active and completed projects
+          </p>
         </div>
         <Input
           type="text"
@@ -126,22 +130,36 @@ const ProjectsPage = () => {
       {/* Project Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-dark-input-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border">
-          <h3 className="text-small-medium text-dark-2 dark:text-dark-text">Active Projects</h3>
-          <p className="text-heading3-bold text-main-heading dark:text-dark-text">{stats?.active || 0}</p>
+          <h3 className="text-small-medium text-dark-2 dark:text-dark-text">
+            Active Projects
+          </h3>
+          <p className="text-heading3-bold text-main-heading dark:text-dark-text">
+            {stats?.active || 0}
+          </p>
         </div>
         <div className="bg-white dark:bg-dark-input-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border">
-          <h3 className="text-small-medium text-dark-2 dark:text-dark-text">Completed</h3>
-          <p className="text-heading3-bold text-main-heading dark:text-dark-text">{stats?.completed || 0}</p>
+          <h3 className="text-small-medium text-dark-2 dark:text-dark-text">
+            Completed
+          </h3>
+          <p className="text-heading3-bold text-main-heading dark:text-dark-text">
+            {stats?.completed || 0}
+          </p>
         </div>
         <div className="bg-white dark:bg-dark-input-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border">
-          <h3 className="text-small-medium text-dark-2 dark:text-dark-text">Total Value</h3>
+          <h3 className="text-small-medium text-dark-2 dark:text-dark-text">
+            Total Value
+          </h3>
           <p className="text-heading3-bold text-main-heading dark:text-dark-text">
             ${stats?.totalValue.toLocaleString() || 0}
           </p>
         </div>
         <div className="bg-white dark:bg-dark-input-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border">
-          <h3 className="text-small-medium text-dark-2 dark:text-dark-text">Success Rate</h3>
-          <p className="text-heading3-bold text-main-heading dark:text-dark-text">{stats?.successRate || 0}%</p>
+          <h3 className="text-small-medium text-dark-2 dark:text-dark-text">
+            Success Rate
+          </h3>
+          <p className="text-heading3-bold text-main-heading dark:text-dark-text">
+            {stats?.successRate || 0}%
+          </p>
         </div>
       </div>
 
@@ -180,39 +198,67 @@ const ProjectsPage = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-sidebar-border dark:border-dark-border">
-                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">Project Details</th>
-                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">Client</th>
-                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">Value</th>
-                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">Progress</th>
-                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">Next Milestone</th>
-                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">Actions</th>
+                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">
+                  Project Details
+                </th>
+                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">
+                  Client
+                </th>
+                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">
+                  Value
+                </th>
+                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">
+                  Progress
+                </th>
+                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">
+                  Next Milestone
+                </th>
+                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
                   <td colSpan={6} className="py-4">
-                    <Loader size="md" text="Loading projects..." fullHeight={false} />
+                    <Loader
+                      size="md"
+                      text="Loading projects..."
+                      fullHeight={false}
+                    />
                   </td>
                 </tr>
               ) : projects.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-dark-2 dark:text-dark-text/60">
+                  <td
+                    colSpan={6}
+                    className="text-center py-8 text-dark-2 dark:text-dark-text/60"
+                  >
                     No projects found
                   </td>
                 </tr>
               ) : (
                 projects.map((project) => (
-                  <tr key={project._id} className="border-b border-sidebar-border dark:border-dark-border">
+                  <tr
+                    key={project._id}
+                    className="border-b border-sidebar-border dark:border-dark-border"
+                  >
                     <td className="py-4 px-6">
                       <div>
-                        <p className="text-base-semibold text-paragraph dark:text-dark-text">{project.title}</p>
-                        <p className="text-small-regular text-dark-2">{project.contractId}</p>
+                        <p className="text-base-semibold text-paragraph dark:text-dark-text">
+                          {project.title}
+                        </p>
+                        <p className="text-small-regular text-dark-2">
+                          {project.contractId}
+                        </p>
                       </div>
                     </td>
                     <td className="py-4 px-6">
                       <div>
-                        <p className="text-base-regular text-paragraph dark:text-dark-text">{project.client.name}</p>
+                        <p className="text-base-regular text-paragraph dark:text-dark-text">
+                          {project.client.name}
+                        </p>
                         <p className="text-small-regular text-dark-2">
                           Client since {formatDate(project.client.since)}
                         </p>
@@ -233,24 +279,33 @@ const ProjectsPage = () => {
                           style={{ width: `${project.progress}%` }}
                         ></div>
                       </div>
-                      <p className="text-small-regular text-dark-2 mt-1">{project.progress}% Complete</p>
+                      <p className="text-small-regular text-dark-2 mt-1">
+                        {project.progress}% Complete
+                      </p>
                     </td>
                     <td className="py-4 px-6">
                       {project.nextMilestone ? (
                         <>
                           <p className="text-base-regular text-paragraph dark:text-dark-text">
-                            {project.nextMilestone.title}
+                            {project.nextMilestone.title.length > 20
+                              ? project.nextMilestone.title.slice(0, 20) + "..."
+                              : project.nextMilestone.title}
                           </p>
                           <p className="text-small-regular text-dark-2">
                             Due {formatDate(project.nextMilestone.dueDate)}
                           </p>
                         </>
                       ) : (
-                        <p className="text-small-regular text-dark-2">No pending milestones</p>
+                        <p className="text-small-regular text-dark-2">
+                          No pending milestones
+                        </p>
                       )}
                     </td>
                     <td className="py-4 px-6">
-                      <Link href={`/dashboard/contract-details/${project.contractId}`} className="text-small-medium text-primary hover:text-primary-500">
+                      <Link
+                        href={`/dashboard/contract-details/${project.contractId}`}
+                        className="text-small-medium text-primary hover:text-primary-500"
+                      >
                         View Details
                       </Link>
                     </td>
@@ -275,4 +330,4 @@ const ProjectsPage = () => {
   );
 };
 
-export default ProjectsPage; 
+export default ProjectsPage;

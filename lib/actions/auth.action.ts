@@ -16,4 +16,4 @@ export const sendMailCode = async (email: string) => {
                 error.response?.data?.error || "Failed to send verification email.",
         };
     }
-};
+}; 

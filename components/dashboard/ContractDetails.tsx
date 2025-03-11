@@ -182,7 +182,7 @@ const ContactDetails = ({
       {isAdmin === false && (
         <Topbar
           title={
-            contract?.title && contract.title.length > 30
+            contract?.title && contract.title.length > 30 
               ? contract.title.slice(0, 30) + "..."
               : contract?.title || "Graphic Designing"
           }
@@ -190,7 +190,9 @@ const ContactDetails = ({
         />
       )}
       {loading ? (
-        <Loader size="lg" text="Loading contract details..." />
+        <div className="flex justify-center items-center h-screen">
+          <Loader size="lg" text="Loading contract details..." />
+        </div>
       ) : (
         <div
           className={`flex-1 ${

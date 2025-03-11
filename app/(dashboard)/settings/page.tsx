@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Share2, Upload, Camera, ImagePlus, X, Eye } from "lucide-react";
+import { Share2, Upload, Camera, ImagePlus, X, Eye, ChevronUp, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -80,6 +80,8 @@ const Settings = () => {
     profileImage: "",
   });
   const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [showAllDocs, setShowAllDocs] = useState(false);
+  const DOCS_PER_PAGE = 2; // Number of documents to show initially
 
   useEffect(() => {
     if (user) {
@@ -362,6 +364,10 @@ const Settings = () => {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
+
+  const displayedDocs = showAllDocs 
+    ? kycData?.documents 
+    : kycData?.documents?.slice(0, DOCS_PER_PAGE);
 
   return (
     <>
@@ -707,14 +713,19 @@ const Settings = () => {
                 {/* Existing Documents */}
                 {kycData?.documents && kycData.documents.length > 0 && (
                   <div className="mt-4">
-                    <p className="text-sm font-medium text-gray-700 dark:text-dark-text mb-2">
-                      Uploaded Documents
-                    </p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-medium text-gray-700 dark:text-dark-text">
+                        Uploaded Documents
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-dark-text/60">
+                        {kycData.documents.length} document{kycData.documents.length > 1 ? 's' : ''}
+                      </p>
+                    </div>
                     <div className="space-y-2">
-                      {kycData.documents.map((doc, index) => (
+                      {displayedDocs?.map((doc, index) => (
                         <div
                           key={index}
-                          className="flex items-center justify-between p-2 bg-gray-50 dark:bg-dark-input-bg rounded-lg"
+                          className="flex items-center justify-between p-2 bg-gray-50 dark:bg-dark-input-bg rounded-lg hover:bg-gray-100 dark:hover:bg-dark-input-bg/80 transition-colors"
                         >
                           <div className="flex items-center space-x-2">
                             <div className="w-8 h-8 flex items-center justify-center bg-primary/10 rounded">
@@ -734,12 +745,34 @@ const Settings = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => window.open(doc.fileUrl, "_blank")}
+                            className="hover:bg-primary/10"
                           >
                             <Eye className="w-4 h-4 text-gray-500 dark:text-dark-text/60" />
                           </Button>
                         </div>
                       ))}
                     </div>
+                    
+                    {/* Show More/Less Button */}
+                    {kycData.documents.length > DOCS_PER_PAGE && (
+                      <Button
+                        variant="ghost"
+                        className="w-full mt-2 text-primary hover:bg-primary/10"
+                        onClick={() => setShowAllDocs(!showAllDocs)}
+                      >
+                        {showAllDocs ? (
+                          <>
+                            <ChevronUp className="w-4 h-4 mr-2" />
+                            Show Less
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-4 h-4 mr-2" />
+                            Show {kycData.documents.length - DOCS_PER_PAGE} More
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>

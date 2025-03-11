@@ -19,67 +19,128 @@ import {
   X,
   Menu
 } from "lucide-react";
+import { useAdmin } from "@/components/providers/AdminProvider";
 
 interface NavItem {
   href: string;
   label: string;
   icon: React.ReactNode;
   badge?: number;
+  requiredPermission: string;
 }
 
 const mainNavItems: NavItem[] = [
-  { href: "/dashboard", label: "Overview", icon: <LayoutDashboard className="w-5 h-5 mr-2" /> },
-  { href: "/dashboard/users/vendors", label: "Vendors", icon: <Users className="w-5 h-5 mr-2" /> },
-  { href: "/dashboard/users/clients", label: "Clients", icon: <Handshake className="w-5 h-5 mr-2" /> },
+  { 
+    href: "/dashboard", 
+    label: "Overview", 
+    icon: <LayoutDashboard className="w-5 h-5 mr-2" />,
+    requiredPermission: "view_analytics"
+  },
+  { 
+    href: "/dashboard/users/vendors", 
+    label: "Vendors", 
+    icon: <Users className="w-5 h-5 mr-2" />,
+    requiredPermission: "manage_users"
+  },
+  { 
+    href: "/dashboard/users/clients", 
+    label: "Clients", 
+    icon: <Handshake className="w-5 h-5 mr-2" />,
+    requiredPermission: "manage_users"
+  },
+  { 
+    href: "/dashboard/users/admins", 
+    label: "Admins", 
+    icon: <Users className="w-5 h-5 mr-2" />,
+    requiredPermission: "manage_admins"
+  },
 ];
 
 const transactionNavItems: NavItem[] = [
-  { href: "/dashboard/verifications", label: "Verifications", icon: <Search className="w-5 h-5 mr-2" /> },
-  { href: "/dashboard/projects", label: "Projects", icon: <FolderClosed className="w-5 h-5 mr-2" /> },
-  { href: "/dashboard/payments", label: "Payments", icon: <Wallet className="w-5 h-5 mr-2" /> },
-  { href: "/dashboard/disputes", label: "Disputes", icon: <AlertTriangle className="w-5 h-5 mr-2" /> },
+  { 
+    href: "/dashboard/verifications", 
+    label: "Verifications", 
+    icon: <Search className="w-5 h-5 mr-2" />,
+    requiredPermission: "manage_users"
+  },
+  { 
+    href: "/dashboard/projects", 
+    label: "Projects", 
+    icon: <FolderClosed className="w-5 h-5 mr-2" />,
+    requiredPermission: "manage_contracts"
+  },
+  { 
+    href: "/dashboard/payments", 
+    label: "Payments", 
+    icon: <Wallet className="w-5 h-5 mr-2" />,
+    requiredPermission: "manage_payments"
+  },
+  { 
+    href: "/dashboard/disputes", 
+    label: "Disputes", 
+    icon: <AlertTriangle className="w-5 h-5 mr-2" />,
+    requiredPermission: "manage_disputes"
+  },
+  { 
+    href: "/dashboard/permotion-code", 
+    label: "Promotion Code", 
+    icon: <Wallet className="w-5 h-5 mr-2" />,
+    requiredPermission: "manage_payments"
+  },
 ];
 
 interface NavSectionProps {
   title: string;
   items: NavItem[];
   currentPath: string;
+  userPermissions: string[];
 }
 
-const NavSection = ({ title, items, currentPath }: NavSectionProps) => (
-  <>
-    <div className="px-4 mt-8 mb-2">
-      <p className="text-xs font-semibold text-dark-2 dark:text-dark-text uppercase">
-        {title}
-      </p>
-    </div>
-    <ul className="space-y-1">
-      {items.map((item) => {
-        const isActive = currentPath === item.href;
-        return (
-          <li key={item.href}>
-            <Link
-              href={item.href}
-              className={`flex items-center px-4 py-2 text-base-medium ${
-                isActive
-                  ? "bg-primary text-white dark:text-dark-text"
-                  : "text-paragraph dark:text-dark-text hover:bg-primary-100 dark:hover:bg-dark-input-bg"
-              }`}
-            >
-              <span>{item.icon}</span>
-              <span>{item.label}</span>
-              {item.badge && (
-                <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-error-bg text-error-text">
-                  {item.badge}
-                </span>
-              )}
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
-  </>
-);
+const NavSection = ({ title, items, currentPath, userPermissions }: NavSectionProps) => {
+  // Filter items based on user permissions
+  const hasAccess = (requiredPermission: string) => {
+    return userPermissions.includes('all') || userPermissions.includes(requiredPermission);
+  };
+
+  const filteredItems = items.filter(item => hasAccess(item.requiredPermission));
+
+  if (filteredItems.length === 0) return null;
+
+  return (
+    <>
+      <div className="px-4 mt-8 mb-2">
+        <p className="text-xs font-semibold text-dark-2 dark:text-dark-text uppercase">
+          {title}
+        </p>
+      </div>
+      <ul className="space-y-1">
+        {filteredItems.map((item) => {
+          const isActive = currentPath === item.href;
+          return (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                className={`flex items-center px-4 py-2 text-base-medium ${
+                  isActive
+                    ? "bg-primary text-white dark:text-dark-text"
+                    : "text-paragraph dark:text-dark-text hover:bg-primary-100 dark:hover:bg-dark-input-bg"
+                }`}
+              >
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+                {item.badge && (
+                  <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-error-bg text-error-text">
+                    {item.badge}
+                  </span>
+                )}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </>
+  );
+};
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -89,8 +150,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
   const isDisputeChat = pathname.includes("/dashboard/dispute-chat");
+  const { user } = useAdmin();
 
-  console.log(isDisputeChat, "isDisputeChat");
+  // If user is not loaded or doesn't have permissions, show loading or return null
+  if (!user || !user.permissions) {
+    return <Loader size="lg" text="Loading..." />;
+  }
 
   return (
     <div className="flex h-screen bg-white-1 dark:bg-dark-bg">
@@ -135,11 +200,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             title="Main"
             items={mainNavItems}
             currentPath={pathname}
+            userPermissions={user.permissions}
           />
           <NavSection
             title="Transactions"
             items={transactionNavItems}
             currentPath={pathname}
+            userPermissions={user.permissions}
           />
           {/* <NavSection
             title="System"

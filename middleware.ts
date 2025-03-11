@@ -46,7 +46,7 @@ const PUBLIC_API_ROUTES = [
     "/api/create-notification",
     "/api/get-user-verification",
     "/api/fetch-notifications",
-    // "/api/manage-profile/upload-photo",
+    "/api/resend-otp",
 ];
 
 // Dashboard routes that require super_admin access
@@ -63,7 +63,23 @@ const SUPER_ADMIN_ROUTES = [
 
 const ONBOARDING_PAGE = "/on-boarding";
 const HOME_PAGE = "/home";
-const LOGIN_PAGE = "/admin-login";
+const LOGIN_PAGE = "/sign-in";
+
+// Add before PERMISSION_ROUTE_MAP
+type PermissionType = 'view_analytics' | 'manage_users' | 'manage_admins' | 'manage_contracts' | 'manage_payments' | 'manage_disputes';
+
+const PERMISSION_ROUTE_MAP: Record<PermissionType, string[]> = {
+  view_analytics: ["/dashboard"],
+  manage_users: [
+    "/dashboard/users/vendors",
+    "/dashboard/users/clients",
+    "/dashboard/verifications"
+  ],
+  manage_admins: ["/dashboard/users/admins"],
+  manage_contracts: ["/dashboard/projects"],
+  manage_payments: ["/dashboard/payments", "/dashboard/permotion-code"],
+  manage_disputes: ["/dashboard/disputes"]
+};
 
 // ✅ Function to verify JWT using jose
 async function verifyToken(token: string) {
@@ -158,13 +174,61 @@ export async function middleware(req: NextRequest) {
         }
     }
 
+    console.log(tokenPayload);
+    
+
     if (tokenPayload) {
-        // If user is super_admin, allow access to all routes except when inactive
-        if (tokenPayload.userType === 'super_admin') {
-            if (tokenPayload.userStatus === "adminInactive") {
+        if (tokenPayload.userType.includes('admin') || tokenPayload.userType.includes('moderator')) {
+            if (tokenPayload.userStatus === "inactive") {
                 return NextResponse.json({ message: "Access Denied: Your account is inactive" }, { status: 403 });
             }
-            // Allow super_admin to access all routes
+
+            // If user has 'all' permission, allow access to all dashboard routes
+            if (tokenPayload.permissions.includes('all')) {
+                const response = NextResponse.next();
+                setCorsHeaders(response);
+                return response;
+            }
+
+            // Check if the current path matches any protected routes
+            const currentPath = req.nextUrl.pathname;
+            let hasPermission = false;
+
+            // Check each permission the user has
+            for (const permission of tokenPayload.permissions as PermissionType[]) {
+                const allowedRoutes = PERMISSION_ROUTE_MAP[permission];
+                if (allowedRoutes) {
+                    // Check if current path starts with any of the allowed routes
+                    hasPermission = allowedRoutes.some((route: string) => 
+                        currentPath === route || currentPath.startsWith(`${route}/`)
+                    );
+                    if (hasPermission) break;
+                }
+            }
+
+            // If path requires permission but user doesn't have it
+            if (!hasPermission && Object.values(PERMISSION_ROUTE_MAP).flat().some(route => 
+                currentPath === route || currentPath.startsWith(`${route}/`)
+            )) {
+                // Find the first accessible route based on user's permissions
+                let redirectPath = "/dashboard"; // Default fallback
+                
+                // Check permissions in priority order
+                if (tokenPayload.permissions.includes("view_analytics")) {
+                    redirectPath = "/dashboard";
+                } else if (tokenPayload.permissions.includes("manage_users")) {
+                    redirectPath = "/dashboard/users/vendors";
+                } else if (tokenPayload.permissions.includes("manage_contracts")) {
+                    redirectPath = "/dashboard/projects";
+                } else if (tokenPayload.permissions.includes("manage_payments")) {
+                    redirectPath = "/dashboard/payments";
+                } else if (tokenPayload.permissions.includes("manage_disputes")) {
+                    redirectPath = "/dashboard/disputes";
+                }
+
+                return NextResponse.redirect(new URL(redirectPath, req.url));
+            }
+
             const response = NextResponse.next();
             setCorsHeaders(response);
             return response;

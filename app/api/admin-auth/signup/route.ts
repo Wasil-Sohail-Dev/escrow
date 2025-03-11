@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { Admin } from "@/models/AdminSchema";
 import dbConnect from "@/lib/dbConnect";
 import { z } from "zod";

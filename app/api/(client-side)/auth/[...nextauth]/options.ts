@@ -86,6 +86,11 @@ export const authOptions: NextAuthOptions = {
                     return null;
                 }
 
+                // Update last login time
+                await Customer.findByIdAndUpdate(user._id, {
+                    lastLogin: new Date()
+                });
+
                 return {
                     id: user._id.toString(),
                     email: user.email,

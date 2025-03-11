@@ -64,20 +64,23 @@ const CreateDispute = () => {
     null
   );
 
-  const fetchContracts = async (pageNum: number = 1, append: boolean = false) => {
+  const fetchContracts = async (
+    pageNum: number = 1,
+    append: boolean = false
+  ) => {
     try {
       setLoading(true);
       const response = await fetch(
         `/api/get-customer-contracts?customerId=${user?._id}&role=${user?.userType}&page=${pageNum}&limit=10&search=${searchTerm}`
       );
       const { data, pagination } = await response.json();
-      
+
       if (append) {
-        setContracts(prev => [...prev, ...data]);
+        setContracts((prev) => [...prev, ...data]);
       } else {
         setContracts(data);
       }
-      
+
       setHasMore(pagination.page < pagination.totalPages);
     } catch (error) {
       console.error("Error fetching contracts:", error);
@@ -108,24 +111,24 @@ const CreateDispute = () => {
             `/api/get-customer-contracts?customerId=${user?._id}&role=${user?.userType}&contractId=${contractId}`
           );
           const { data } = await response.json();
-          
+
           if (data && data.length > 0) {
             const contract = data[0];
             setContracts([contract]);
             setSelectedContract(contract);
-            
+
             // Set the raisedToEmail based on user type
             const raisedToEmail =
               user?.userType === "client"
                 ? contract.vendorId.email
                 : contract.clientId.email;
 
-            setFormData(prev => ({
+            setFormData((prev) => ({
               ...prev,
               contractId: contract.contractId,
               raisedToEmail,
               // If milestoneId is provided, set it
-              milestoneId: milestoneId || prev.milestoneId
+              milestoneId: milestoneId || prev.milestoneId,
             }));
           }
         } catch (error) {
@@ -140,12 +143,12 @@ const CreateDispute = () => {
   useEffect(() => {
     if (selectedContract && milestoneId) {
       const milestone = selectedContract.milestones.find(
-        m => m.milestoneId === milestoneId
+        (m) => m.milestoneId === milestoneId
       );
       if (milestone) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          milestoneId: milestone.milestoneId
+          milestoneId: milestone.milestoneId,
         }));
       }
     }
@@ -154,11 +157,11 @@ const CreateDispute = () => {
   const handleSelectScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.target as HTMLDivElement;
     if (
-      !loading && 
-      hasMore && 
+      !loading &&
+      hasMore &&
       target.scrollTop + target.clientHeight >= target.scrollHeight - 20
     ) {
-      setPage(prev => prev + 1);
+      setPage((prev) => prev + 1);
       fetchContracts(page + 1, true);
     }
   };
@@ -277,12 +280,12 @@ const CreateDispute = () => {
         title: formData.title,
         reason: formData.reason,
       };
-      submitFormData.append('data', JSON.stringify(jsonData));
+      submitFormData.append("data", JSON.stringify(jsonData));
 
       // Add files if they exist
       if (documents.length > 0) {
         documents.forEach((file) => {
-          submitFormData.append('files', file);
+          submitFormData.append("files", file);
         });
       }
 
@@ -327,7 +330,9 @@ const CreateDispute = () => {
         });
 
         // Redirect to appropriate page
-        router.push(`/dispute-management-screen?contractId=${formData.contractId}`);
+        router.push(
+          `/dispute-management-screen?contractId=${formData.contractId}`
+        );
       }
     } catch (error) {
       console.error("Error creating dispute:", error);
@@ -342,11 +347,11 @@ const CreateDispute = () => {
   };
 
   const handleFileUpload = (files: File[]) => {
-    setDocuments(prev => [...prev, ...files]);
+    setDocuments((prev) => [...prev, ...files]);
   };
 
   const handleRemoveFile = (index: number) => {
-    setDocuments(prev => prev.filter((_, i) => i !== index));
+    setDocuments((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -385,7 +390,10 @@ const CreateDispute = () => {
                   <SelectContent className="max-h-[300px] overflow-hidden">
                     <div className="sticky top-0 bg-white dark:bg-dark-bg z-10 px-2 py-2 border-b dark:border-dark-border">
                       <div className="flex items-center gap-2 border dark:border-dark-border rounded-lg bg-[#FBFBFB] dark:bg-dark-input-bg px-3 focus-within:border-primary dark:focus-within:border-primary transition-colors">
-                        <Search className="text-[#959BA4] dark:text-dark-text" style={{ height: '16px', width: '16px' }} />
+                        <Search
+                          className="text-[#959BA4] dark:text-dark-text"
+                          style={{ height: "16px", width: "16px" }}
+                        />
                         <Input
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
@@ -394,7 +402,7 @@ const CreateDispute = () => {
                         />
                       </div>
                     </div>
-                    <div 
+                    <div
                       className="overflow-y-auto max-h-[200px]"
                       onScroll={handleSelectScroll}
                     >
@@ -409,7 +417,11 @@ const CreateDispute = () => {
                       ))}
                       {loading && (
                         <div className="py-1 text-center">
-                          <Loader size="sm" text="Loading more..." fullHeight={false} />
+                          <Loader
+                            size="sm"
+                            text="Loading more..."
+                            fullHeight={false}
+                          />
                         </div>
                       )}
                       {!hasMore && contracts.length > 0 && (
@@ -432,7 +444,9 @@ const CreateDispute = () => {
                   Select Milestone <span className="text-red-500">*</span>
                 </label>
                 <Select
-                  onValueChange={(value) => handleInputChange("milestoneId", value)}
+                  onValueChange={(value) =>
+                    handleInputChange("milestoneId", value)
+                  }
                   value={formData.milestoneId}
                   defaultValue={milestoneId || undefined}
                   disabled={!selectedContract}
@@ -531,7 +545,13 @@ const CreateDispute = () => {
         <div className="flex flex-col sm:flex-row justify-end items-center gap-4 pt-6">
           <Button
             onClick={handleSubmit}
-            disabled={isLoading || !formData.contractId || !formData.milestoneId || !formData.title || !formData.reason}
+            disabled={
+              isLoading ||
+              !formData.contractId ||
+              !formData.milestoneId ||
+              !formData.title ||
+              !formData.reason
+            }
             className="w-full sm:w-auto h-[42px] px-6 md:px-10 bg-primary hover:bg-primary/90 text-[16px] font-[700] leading-[19.6px] text-white dark:text-dark-text rounded-lg transition-colors"
           >
             {isLoading ? (

@@ -115,6 +115,8 @@ export async function POST(req: Request) {
     // Upload files to S3 and get URLs
     const contractFiles = formData.getAll("contractFiles") as File[];
 
+    console.log(contractFiles, "contractFiles");
+
     const uploadedFiles = await Promise.all(
       contractFiles.map(async (file) => {
         const { fileUrl, fileName } = await uploadFileToS3(file);

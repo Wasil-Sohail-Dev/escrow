@@ -58,7 +58,7 @@ const SelectUserType = () => {
 
       if (response.status === 201) {
         // Clear temporary data
-        localStorage.removeItem("tempRegisterData");
+        localStorage.removeItem("tempRegisterData"); 
         
         // Store auth token
         localStorage.setItem("TpAuthToken", JSON.stringify(response.data.data));

@@ -98,7 +98,9 @@ export async function POST(req: Request) {
 
     // Handle file uploads if present
     let uploadedFiles: UploadedFile[] = [];
+    console.log(jsonData);
     const fileEntries = formData.getAll("files") as File[];
+    console.log(fileEntries);
     
     if (fileEntries.length > 0) {
       try {

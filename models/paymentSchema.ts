@@ -63,6 +63,15 @@ const paymentSchema = new mongoose.Schema(
             enum: ["stripe"],
             default: "stripe",
         },
+        promoCode: {
+            type: String,
+            required: false,
+        },
+        discountAmount: {
+            type: Number,
+            required: false,
+            default: 0,
+        }
     },
     {
         timestamps: true, // Automatically manages createdAt and updatedAt

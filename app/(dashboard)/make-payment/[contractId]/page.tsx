@@ -23,6 +23,13 @@ function PaymentPage() {
 
   // Add loading state for both buttons
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string;
+    discountPercentage: number;
+    discountAmount: number;
+  } | null>(null);
 
   useEffect(() => {
     if (contractID) {
@@ -31,7 +38,7 @@ function PaymentPage() {
   }, [contractID]);
 
   const escrowTax = calculateTax(
-    contract?.budget || 0, 
+    contract?.budget || 0,
     (contract?.contractType || "services") as "services" | "products"
   );
 
@@ -41,7 +48,9 @@ function PaymentPage() {
       const response = await fetch("/api/check-intent-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contractId: contractID }),
+        body: JSON.stringify({
+          contractId: contractID,
+        }),
       });
 
       const data = await response.json();
@@ -91,6 +100,64 @@ function PaymentPage() {
     }
   };
 
+  const handleApplyPromoCode = async () => {
+    if (!promoCode.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a promotion code",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setPromoLoading(true);
+    try {
+      const response = await fetch("/api/generate-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: promoCode,
+          action: "validate",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const discountAmount = escrowTax * (data.discountPercentage / 100);
+        setAppliedPromo({
+          code: promoCode,
+          discountPercentage: data.discountPercentage,
+          discountAmount,
+        });
+        toast({
+          title: "Success",
+          description: data.message,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: data.error,
+          variant: "destructive",
+        });
+        setAppliedPromo(null);
+      }
+    } catch (error) {
+      console.error("Error applying promo code:", error);
+      toast({
+        title: "Error",
+        description: "Failed to apply promotion code",
+        variant: "destructive",
+      });
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  // Calculate final amounts
+  const finalServiceFee = escrowTax - (appliedPromo?.discountAmount || 0);
+  const totalAmount = (contract?.budget || 0) + finalServiceFee + bankFee;
+
   return (
     <>
       <Topbar
@@ -101,7 +168,7 @@ function PaymentPage() {
         <div className="w-full lg:w-[500px]">
           <div className="bg-[#D4F1E9] dark:bg-dark-input-bg border border-[#E8EAEE] dark:border-dark-border rounded-md p-4 lg:p-6">
             <h2 className="text-[18px] lg:text-[22px] text-center font-semibold mb-4 lg:mb-6 text-[#292929] dark:text-dark-text">
-            Make Payment
+              Make Payment
             </h2>
 
             <div className="space-y-4">
@@ -123,7 +190,7 @@ function PaymentPage() {
                     <span className="text-body-medium text-[#474747] dark:text-dark-text">
                       Project Name
                     </span>
-                    <span className="text-body-normal text-[#474747] dark:text-dark-text">
+                    <span className="text-body-normal text-[#474747] dark:text-dark-text truncate">
                       {contract?.title}
                     </span>
                   </div>
@@ -170,18 +237,75 @@ function PaymentPage() {
                     </span>
                   </div>
 
-                  <div className="flex justify-between items-center">
-                    <span className="text-body-medium text-[#474747] dark:text-dark-text">
-                    Third Party Service Fee
-                    </span>
-                    <span className="text-body-normal text-[#474747] dark:text-dark-text">
-                      $ {escrowTax?.toFixed(2)}
-                    </span>
+                  {/* Promotion Code Input */}
+                  <div className="py-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={promoCode}
+                        onChange={(e) =>
+                          setPromoCode(e.target.value.toUpperCase())
+                        }
+                        placeholder="Enter promotion code"
+                        className="flex-1 px-3 py-2 rounded-lg border border-[#E8EAEE] dark:border-dark-border bg-white dark:bg-dark-input-bg text-[#474747] dark:text-dark-text placeholder:text-[#ABB1BB] dark:placeholder:text-dark-text/40"
+                      />
+                      <Button
+                        onClick={handleApplyPromoCode}
+                        disabled={promoLoading || !promoCode}
+                        className="bg-primary hover:bg-primary/90 text-white dark:text-dark-text min-w-[80px]"
+                      >
+                        {promoLoading ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          "Apply"
+                        )}
+                      </Button>
+                    </div>
+                    {appliedPromo && (
+                      <div className="mt-2 flex justify-between items-center bg-primary/10 p-2 rounded-lg">
+                        <div>
+                          <p className="text-primary font-medium">
+                            {appliedPromo.code}
+                          </p>
+                          <p className="text-sm text-[#474747] dark:text-dark-text">
+                            {appliedPromo.discountPercentage}% discount on Third
+                            Party Service Fee
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setAppliedPromo(null);
+                            setPromoCode("");
+                          }}
+                          className="text-[#E71D1D] hover:text-[#E71D1D]/90"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex justify-between items-center">
                     <span className="text-body-medium text-[#474747] dark:text-dark-text">
-                    Payment Processing Fee
+                      Third Party Service Fee
+                    </span>
+                    <div className="text-right">
+                      <span className="text-body-normal text-[#474747] dark:text-dark-text">
+                        $ {escrowTax?.toFixed(2)}
+                      </span>
+                      {appliedPromo && (
+                        <div className="text-sm text-primary">
+                          - $ {appliedPromo.discountAmount.toFixed(2)}{" "}
+                          (Discount)
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-body-medium text-[#474747] dark:text-dark-text">
+                      Payment Processing Fee
                     </span>
                     <span className="text-body-normal text-[#474747] dark:text-dark-text">
                       $ {bankFee?.toFixed(2)}
@@ -196,8 +320,7 @@ function PaymentPage() {
                     Total Amount:
                   </span>
                   <span className="text-[16px] font-semibold text-[#474747] dark:text-dark-text">
-                    ${" "}
-                    {(contract?.budget! + escrowTax + bankFee)?.toFixed(2)}
+                    $ {totalAmount.toFixed(2)}
                   </span>
                 </div>
               </div>

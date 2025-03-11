@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import React from "react";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,10 @@ interface LogoutConfirmationModalProps {
   onClose: () => void;
 }
 
-const LogoutConfirmationModal = ({ isOpen, onClose }: LogoutConfirmationModalProps) => {
+const LogoutConfirmationModal = ({
+  isOpen,
+  onClose,
+}: LogoutConfirmationModalProps) => {
   const handleLogout = () => {
     localStorage.removeItem("TpAuthToken");
     signOut({ callbackUrl: "/sign-in" });
@@ -66,4 +69,4 @@ const LogoutConfirmationModal = ({ isOpen, onClose }: LogoutConfirmationModalPro
   );
 };
 
-export default LogoutConfirmationModal; 
+export default LogoutConfirmationModal;

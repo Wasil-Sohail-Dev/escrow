@@ -10,10 +10,24 @@ import {
   DollarSign,
   FileText,
   Users,
-  XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import Loader from "@/components/ui/loader";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  Legend
+} from 'recharts';
 
 interface DashboardStats {
   revenue: {
@@ -23,8 +37,11 @@ interface DashboardStats {
   };
   projects: {
     total: number;
-    active: number;
-    completed: number;
+    distribution: Array<{
+      name: string;
+      value: number;
+      color: string;
+    }>;
     newThisMonth: number;
   };
   users: {
@@ -33,6 +50,7 @@ interface DashboardStats {
     clients: number;
     vendors: number;
     newThisMonth: number;
+    trends: { name: string; clients: number; vendors: number }[];
   };
   disputes: {
     active: number;
@@ -53,7 +71,19 @@ interface DashboardStats {
       authentication: string;
     };
   };
+  admins: {
+    active: number;
+    inactive: number;
+  };
 }
+
+const COLORS = {
+  primary: '#0EA5E9',
+  success: '#22C55E',
+  warning: '#F59E0B',
+  error: '#EF4444',
+  gray: '#6B7280'
+};
 
 const DashboardPage = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -96,6 +126,17 @@ const DashboardPage = () => {
     );
   }
 
+  // Remove static data and use API data
+  const userTrendData = stats?.users.trends || [];
+
+  // Remove the static projectDistributionData
+  const projectDistributionData = stats?.projects.distribution || [];
+
+  const disputeData = [
+    { name: 'Active', value: stats?.disputes.active || 0 },
+    { name: 'Resolved', value: stats?.disputes.resolved || 0 },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Revenue Stats */}
@@ -125,7 +166,7 @@ const DashboardPage = () => {
             </Link>
           </div>
           <h3 className="text-2xl font-bold text-main-heading dark:text-dark-text mb-1">
-            {stats?.projects.active}
+            {stats?.projects.distribution.find(p => p.name === 'Active')?.value || 0}
           </h3>
           <p className="text-sm text-dark-2 dark:text-dark-text/60">Active Projects</p>
         </div>
@@ -278,36 +319,80 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {/* Detailed Stats */}
+      {/* User Statistics with Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* User Stats */}
+        <div className="bg-white dark:bg-dark-input-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border lg:col-span-2">
+          <h2 className="text-xl font-semibold text-main-heading dark:text-dark-text mb-4">
+            User Growth Trend
+          </h2>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={userTrendData}>
+                <XAxis dataKey="name" stroke="#6B7280" />
+                <YAxis stroke="#6B7280" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1F2937',
+                    border: 'none',
+                    borderRadius: '8px',
+                  }}
+                  labelStyle={{ color: '#F9FAFB' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="clients"
+                  stroke={COLORS.primary}
+                  strokeWidth={2}
+                  dot={{ fill: COLORS.primary }}
+                  activeDot={{ r: 6 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="vendors"
+                  stroke={COLORS.success}
+                  strokeWidth={2}
+                  dot={{ fill: COLORS.success }}
+                  activeDot={{ r: 6 }}
+                />
+                <Legend />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
         <div className="bg-white dark:bg-dark-input-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
           <h2 className="text-xl font-semibold text-main-heading dark:text-dark-text mb-4">
-            User Statistics
+            User Distribution
           </h2>
-          <div className="space-y-4">
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: 'Clients', value: stats?.users.clients || 0 },
+                    { name: 'Vendors', value: stats?.users.vendors || 0 },
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  fill={COLORS.primary}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  <Cell fill={COLORS.primary} />
+                  <Cell fill={COLORS.success} />
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-4 space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-sm text-dark-2 dark:text-dark-text/60">Total Users</span>
               <span className="text-base-medium text-paragraph dark:text-dark-text">
                 {stats?.users.total}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2 dark:text-dark-text/60">Active Users</span>
-              <span className="text-base-medium text-paragraph dark:text-dark-text">
-                {stats?.users.active}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2 dark:text-dark-text/60">Clients</span>
-              <span className="text-base-medium text-paragraph dark:text-dark-text">
-                {stats?.users.clients}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2 dark:text-dark-text/60">Vendors</span>
-              <span className="text-base-medium text-paragraph dark:text-dark-text">
-                {stats?.users.vendors}
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -318,29 +403,75 @@ const DashboardPage = () => {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Project Stats */}
-        <div className="bg-white dark:bg-dark-input-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
+      {/* Project and Dispute Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="bg-white dark:bg-dark-input-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
+          <h2 className="text-xl font-semibold text-main-heading dark:text-dark-text mb-4">
+            Dispute Resolution
+          </h2>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={disputeData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  fill={COLORS.primary}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  <Cell fill={COLORS.warning} />
+                  <Cell fill={COLORS.success} />
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-4 space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-dark-2 dark:text-dark-text/60">Resolution Rate</span>
+              <span className="text-base-medium text-success-text">
+                {stats?.disputes.resolutionRate}%
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-dark-input-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border lg:col-span-2">
           <h2 className="text-xl font-semibold text-main-heading dark:text-dark-text mb-4">
             Project Overview
           </h2>
-          <div className="space-y-4">
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={projectDistributionData}>
+                <XAxis dataKey="name" stroke="#6B7280" />
+                <YAxis stroke="#6B7280" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1F2937',
+                    border: 'none',
+                    borderRadius: '8px',
+                  }}
+                  labelStyle={{ color: '#F9FAFB' }}
+                />
+                <Bar dataKey="value" fill={COLORS.primary} radius={[4, 4, 0, 0]}>
+                  {projectDistributionData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+                <Legend />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-4 space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-sm text-dark-2 dark:text-dark-text/60">Total Projects</span>
               <span className="text-base-medium text-paragraph dark:text-dark-text">
                 {stats?.projects.total}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2 dark:text-dark-text/60">Active Projects</span>
-              <span className="text-base-medium text-paragraph dark:text-dark-text">
-                {stats?.projects.active}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2 dark:text-dark-text/60">Completed Projects</span>
-              <span className="text-base-medium text-paragraph dark:text-dark-text">
-                {stats?.projects.completed}
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -351,33 +482,114 @@ const DashboardPage = () => {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Dispute Stats */}
-        <div className="bg-white dark:bg-dark-input-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
+      {/* Admin and Verification Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Admin Stats */}
+        <div className="bg-white dark:bg-dark-input-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border lg:col-span-2">
           <h2 className="text-xl font-semibold text-main-heading dark:text-dark-text mb-4">
-            Dispute Resolution
+            Admin Distribution
           </h2>
-          <div className="space-y-4">
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={[
+                  {
+                    name: 'Active',
+                    value: stats?.admins?.active || 0,
+                    color: COLORS.success
+                  },
+                  {
+                    name: 'Inactive',
+                    value: stats?.admins?.inactive || 0,
+                    color: COLORS.error
+                  }
+                ]}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <XAxis type="number" />
+                <YAxis dataKey="name" type="category" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1F2937',
+                    border: 'none',
+                    borderRadius: '8px',
+                  }}
+                  labelStyle={{ color: '#F9FAFB' }}
+                />
+                <Bar dataKey="value" fill={COLORS.primary}>
+                  {[COLORS.success, COLORS.error].map((color, index) => (
+                    <Cell key={`cell-${index}`} fill={color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2 dark:text-dark-text/60">Active Disputes</span>
+              <span className="text-sm text-dark-2 dark:text-dark-text/60">Total Admins</span>
               <span className="text-base-medium text-paragraph dark:text-dark-text">
-                {stats?.disputes.active}
+                {(stats?.admins?.active || 0) + (stats?.admins?.inactive || 0)}
               </span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2 dark:text-dark-text/60">Resolved Disputes</span>
-              <span className="text-base-medium text-paragraph dark:text-dark-text">
-                {stats?.disputes.resolved}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-dark-2 dark:text-dark-text/60">Resolution Rate</span>
+            <div className="flex justify-between items-center mt-2">
+              <span className="text-sm text-dark-2 dark:text-dark-text/60">Active Rate</span>
               <span className="text-base-medium text-success-text">
-                {stats?.disputes.resolutionRate}%
+                {Math.round((stats?.admins?.active || 0) / ((stats?.admins?.active || 0) + (stats?.admins?.inactive || 0)) * 100 || 0)}%
               </span>
             </div>
           </div>
         </div>
+        {/* KYC Verification Stats */}
+        <div className="bg-white dark:bg-dark-input-bg p-6 rounded-lg border border-sidebar-border dark:border-dark-border">
+          <h2 className="text-xl font-semibold text-main-heading dark:text-dark-text mb-4">
+            KYC Verification Status
+          </h2>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: 'Pending', value: stats?.kyc.pending || 0, color: COLORS.warning },
+                    { name: 'Approved', value: stats?.kyc.approved || 0, color: COLORS.success },
+                    { name: 'Rejected', value: stats?.kyc.rejected || 0, color: COLORS.error }
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  fill={COLORS.primary}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {[COLORS.warning, COLORS.success, COLORS.error].map((color, index) => (
+                    <Cell key={`cell-${index}`} fill={color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-4 space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-dark-2 dark:text-dark-text/60">Total Verifications</span>
+              <span className="text-base-medium text-paragraph dark:text-dark-text">
+                {(stats?.kyc.pending || 0) + (stats?.kyc.approved || 0) + (stats?.kyc.rejected || 0)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-dark-2 dark:text-dark-text/60">Pending Review</span>
+              <span className="text-base-medium text-warning dark:text-dark-text">
+                {stats?.kyc.pending || 0}
+              </span>
+            </div>
+          </div>
+        </div>
+
+
       </div>
     </div>
   );

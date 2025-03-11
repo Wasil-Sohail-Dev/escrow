@@ -96,6 +96,14 @@ const customerSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    lastOtpSentAt: {
+      type: Date,
+      default: null,
+    },
+    lastLogin: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

@@ -126,13 +126,13 @@ const PaymentsPage = () => {
   }, [currentPage, statusFilter, debouncedSearchTerm]);
 
   const handleSearch = (value: string) => {
-    setSearchTerm(value);
     setCurrentPage(1);
+    setSearchTerm(value);
   };
 
   const handleStatusChange = (value: string) => {
-    setStatusFilter(value);
     setCurrentPage(1);
+    setStatusFilter(value);
   };
 
   const handlePageChange = (page: number) => {

@@ -7,7 +7,6 @@ import { ChatSystem } from "@/models/ChatSystem";
 import { sendNotification } from "@/lib/actions/sender.action";
 import { uploadFileToS3 } from "@/lib/s3";
 import { Admin } from "@/models/AdminSchema";
-import mongoose from "mongoose";
 
 interface RequestBody {
   raisedByEmail: string;
@@ -77,8 +76,8 @@ export async function POST(req: Request) {
     const existingDispute = await Dispute.findOne({
       $and: [
         { contractId: contract._id },
-        { milestoneId: { $regex: new RegExp(milestoneId, 'i') } }
-      ]
+        { milestoneId: { $regex: new RegExp(milestoneId, "i") } },
+      ],
     }).lean();
 
     if (existingDispute) {
@@ -148,7 +147,7 @@ export async function POST(req: Request) {
       title,
       reason,
       files: uploadedFiles,
-      disputeId: generatedDisputeId
+      disputeId: generatedDisputeId,
     };
 
     const dispute = await Dispute.create(disputeData);
@@ -166,10 +165,10 @@ export async function POST(req: Request) {
     const chat = await ChatSystem.create({
       disputeId: dispute._id,
       participants: [raisedBy._id, raisedTo._id, admin._id],
-      participantTypes: ['Customer', 'Customer', 'Admin'],
+      participantTypes: ["Customer", "Customer", "Admin"],
       messages: [],
       lastMessage: "",
-      lastMessageAt: new Date()
+      lastMessageAt: new Date(),
     });
 
     // Send Notifications
@@ -192,7 +191,8 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         success: true,
-        message: "Dispute raised successfully. Files uploaded. Chat created. Notifications sent.",
+        message:
+          "Dispute raised successfully. Files uploaded. Chat created. Notifications sent.",
         disputeId: dispute._id,
         chatId: chat._id,
       },

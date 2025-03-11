@@ -3,21 +3,13 @@
 import { useEffect, useState } from "react";
 import Pagination from "@/components/dashboard/Pagination";
 import { Input } from "@/components/ui/input";
-import { toast, useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import CustomerDetailsModal from "@/components/modals/CustomerDetailsModal";
 import { getStatusColor } from "@/lib/helpers/getStatusColor";
 import Loader from "@/components/ui/loader";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { useAdmin } from "../providers/AdminProvider";
 import BlockConfirmationModal from "@/components/modals/BlockConfirmationModal";
+import { formatDate } from "@/lib/helpers/fromatDate";
 
 interface Customer {
   _id: string;
@@ -30,6 +22,7 @@ interface Customer {
   userStatus: string;
   profileImage: string | null;
   createdAt: string;
+  lastLogin: string | null;
   projects: {
     active: number;
     completed: number;
@@ -91,7 +84,8 @@ const CustomersScreen = ({ userType }: { userType: string }) => {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [blockModalOpen, setBlockModalOpen] = useState(false);
-  const [selectedCustomerForBlock, setSelectedCustomerForBlock] = useState<Customer | null>(null);
+  const [selectedCustomerForBlock, setSelectedCustomerForBlock] =
+    useState<Customer | null>(null);
 
   // Debounce search term
   useEffect(() => {
@@ -141,13 +135,13 @@ const CustomersScreen = ({ userType }: { userType: string }) => {
   }, [currentPage, statusFilter, debouncedSearchTerm]);
 
   const handleSearch = (value: string) => {
-    setSearchTerm(value);
     setCurrentPage(1);
+    setSearchTerm(value);
   };
 
   const handleStatusChange = (value: string) => {
-    setStatusFilter(value);
     setCurrentPage(1); // Reset to first page when filtering
+    setStatusFilter(value);
   };
 
   const handlePageChange = (page: number) => {
@@ -166,7 +160,7 @@ const CustomersScreen = ({ userType }: { userType: string }) => {
 
   const handleConfirmBlock = async () => {
     if (!selectedCustomerForBlock) return;
-    
+
     setProcessing(true);
     try {
       const response = await fetch("/api/update-customer-status", {
@@ -190,7 +184,9 @@ const CustomersScreen = ({ userType }: { userType: string }) => {
       toast({
         title: "Success",
         description: `Customer ${
-          selectedCustomerForBlock.userStatus !== "adminInactive" ? "blocked" : "unblocked"
+          selectedCustomerForBlock.userStatus !== "adminInactive"
+            ? "blocked"
+            : "unblocked"
         } successfully`,
         variant: "default",
       });
@@ -232,10 +228,16 @@ const CustomersScreen = ({ userType }: { userType: string }) => {
             Total {userType === "client" ? "Clients" : "Vendors"}
           </h3>
           <p className="text-heading3-bold text-main-heading dark:text-dark-text">
-            {userType === "client" ? stats?.clients.total || 0 : stats?.vendors.total || 0}
+            {userType === "client"
+              ? stats?.clients.total || 0
+              : stats?.vendors.total || 0}
           </p>
           <p className="text-small-regular text-success-text">
-            +{userType === "client" ? stats?.clients.monthlyGrowth || 0 : stats?.vendors.monthlyGrowth || 0} this month
+            +
+            {userType === "client"
+              ? stats?.clients.monthlyGrowth || 0
+              : stats?.vendors.monthlyGrowth || 0}{" "}
+            this month
           </p>
         </div>
         <div className="bg-white dark:bg-dark-input-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border">
@@ -243,7 +245,9 @@ const CustomersScreen = ({ userType }: { userType: string }) => {
             Active {userType === "client" ? "Clients" : "Vendors"}
           </h3>
           <p className="text-heading3-bold text-main-heading dark:text-dark-text">
-            {userType === "client" ? stats?.clients.active || 0 : stats?.vendors.active || 0}
+            {userType === "client"
+              ? stats?.clients.active || 0
+              : stats?.vendors.active || 0}
           </p>
           <p className="text-small-regular text-dark-2 dark:text-dark-text/60">
             {userType === "client"
@@ -251,8 +255,8 @@ const CustomersScreen = ({ userType }: { userType: string }) => {
                 ? Math.round((stats.clients.active / stats.clients.total) * 100)
                 : 0
               : stats?.vendors.total
-                ? Math.round((stats.vendors.active / stats.vendors.total) * 100)
-                : 0}
+              ? Math.round((stats.vendors.active / stats.vendors.total) * 100)
+              : 0}
             % active rate
           </p>
         </div>
@@ -261,16 +265,22 @@ const CustomersScreen = ({ userType }: { userType: string }) => {
             Blocked {userType === "client" ? "Clients" : "Vendors"}
           </h3>
           <p className="text-heading3-bold text-main-heading dark:text-dark-text">
-            {userType === "client" ? stats?.clients.blocked || 0 : stats?.vendors.blocked || 0}
+            {userType === "client"
+              ? stats?.clients.blocked || 0
+              : stats?.vendors.blocked || 0}
           </p>
-          <p className="text-small-regular text-dark-2 dark:text-dark-text/60">Due to violations</p>
+          <p className="text-small-regular text-dark-2 dark:text-dark-text/60">
+            Due to violations
+          </p>
         </div>
         <div className="bg-white dark:bg-dark-input-bg p-4 rounded-lg border border-sidebar-border dark:border-dark-border">
           <h3 className="text-small-medium text-dark-2 dark:text-dark-text">
             Pending Verification
           </h3>
           <p className="text-heading3-bold text-main-heading dark:text-dark-text">
-            {userType === "client" ? stats?.clients.pendingVerification || 0 : stats?.vendors.pendingVerification || 0}
+            {userType === "client"
+              ? stats?.clients.pendingVerification || 0
+              : stats?.vendors.pendingVerification || 0}
           </p>
           <p className="text-small-regular text-warning-text dark:text-dark-text/60">
             Awaiting verification
@@ -291,22 +301,36 @@ const CustomersScreen = ({ userType }: { userType: string }) => {
                 onChange={(e) => handleStatusChange(e.target.value)}
                 className="px-4 py-2 bg-white-2 dark:bg-dark-input-bg border border-sidebar-border dark:border-dark-border rounded-lg text-sm text-paragraph dark:text-dark-text focus:outline-none focus:border-primary dark:focus:border-primary [&>option]:bg-white [&>option]:dark:bg-dark-bg [&>option]:dark:text-dark-text"
               >
-                <option value="all" className="text-paragraph dark:text-dark-text">
+                <option
+                  value="all"
+                  className="text-paragraph dark:text-dark-text"
+                >
                   All {userType === "client" ? "Clients" : "Vendors"}
                 </option>
-                <option value="active" className="text-paragraph dark:text-dark-text">
+                <option
+                  value="active"
+                  className="text-paragraph dark:text-dark-text"
+                >
                   Active
                 </option>
-                <option value="adminInactive" className="text-paragraph dark:text-dark-text">
+                <option
+                  value="adminInactive"
+                  className="text-paragraph dark:text-dark-text"
+                >
                   Inactive
                 </option>
-                <option value="pendingVerification" className="text-paragraph dark:text-dark-text">
+                <option
+                  value="pendingVerification"
+                  className="text-paragraph dark:text-dark-text"
+                >
                   Pending
                 </option>
               </select>
               <Input
                 type="text"
-                placeholder="Search clients..."
+                placeholder={`Search ${
+                  userType === "client" ? "clients" : "vendors"
+                }...`}
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="px-4 py-2 bg-white-2 dark:bg-dark-input-bg border border-sidebar-border dark:border-dark-border rounded-lg text-sm text-paragraph dark:text-dark-text focus:outline-none focus:border-primary"
@@ -330,6 +354,9 @@ const CustomersScreen = ({ userType }: { userType: string }) => {
                 </th>
                 <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">
                   Revenue
+                </th>
+                <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">
+                  Last Login
                 </th>
                 <th className="text-left py-4 px-6 text-base-medium text-dark-2 dark:text-dark-text">
                   Actions
@@ -423,6 +450,9 @@ const CustomersScreen = ({ userType }: { userType: string }) => {
                           {customer.revenue.growth}% this month
                         </p>
                       </div>
+                    </td>
+                    <td className="py-4 px-6 text-base-regular text-paragraph dark:text-dark-text">
+                      {customer.lastLogin ? formatDate(customer.lastLogin) : "Never"}
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center space-x-3">

@@ -16,64 +16,27 @@ export async function POST(req: Request) {
       );
     }
 
-    // Get files and document types
-    const testFiles = formData.getAll("files");
-    const files = testFiles.map(file => {
-      if (typeof file === 'string') {
-        try {
-          // Parse stringified file data
-          const parsedFile = JSON.parse(file);
-          // Convert the parsed data into a File object
-          return new File(
-            [Buffer.from(parsedFile.uri || parsedFile.path || '', 'utf-8')],
-            parsedFile.name,
-            { type: parsedFile.type }
-          );
-        } catch (error) {
-          console.error('Error parsing file data:', error);
-          throw new Error('Invalid file format received');
-        }
-      }
-      return file as File;
-    });
-
+    // Extract files and document types
+    const rawFiles = formData.getAll("files");
     const documentTypes = formData.getAll("documentTypes") as string[];
 
-    console.log("files", files, documentTypes, files.length, documentTypes.length);
-
-    if (!files.length) {
+    if (!rawFiles.length) {
       return NextResponse.json(
         { error: "Please select at least one file to upload." },
         { status: 400 }
       );
     }
 
-    // Validate each file
-    for (const file of files) {
-      if (!file || !file.name) {
-        return NextResponse.json(
-          { error: "Invalid file format received" },
-          { status: 400 }
-        );
-      }
-    }
-
-    if (files.length !== documentTypes.length) {
+    if (rawFiles.length !== documentTypes.length) {
       return NextResponse.json(
         { error: "Each file must have a corresponding document type." },
         { status: 400 }
       );
     }
-    
-    const validDocumentTypes = [
-      "government_id",
-      "passport",
-      "drivers_license",
-      "other",
-    ];
-    const invalidTypes = documentTypes.filter(
-      (type) => !validDocumentTypes.includes(type)
-    );
+
+    const validDocumentTypes = ["government_id", "passport", "drivers_license", "other"];
+    const invalidTypes = documentTypes.filter(type => !validDocumentTypes.includes(type));
+
     if (invalidTypes.length > 0) {
       return NextResponse.json(
         { error: `Invalid document type(s): ${invalidTypes.join(", ")}` },
@@ -81,27 +44,54 @@ export async function POST(req: Request) {
       );
     }
 
+    // Normalize files (Handling both Web and React Native format)
+    const files = rawFiles.map((file: any) => {
+      if (typeof file === "string") {
+        try {
+          const parsedFile = JSON.parse(file);
+          if (!parsedFile.uri || !parsedFile.name) throw new Error("Invalid mobile file format");
+          return {
+            uri: parsedFile.uri,
+            name: parsedFile.name || `file_${Date.now()}`,
+            type: parsedFile.type || "application/octet-stream",
+          };
+        } catch (error) {
+          console.error("Error parsing mobile file data:", error);
+          throw new Error("Invalid file format received");
+        }
+      }
+
+      if (file instanceof File) {
+        return file; // Web file input is already valid
+      }
+
+      if (file.uri && file.name) {
+        return file; // Handle React Native format
+      }
+
+      throw new Error("Invalid file format received");
+    });
+
     // Connect to MongoDB
     await dbConnect();
 
-    // Find existing KYC record or create new one
+    // Find existing KYC record or create a new one
     let kyc = await KYC.findOne({ customerId });
     if (!kyc) {
       kyc = new KYC({ customerId });
     }
 
     try {
-      console.log(files,"filesssssss");
+      console.log(files, "files to be uploaded");
+
       // Upload files to S3 and add to documents array
       const uploadPromises = files.map(async (file, index) => {
-        
         if (!file || !file.name) {
           throw new Error(`Invalid file at index ${index}`);
         }
 
         const { fileUrl, fileName } = await uploadFileToS3(
-          file,
-          "kyc-documents"
+          file, "kyc-documents"
         );
 
         return {
@@ -118,7 +108,7 @@ export async function POST(req: Request) {
       // Add new documents to KYC record
       kyc.documents.push(...uploadedDocs);
 
-      // Set status to pending if it was rejected before
+      // Reset status if it was rejected before
       if (kyc.status === "rejected") {
         kyc.status = "pending";
         kyc.rejectionReason = undefined;
